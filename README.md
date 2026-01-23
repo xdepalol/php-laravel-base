@@ -119,3 +119,26 @@ Accede a la aplicación en: `http://localhost:8000`
 - `pages` / `views`: Vistas de la aplicación organizadas por módulos.
 - `store`: Estados globales con Pinia (Auth, Lang, etc.).
 - `routes`: Definición de rutas y guards.
+
+# Comandos scaffolding
+
+Crea model amb el control·lador (-c) i model (-m)
+```
+php artisan make:model Post -c -m
+```
+
+## Base de dades
+
+Actualitzar el model
+
+```
+php artisan migrate
+```
+
+## Documentació
+
+### Laravel
+
+#### Controllers
+
+https://laravel.com/docs/12.x/controllers
