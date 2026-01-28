@@ -120,7 +120,9 @@ Accede a la aplicación en: `http://localhost:8000`
 - `store`: Estados globales con Pinia (Auth, Lang, etc.).
 - `routes`: Definición de rutas y guards.
 
-# Comandos scaffolding
+# Notes de aprendizaje
+
+## Comandos scaffolding
 
 Crea model amb el control·lador (-c) i model (-m)
 ```
@@ -142,3 +144,63 @@ php artisan migrate
 #### Controllers
 
 https://laravel.com/docs/12.x/controllers
+
+## Errors
+
+Aquesta API utilitza content negotiation segons l’estàndard HTTP.
+
+Per defecte, si no s’especifica la capçalera Accept, Laravel pot retornar una resposta HTML (comportament web). Per obtenir **respostes JSON** pròpies d’una API, és obligatori enviar la capçalera:
+
+```
+Accept: application/json
+```
+
+**Petició no conforme a model (sense `Accept: application/json`)**
+
+```yaml
+POST /api/posts
+{
+    "title": "SaL",
+    "content": "Les migracions permeten versionar l'estructura de la base de dades.",
+    "user_id": 2
+}
+```
+Resposta
+```yaml
+HTTP/1.1 200 OK
+Content-Type: text/html
+<html>
+...
+</html>
+```
+
+Aquest comportament es correspon a una petició tractada com a **web**, no com a API.
+
+**Petició correcte API (amb `Accept: application/json`)**
+
+Per obtenir la resposta en HTML amb l'error s'ha d'enviar la capçalera `Header: application/json`.
+
+```yaml
+POST /api/posts
+Accept: application/json
+Content-Type: application/json
+{
+    "title": "SaL",
+    "content": "Les migracions permeten versionar l'estructura de la base de dades.",
+    "user_id": 2
+}
+```
+Resposta
+```yaml
+HTTP/1.1 422 Unprocessable content
+{
+    "message": "The title must be at least 5",
+    "errors": {
+        "title": [
+            "The title must be at least 5 characters."
+        ]
+    }
+}
+```
+
+Aquesta és la resposta esperada i correcta d'una API REST.
