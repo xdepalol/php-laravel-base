@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\ProfileController;
@@ -11,6 +12,8 @@ use Illuminate\Support\Facades\Route;
 
 
 Route::group(['middleware' => 'auth:sanctum'], function() {
+
+    Route::post('/auth/logout', [AuthController::class, 'logout']);
 
     Route::apiResource('users', UserController::class);
     Route::post('users/updateimg', [UserController::class,'updateimg']);
@@ -27,6 +30,12 @@ Route::group(['middleware' => 'auth:sanctum'], function() {
     Route::get('/user/signin', [ProfileController::class, 'user']);
     Route::put('/user', [ProfileController::class, 'update']);
 
+    Route::apiResource('posts', PostController::class)
+        ->missing(function($request) {
+            $postId = $request->route('post');
+            return response()->json(['message' => "Post not found (#{$postId})"]);
+        });
+
     Route::get('abilities', function(Request $request) {
         return $request->user()->roles()->with('permissions')
             ->get()
@@ -39,5 +48,6 @@ Route::group(['middleware' => 'auth:sanctum'], function() {
     });
 });
 
+Route::post('/auth/login', [AuthController::class, 'login']);
+
 Route::get('category-list', [CategoryController::class, 'getList']);
-Route::apiResource('posts', PostController::class);
