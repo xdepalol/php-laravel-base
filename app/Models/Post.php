@@ -26,4 +26,12 @@ class Post extends Model
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * Categories navigation (many-to-many)
+     */
+    public function categories()
+    {
+        return $this->belongsToMany(Category::class);
+    }
+
 }
