@@ -9,6 +9,8 @@ use PhpParser\Node\Expr\FuncCall;
 
 class PostController extends Controller
 {
+    const USER_PROJECTION = "id,name,surname1";
+
     //
     public function index()
     {
@@ -18,6 +20,7 @@ class PostController extends Controller
 
     public function show(Post $post)
     {
+        $post->load('user:' . self::USER_PROJECTION);
         return $post;
     }
 
@@ -29,8 +32,11 @@ class PostController extends Controller
 
     public function store(StorePostRequest $request)
     {
-        $data = $request->all();
-        // $data = $request->validated();
+        $this->authorize('post-edit');
+
+        //$data = $request->all();
+        $data = $request->validated();
+        $data['user_id'] = auth()->id();;
         $post = Post::create($data);
         return $post;
     }
