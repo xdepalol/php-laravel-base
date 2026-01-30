@@ -15,25 +15,37 @@ class PostController extends Controller
     //
     public function index()
     {
+        $this->authorize('post-list');
+
         $posts = Post::all();
         return $posts;
     }
 
     public function show(Post $post)
     {
+        $this->authorize('post-list');
+
         $post->load('user:' . self::USER_PROJECTION, 'categories:' . self::CATEGORY_PROJECTION);
         return $post;
     }
 
     public function destroy(Post $post)
     {
+        $this->authorize('post-delete');
+
+        if (!$post->isAuthorized()) {
+            return response()->json([
+                "message" => "No permission to delete this post"
+            ], 403);
+        }
+
         $post->delete();
         return $post;
     }
 
     public function store(StorePostRequest $request)
     {
-        // $this->authorize('post-edit');
+        $this->authorize('post-create');
 
         //$data = $request->all();
         $data = $request->validated();

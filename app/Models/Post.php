@@ -34,4 +34,19 @@ class Post extends Model
         return $this->belongsToMany(Category::class);
     }
 
+    /**
+     * Verifies whether the logged user is authorized to manipulated the post
+     */
+    public function isAuthorized($user = null)
+    {
+        if (is_null($user) && !is_null(auth())) {
+            $user = auth()->user();
+        }
+        if (!is_null($user))
+        {
+            return $user->id == $this->id || $user->hasPermissionTo('post-all');
+        }
+        return false;
+    }
+
 }
