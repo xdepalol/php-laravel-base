@@ -143,6 +143,23 @@ export default [
             },
 
             {
+                name: 'posts',
+                path: 'posts',
+                meta: { breadCrumb: 'Posts' },
+                children: [
+                    {
+                        name: 'posts.index',
+                        path: '',
+                        component: () => import('../views/admin/posts/Index.vue'),
+                        meta: {
+                            breadCrumb: 'View Posts',
+                            hideBreadcrumb: true
+                        }
+                    },
+                ]
+            },
+
+            {
                 name: 'permissions',
                 path: 'permissions',
                 meta: { breadCrumb: 'Permisos' },

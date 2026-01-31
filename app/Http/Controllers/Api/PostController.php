@@ -17,7 +17,7 @@ class PostController extends Controller
     {
         $this->authorize('post-list');
 
-        $posts = Post::all();
+        $posts = Post::with(['categories', 'user'])->get();
         return $posts;
     }
 
