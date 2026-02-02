@@ -6,19 +6,31 @@
         <p class="text-sm text-gray-600">Lista simple de posts</p>
       </div>
       <div class="flex gap-2">
-        <button class="px-3 py-2 text-sm border rounded hover:bg-gray-50 bg-white">
-          Actualizar'
-        </button>
+        <Button
+            label="Actualizar"
+            icon="pi pi-refresh"
+            size="small"
+            outlined
+            severity="secondary"
+            :loading="isLoading"
+            @click="getPosts"
+        />
       </div>
     </div>
 
     <DataTable :value="posts" tableStyle="min-width: 50rem">
-        <Column field="id" header="@" sortable></Column>
+        <Column field="id" header="ID" sortable>
+        </Column>
         <Column field="title" header="Titulo" sortable></Column>
         <Column field="content" header="Contenido"></Column>
-        <Column field="categories" header="Cat">
+        <Column field="categories" header="Categoría">
             <template #body="{data}">
                 <Badge v-for="cat in data.categories" severity="info">{{cat.name}}</Badge>
+            </template>
+        </Column>
+        <Column field="user" header="Creado por">
+             <template #body="{data}">
+                <div class="user"><span class="user__name">{{ data.user.name }}</span><span class="user__surname">{{ data.user.surname1 }}</span></div>
             </template>
         </Column>
         <Column field="created_at" header="Creado">
@@ -35,7 +47,7 @@ import { onMounted, ref } from "vue";
 import useUtils from "@/composables/utils";
 import usePosts from "@/composables/posts";
 
-const {posts, getPosts} = usePosts();
+const {posts, getPosts, isLoading} = usePosts();
 const {formatDate} = useUtils();
 
 onMounted(()=> {

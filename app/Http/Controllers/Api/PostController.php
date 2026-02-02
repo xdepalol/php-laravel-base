@@ -17,7 +17,7 @@ class PostController extends Controller
     {
         $this->authorize('post-list');
 
-        $posts = Post::with(['categories', 'user'])->get();
+        $posts = Post::with(['categories', 'user:' . self::USER_PROJECTION])->get();
         return $posts;
     }
 
@@ -49,7 +49,7 @@ class PostController extends Controller
 
         //$data = $request->all();
         $data = $request->validated();
-        $data['user_id'] = auth()->id();;
+        $data['user_id'] = auth()->id();
         $post = Post::create($data);
         $post->categories()->attach($request->categories);
         return $post;
