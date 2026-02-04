@@ -124,6 +124,31 @@ Accede a la aplicación en: `http://localhost:8000`
 
 ## Comandos scaffolding
 
+**Crea model** i fitxer de **migració**
+```
+php artisan make:model Student --migration
+```
+
+Després de definir la taula al fitxer de migració, creem la resta de **components API**:
+```
+php artisan make:controller StudentController --api
+```
+
+Crear un fitxer de **seeder**
+```
+php artisan make:seeder StudentSeeder
+```
+
+**Executar un seeder** específic
+```
+php artisan db:seed --class=StudentSeeder
+```
+
+Desfer el darrer fitxer de migració (si ens hem equivocat i volem repetir-lo però bé)
+```
+php artisan migrate:rollback
+```
+
 Crea model amb el control·lador (-c) i model (-m)
 ```
 php artisan make:model Post -c -m

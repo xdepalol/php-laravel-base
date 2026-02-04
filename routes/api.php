@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\PostController;
+use App\Http\Controllers\StudentController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -34,6 +35,12 @@ Route::group(['middleware' => 'auth:sanctum'], function() {
         ->missing(function($request) {
             $postId = $request->route('post');
             return response()->json(['message' => "Post not found (#{$postId})"]);
+        });
+
+    Route::apiResource('students', StudentController::class)
+        ->missing(function($request) {
+            $studentId = $request->route('student');
+            return response()->json(['message' => "Student not found (#{$studentId})"]);
         });
 
     Route::get('abilities', function(Request $request) {
