@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePostRequest;
+use App\Http\Requests\UpdatePostRequest;
 use App\Models\Post;
 use App\Support\ContentSanitizer;
 use Illuminate\Http\Request;
@@ -15,7 +16,9 @@ class PostController extends Controller
     const USER_PROJECTION = "id,name,surname1";
     const CATEGORY_PROJECTION = "id,name";
 
-    //
+    /**
+     * Display a listing of the resource.
+     */
     public function index(Request $request)
     {
         $this->authorize('post-list');
@@ -24,14 +27,20 @@ class PostController extends Controller
         return $posts;
     }
 
+    /**
+     * Display the specified resource.
+     */
     public function show(Post $post)
     {
-        $this->authorize('post-list');
+        $this->authorize('post-view');
 
         $post->load('user:' . self::USER_PROJECTION, 'categories:' . self::CATEGORY_PROJECTION);
         return $post;
     }
 
+    /**
+     * Remove the specified resource from storage.
+     */
     public function destroy(Post $post)
     {
         $this->authorize('post-delete');
@@ -46,6 +55,9 @@ class PostController extends Controller
         return $post;
     }
 
+    /**
+     * Store a newly created resource in storage.
+     */
     public function store(StorePostRequest $request)
     {
         $this->authorize('post-create');
@@ -59,4 +71,24 @@ class PostController extends Controller
         return $post;
     }
 
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(UpdatePostRequest $request, Post $post)
+    {
+        $this->authorize('post-edit');
+
+        $data = $request->validated();
+        // categories
+        $categoryIds = $data['categories'] ?? [];
+        unset($data['categories']);
+
+        // actualitza dades
+        $post->update($data);
+        $post->categories()->sync($categoryIds);
+
+        // materialitza navegacions
+        $post->load('user:' . self::USER_PROJECTION, 'categories:' . self::CATEGORY_PROJECTION);
+        return $post;
+    }
 }
