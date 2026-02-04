@@ -156,6 +156,15 @@ export default [
                             hideBreadcrumb: true
                         }
                     },
+                    {
+                        name: 'posts.create',
+                        path: 'create',
+                        component: () => import('../views/admin/posts/Create.vue'),
+                        meta: {
+                            breadCrumb: 'Nuevo Post',
+                            linked: false
+                        }
+                    },
                 ]
             },
 

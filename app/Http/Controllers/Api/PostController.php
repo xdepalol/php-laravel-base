@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePostRequest;
 use App\Models\Post;
+use App\Support\ContentSanitizer;
+use Illuminate\Http\Request;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use PhpParser\Node\Expr\FuncCall;
 
 class PostController extends Controller
@@ -13,7 +16,7 @@ class PostController extends Controller
     const CATEGORY_PROJECTION = "id,name";
 
     //
-    public function index()
+    public function index(Request $request)
     {
         $this->authorize('post-list');
 
@@ -49,6 +52,7 @@ class PostController extends Controller
 
         //$data = $request->all();
         $data = $request->validated();
+        $data['content'] = ContentSanitizer::sanitize($data['content']);
         $data['user_id'] = auth()->id();
         $post = Post::create($data);
         $post->categories()->attach($request->categories);

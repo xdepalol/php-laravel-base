@@ -40,7 +40,7 @@ export default function usePosts() {
     const getPost = async (id) => {
         return axios.get('/api/posts/' + id)
             .then(response => {
-                post.value = response.data.data;
+                post.value = response.data.data ?? response.data;
                 return response;
             })
     }
@@ -138,6 +138,7 @@ export default function usePosts() {
         updatePost,
         deletePost,
         resetPost,
+        errors,
         hasError,
         getError,
         validationErrors,

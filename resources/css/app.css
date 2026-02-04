@@ -1487,3 +1487,25 @@ aside.sidebar-container a:hover img {
 
 /* Prism CSS - Solo importar si existe */
 /* @import "./prism-vsc-dark-plus.css"; */
+
+/* UserName component */
+.user {
+  display: flex;
+  gap: 0.5rem; /* separació entre nom i cognom */
+  align-items: center;
+}
+.user__name {
+  font-weight: 500;
+}
+.user__surname {
+  color: #6b7280; /* gris suau */
+}
+.user--empty {
+  color: #9ca3af;
+}
+/* Categories list */
+.categories-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}

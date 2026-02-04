@@ -139,6 +139,12 @@ php artisan migrate
 
 ## Documentació
 
+### Paquets
+
+```
+composer require symfony/html-sanitizer
+```
+
 ### Laravel
 
 #### Controllers

@@ -15,6 +15,15 @@
             :loading="isLoading"
             @click="getPosts"
         />
+        <Button
+            v-if="can('post-create')"
+            label="Nuevo Post"
+            icon="pi pi-plus"
+            size="small"
+            severity="primary"
+            @click="router.push('/admin/posts/create')"
+        />
+
       </div>
     </div>
 
@@ -22,15 +31,23 @@
         <Column field="id" header="ID" sortable>
         </Column>
         <Column field="title" header="Titulo" sortable></Column>
-        <Column field="content" header="Contenido"></Column>
+        <Column field="content" header="Contenido">
+            <template #body="{data}">
+                <div class="post-content" v-html="data.content"></div>
+            </template>
+        </Column>
         <Column field="categories" header="Categoría">
             <template #body="{data}">
-                <Badge v-for="cat in data.categories" severity="info">{{cat.name}}</Badge>
+                <div class="categories-list">
+                    <Badge v-for="cat in data.categories" :key="cat.id" severity="info">
+                        {{cat.name}}
+                    </Badge>
+                </div>
             </template>
         </Column>
         <Column field="user" header="Creado por">
-             <template #body="{data}">
-                <div class="user"><span class="user__name">{{ data.user.name }}</span><span class="user__surname">{{ data.user.surname1 }}</span></div>
+            <template #body="{ data }">
+                <UserName :user="data.user" />
             </template>
         </Column>
         <Column field="created_at" header="Creado">
@@ -44,11 +61,16 @@
 
 <script setup>
 import { onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
 import useUtils from "@/composables/utils";
 import usePosts from "@/composables/posts";
+import UserName from '@/components/UserName.vue'
+import { useAbility } from '@casl/vue';
 
+const router = useRouter();
 const {posts, getPosts, isLoading} = usePosts();
 const {formatDate} = useUtils();
+const { can } = useAbility();
 
 onMounted(()=> {
     getPosts()
