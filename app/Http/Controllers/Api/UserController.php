@@ -25,13 +25,13 @@ class UserController extends Controller
 
     public function index()
     {
-        $orderColumn = request('order_column', 'created_at');
-        if (!in_array($orderColumn, ['id', 'name', 'created_at'])) {
-            $orderColumn = 'created_at';
+        $sortField = request('sort_field', 'created_at');
+        if (!in_array($sortField, ['id', 'name', 'created_at'])) {
+            $sortField = 'created_at';
         }
-        $orderDirection = request('order_direction', 'desc');
-        if (!in_array($orderDirection, ['asc', 'desc'])) {
-            $orderDirection = 'desc';
+        $sortOrder = request('sort_order', 'desc');
+        if (!in_array($sortOrder, ['asc', 'desc'])) {
+            $sortOrder = 'desc';
         }
         $users = User::
         when(request('search_id'), function ($query) {
@@ -47,7 +47,7 @@ class UserController extends Controller
 
                 });
             })
-            ->orderBy($orderColumn, $orderDirection)
+            ->orderBy($sortField, $sortOrder)
             ->paginate(500);
 
         return UserResource::collection($users);

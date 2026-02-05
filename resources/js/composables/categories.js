@@ -66,8 +66,8 @@ export default function useCategories() {
       search_id: '',
       search_title: '',
       search_global: '',
-      order_column: 'created_at',
-      order_direction: 'desc'
+      sort_field: 'created_at',
+      sort_order: 'desc'
     }
 
     const query = new URLSearchParams({ ...defaultParams, ...params }).toString()

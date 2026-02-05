@@ -85,16 +85,16 @@ export default function useUsers() {
         search_id = '',
         search_title = '',
         search_global = '',
-        order_column = 'created_at',
-        order_direction = 'desc'
+        sort_field = 'created_at',
+        sort_order = 'desc'
     ) => {
         const params = {
             page,
             search_id,
             search_title,
             search_global,
-            order_column,
-            order_direction
+            sort_field,
+            sort_order
         }
         const query = new URLSearchParams(params).toString()
         return axios.get(`/api/users?${query}`)
