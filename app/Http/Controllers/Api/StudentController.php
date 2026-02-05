@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreStudentRequest;
 use App\Http\Requests\UpdateStudentRequest;
 use Illuminate\Http\Request;
@@ -20,8 +21,8 @@ class StudentController extends Controller
 
         // Camps ordenables
         $allowedSorts = ['id', 'name', 'surname1', 'surname2', 'email', 'birthday_date', 'created_at'];
-        $sortField = $request->query('sortField');
-        $sortOrder = (int) $request->query('sortOrder', 1); // 1 asc, -1 desc
+        $sortField = $request->query('sort_field');
+        $sortOrder = (int) $request->query('sort_order', 1); // 1 asc, -1 desc
         
         $query = Student::query();
 
