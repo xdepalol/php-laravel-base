@@ -44,7 +44,7 @@ class Post extends Model
         }
         if (!is_null($user))
         {
-            return $user->id == $this->id || $user->hasPermissionTo('post-all');
+            return $user->id == $this->user_id || $user->hasPermissionTo('post-all');
         }
         return false;
     }

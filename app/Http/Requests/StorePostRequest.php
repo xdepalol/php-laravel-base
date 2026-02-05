@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StorePostRequest extends FormRequest
 {
@@ -26,8 +27,8 @@ class StorePostRequest extends FormRequest
         return [
             'title' => ['required', 'string', 'min:5', 'max:255'],
             'content' => ['required', 'string', 'max:255'],
-            'categories' => ['required', 'array'],
-            'categories.*' => ['integer']
+            'categories' => ['required', 'array', 'min:1'],
+            'categories.*' => ['integer', Rule::exists('categories', 'id')]
         ];
     }
 }
