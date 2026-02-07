@@ -129,6 +129,7 @@ const menuModel = computed(() => {
             label: 'Contenido',
             items: [
                 { label: 'Categorías', icon: 'pi pi-tags', route: '/admin/categories', permission: 'category-list' },
+                { label: 'Students', icon: 'pi pi-address-book', route: '/admin/students', permission: 'student-list' },
                 { label: 'Posts', icon: 'pi pi-comments', route: '/admin/posts', permission: 'post-list' }
             ]
         }

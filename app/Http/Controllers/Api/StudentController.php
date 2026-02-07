@@ -22,7 +22,10 @@ class StudentController extends Controller
         // Camps ordenables
         $allowedSorts = ['id', 'name', 'surname1', 'surname2', 'email', 'birthday_date', 'created_at'];
         $sortField = $request->query('sort_field');
-        $sortOrder = (int) $request->query('sort_order', 1); // 1 asc, -1 desc
+        $sortOrder = request('sort_order', 'desc');
+        if (!in_array($sortOrder, ['asc', 'desc'])) {
+            $sortOrder = 'desc';
+        }
         
         $query = Student::query();
 
@@ -55,8 +58,7 @@ class StudentController extends Controller
 
         // Ordenació
         if ($sortField && in_array($sortField, $allowedSorts, true)) {
-            $direction = $sortOrder === -1 ? 'desc' : 'asc';
-            $query->orderBy($sortField, $direction);
+            $query->orderBy($sortField, $sortOrder);
         } else {
             $query->latest(); // default
         }        

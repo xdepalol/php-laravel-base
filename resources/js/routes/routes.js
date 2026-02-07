@@ -169,6 +169,23 @@ export default [
             },
 
             {
+                name: 'students',
+                path: 'students',
+                meta: { breadCrumb: 'Estudiantes' },
+                children: [
+                    {
+                        name: 'students.index',
+                        path: '',
+                        component: () => import('../views/admin/students/Index.vue'),
+                        meta: {
+                            breadCrumb: 'Estudiantes',
+                            hideBreadcrumb: true
+                        }
+                    }
+                ]
+            },
+
+            {
                 name: 'permissions',
                 path: 'permissions',
                 meta: { breadCrumb: 'Permisos' },
