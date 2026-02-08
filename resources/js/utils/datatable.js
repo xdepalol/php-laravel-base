@@ -3,10 +3,14 @@ import { ref } from 'vue'
 export default function useDatatable() {
 
     const lazyState = ref({
+        // PrimeVue offset (0-based)
+        first: 0,
+        // API
         page: 1,
         per_page: 10,
         sort_field: 'created_at',
         sort_order: 'desc',
+        // { field: { value, matchMode } }
         filters: {}
     })
 
@@ -14,35 +18,50 @@ export default function useDatatable() {
         return sortOrder === 1 ? 'asc' : 'desc'
     }
 
+    const firstToPage = (first, rows) => Math.floor((first || 0) / (rows || 10)) + 1
+
     const applyPrimeEvent = (e = {}) => {
-        // Page (PrimeVue 0-based)
+        // Pagination
+        if (typeof e.first === 'number') {
+            lazyState.value.first = e.first
+        }
+
+        if (typeof e.rows === 'number') {
+            lazyState.value.per_page = e.rows
+        }
+
+        // PrimeVue pot enviar e.page (0-based) o no; si no, calculem a partir de first/rows
         if (typeof e.page === 'number') {
             lazyState.value.page = e.page + 1
-            lazyState.value.per_page = e.rows
+        } else {
+            lazyState.value.page = firstToPage(lazyState.value.first, lazyState.value.per_page)
         }
 
         // Sort
         if (e.sortField) {
             lazyState.value.sort_field = e.sortField
-            lazyState.value.sort_order = e.sortOrder === 1 ? 'asc' : 'desc'
+            lazyState.value.sort_order = primeSortToApi(e.sortOrder)
         }
 
-        // Filters (aquí tu decideixes el mapping)
+        // Filters
         if (e.filters) {
             lazyState.value.filters = primeFiltersToApi(e.filters)
         }
     }
 
-    const primeFiltersToApi = (filters) => {
+    // IMPORTANT: ara NO aplanem a string.
+    // Guardem value + matchMode (de menu i de row filters).
+    const primeFiltersToApi = (filters = {}) => {
         const out = {}
 
-        for (const [field, meta] of Object.entries(filters || {})) {
-            const value =
-            meta?.value ??
-            meta?.constraints?.[0]?.value
+        for (const [field, meta] of Object.entries(filters)) {
+            const constraint0 = meta?.constraints?.[0]
+
+            const value = meta?.value ?? constraint0?.value ?? null
+            const matchMode = meta?.matchMode ?? constraint0?.matchMode ?? null
 
             if (value !== null && value !== '') {
-            out[field] = value
+                out[field] = { value, matchMode }
             }
         }
 
@@ -52,7 +71,6 @@ export default function useDatatable() {
     const extractPagination = (response) => {
         const data = response?.data ?? response;
 
-        // Resource: { data, meta }
         if (data?.meta) {
             return {
                 page: data.meta.current_page,
@@ -64,7 +82,6 @@ export default function useDatatable() {
             };
         }
 
-        // paginator "pla" (integrat)
         if (data?.current_page) {
             return {
                 page: data.current_page,
@@ -76,7 +93,6 @@ export default function useDatatable() {
             };
         }
 
-        // Fallback (sense paginació)
         return {
             page: 1,
             per_page: Array.isArray(data?.data) ? data.data.length : 0,
@@ -87,9 +103,15 @@ export default function useDatatable() {
         };
     }
 
-    const dtOnPage = async (e) => { applyPrimeEvent(e); }
-    const dtOnSort = async (e) => { applyPrimeEvent(e); lazyState.value.page = 1; }
-    const dtOnFilter = async (e) => { applyPrimeEvent(e); lazyState.value.page = 1; }
+    // Quan canvies sort o filtre, és bona pràctica tornar a la primera pàgina
+    const resetToFirstPage = () => {
+        lazyState.value.first = 0
+        lazyState.value.page = 1
+    }
+
+    const dtOnPage = (e) => { applyPrimeEvent(e); }
+    const dtOnSort = (e) => { applyPrimeEvent(e); resetToFirstPage(); }
+    const dtOnFilter = (e) => { applyPrimeEvent(e); resetToFirstPage(); }
 
     return {
         lazyState,

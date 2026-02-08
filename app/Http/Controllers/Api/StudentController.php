@@ -7,6 +7,7 @@ use App\Http\Requests\StoreStudentRequest;
 use App\Http\Requests\UpdateStudentRequest;
 use Illuminate\Http\Request;
 use App\Models\Student;
+use App\Support\PrimeFilter;
 
 class StudentController extends Controller
 {
@@ -31,29 +32,27 @@ class StudentController extends Controller
 
         // Filters
         $allowedFilters = ['name', 'surname1', 'surname2', 'email'];
-        $filters = $request->query('filter', []);
+        $filters = PrimeFilter::getFiltersFromRequest($request, $allowedFilters);
 
         // Cerca global
-        if (!empty($filters['global'])) {
-            $term = $filters['global'];
-            if ($term !== null && $term !== '') {
-                $query->where(function ($q) use ($term) {
-                    $q->where('name', 'like', "%{$term}%")
-                    ->orWhere('surname1', 'like', "%{$term}%")
-                    ->orWhere('surname2', 'like', "%{$term}%")
-                    ->orWhere('email', 'like', "%{$term}%");
-                });
-            }
+        if (isset($filters['global'])) {
+            $global = $filters['global'];
+
+            $query->where(function ($q) use ($global, $allowedFilters)
+            {
+                foreach ($allowedFilters as $i => $field)
+                {
+                    $f = new PrimeFilter($field, $global->value, $global->matchMode);
+                    $f->apply($q, $i > 0); // OR a partir del segon
+                }
+            });
+            unset($filters['global']); // per no reaplicar
         }
 
-        // Filtres per camp
-        foreach ($filters as $filterName => $filterValue) {
-            if ($filterName === 'global') continue;
-            if ($filterValue === null || $filterValue === '') continue;
-
-            if (in_array($filterName, $allowedFilters, true)) {
-                $query->where($filterName, 'like', '%' . $filterValue . '%');
-            }
+        // Filtres locals
+        foreach ($filters as $f)
+        {
+            $f->apply($query);
         }
 
         // Ordenació

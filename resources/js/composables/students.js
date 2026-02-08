@@ -5,9 +5,8 @@ import { useValidation } from './useValidation'
 import axios from 'axios'
 import useDatatable from "../utils/datatable";
 
-const { extractPagination } = useDatatable();
-
 export default function useStudents() {
+    const { extractPagination } = useDatatable();
     const students = ref([])
     const isLoading = ref(false)
     const toast = useToast()
@@ -89,11 +88,17 @@ export default function useStudents() {
             sort_field,
             sort_order
         }
-        Object.entries(filters).forEach(([key, value]) => {
-            if (value !== null && value !== undefined && value !== '') {
-                params[`filter[${key}]`] = value
-            }
+
+        // filters nested
+        Object.entries(filters || {}).forEach(([field, f]) => {
+            const value = (typeof f === 'object' && f !== null) ? f.value : f
+            const matchMode = (typeof f === 'object' && f !== null) ? f.matchMode : null
+
+            if (!value) return
+            params[`filter[${field}][value]`] = value
+            if (matchMode) params[`filter[${field}][matchMode]`] = matchMode
         })
+
         const query = new URLSearchParams(params).toString()
         return axios.get(`/api/students?${query}`)
             .then(response => {

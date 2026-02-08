@@ -1,99 +1,108 @@
 <template>
-    <div class="flex items-center justify-between">
-      <div>
-        <h2 class="text-lg font-semibold">Gestión de Estudiantes</h2>
-        <p class="text-sm text-gray-600">Listado con todos los estudiantes del centro</p>
-      </div>
-      <div class="flex gap-2">
-        <Button
-            label="Actualizar"
-            icon="pi pi-refresh"
-            size="small"
-            outlined
-            severity="secondary"
-            :loading="isLoading"
-            @click="getStudents(lazyState)"
-        />
-        <Button
-            v-if="can('student-create')"
-            label="Nuevo Estudiante"
-            icon="pi pi-plus"
-            size="small"
-            severity="primary"
-            @click="router.push('/admin/students/create')"
-        />
-      </div>
-    </div>
-
-    <DataTable
-        :value="students"
-        lazy
-        paginator
-        :totalRecords="pagination?.total ?? 0"
-        :rows="lazyState.per_page"
-        :first="(lazyState.page - 1) * lazyState.per_page"
-        :rows-per-page-options="[10, 25, 50]"
-        v-model:filters="studentsFilters"
-        dataKey="id"
-        striped-rows
-        :loading="isLoading"
-        @page="onPage"
-        @sort="onSort"
-        @filter="onFilter"
-        filter-display="menu"
-        :filter-delay="300"
-        :globalFilterFields="['name','surname1', 'surname2', 'email']">
-
-        <Column field="id" header="ID" sortable>
-        </Column>
-
-        <Column field="name" header="Nombre" sortable filter :filter-placeholder="'Nombre'" class="min-w-[200px]">
-            <template #body="slotProps">
-                <Skeleton v-if="isLoading" width="10rem" height="1rem" />
-                <div v-else class="flex items-center space-x-2">
-                    <i class="pi pi-user text-blue-600" />
-                    <span class="font-medium table-cell-name">{{ slotProps.data.name || '-' }}</span>
+    <Card>
+        <template #title>
+            <div class="flex items-center justify-between w-full">
+                <span>Gestión de Estudiantes</span>
+                <div class="flex items-center gap-2">
+                    <Button
+                        label="Actualizar"
+                        icon="pi pi-refresh"
+                        size="small"
+                        outlined
+                        severity="secondary"
+                        :loading="isLoading"
+                        @click="getStudents(lazyState)"
+                    />
+                    <Button
+                        v-if="can('student-create')"
+                        label="Nuevo Estudiante"
+                        icon="pi pi-plus"
+                        size="small"
+                        severity="primary"
+                        @click="router.push('/admin/students/create')"
+                    />
                 </div>
-            </template>
-            <template #filter="{ filterModel }">
-                <InputText v-model="filterModel.value" placeholder="Nombre" class="w-full" />
-            </template>
-        </Column>
+            </div>
+        </template>
 
-        <Column field="surname1" header="Apellido" sortable filter :filter-placeholder="'Apellido'" class="min-w-[200px]">
-            <template #body="slotProps">
-                <Skeleton v-if="isLoading" width="10rem" height="1rem" />
-                <div v-else class="flex items-center space-x-2">
-                    <span class="font-medium table-cell-name">{{ slotProps.data.surname1 || '-' }}</span>
-                </div>
-            </template>
-            <template #filter="{ filterModel }">
-                <InputText v-model="filterModel.value" placeholder="Apellido" class="w-full" />
-            </template>
-        </Column>
+        <template #subtitle>Administra y gestiona los estudiantes del sistema. Crea, edita y elimina estudiantes.</template>
 
-        <Column field="surname2" header="2º Apellido" sortable filter :filter-placeholder="'2º Apellido'" class="min-w-[200px]">
-            <template #body="slotProps">
-                <Skeleton v-if="isLoading" width="10rem" height="1rem" />
-                <div v-else class="flex items-center space-x-2">
-                    <span class="font-medium table-cell-name">{{ slotProps.data.surname2 || '-' }}</span>
-                </div>
-            </template>
-            <template #filter="{ filterModel }">
-                <InputText v-model="filterModel.value" placeholder="2º Apellido" class="w-full" />
-            </template>
-        </Column>        
+        <template #content>
+            <DataTable
+                :value="students"
+                lazy
+                paginator
+                :totalRecords="pagination?.total ?? 0"
+                :rows="lazyState.per_page"
+                :first="(lazyState.page - 1) * lazyState.per_page"
+                :rows-per-page-options="[10, 25, 50]"
+                v-model:filters="studentsFilters"
+                dataKey="id"
+                striped-rows
+                :loading="isLoading"
+                @page="onPage"
+                @sort="onSort"
+                @filter="onFilter"
+                filter-display="menu"
+                :filter-delay="300"
+                :globalFilterFields="['name','surname1', 'surname2', 'email']">
 
-        <Column field="email" header="Email" sortable filter :filter-placeholder="'Email'" class="min-w-[200px]">
-            <template #body="slotProps">
-                <Skeleton v-if="isLoading" width="12rem" height="1rem" />
-                <span v-else class="text-sm table-cell-email">{{ slotProps.data.email || '-' }}</span>
-            </template>
-            <template #filter="{ filterModel }">
-                <InputText v-model="filterModel.value" placeholder="Email" class="w-full" />
-            </template>
-        </Column>
-    </DataTable>
+                <Column field="id" header="ID" sortable class="w-[60px]">
+                    <template #body="slotProps">
+                        <Skeleton v-if="isLoading" width="3rem" height="1rem" />
+                        <span v-else class="table-cell-id">{{ slotProps.data.id }}</span>
+                    </template>
+                </Column>
+
+                <Column field="name" header="Nombre" sortable filter :filter-placeholder="'Nombre'" class="min-w-[200px]">
+                    <template #body="slotProps">
+                        <Skeleton v-if="isLoading" width="10rem" height="1rem" />
+                        <div v-else class="flex items-center space-x-2">
+                            <i class="pi pi-user text-blue-600" />
+                            <span class="font-medium table-cell-name">{{ slotProps.data.name || '-' }}</span>
+                        </div>
+                    </template>
+                    <template #filter="{ filterModel }">
+                        <InputText v-model="filterModel.value" placeholder="Nombre" class="w-full" />
+                    </template>
+                </Column>
+
+                <Column field="surname1" header="Apellido" sortable filter :filter-placeholder="'Apellido'" class="min-w-[200px]">
+                    <template #body="slotProps">
+                        <Skeleton v-if="isLoading" width="10rem" height="1rem" />
+                        <div v-else class="flex items-center space-x-2">
+                            <span class="font-medium table-cell-name">{{ slotProps.data.surname1 || '-' }}</span>
+                        </div>
+                    </template>
+                    <template #filter="{ filterModel }">
+                        <InputText v-model="filterModel.value" placeholder="Apellido" class="w-full" />
+                    </template>
+                </Column>
+
+                <Column field="surname2" header="2º Apellido" sortable filter :filter-placeholder="'2º Apellido'" class="min-w-[200px]">
+                    <template #body="slotProps">
+                        <Skeleton v-if="isLoading" width="10rem" height="1rem" />
+                        <div v-else class="flex items-center space-x-2">
+                            <span class="font-medium table-cell-name">{{ slotProps.data.surname2 || '-' }}</span>
+                        </div>
+                    </template>
+                    <template #filter="{ filterModel }">
+                        <InputText v-model="filterModel.value" placeholder="2º Apellido" class="w-full" />
+                    </template>
+                </Column>        
+
+                <Column field="email" header="Email" sortable filter :filter-placeholder="'Email'" class="min-w-[200px]">
+                    <template #body="slotProps">
+                        <Skeleton v-if="isLoading" width="12rem" height="1rem" />
+                        <span v-else class="text-sm table-cell-email">{{ slotProps.data.email || '-' }}</span>
+                    </template>
+                    <template #filter="{ filterModel }">
+                        <InputText v-model="filterModel.value" placeholder="Email" class="w-full" />
+                    </template>
+                </Column>
+            </DataTable>
+        </template>
+    </Card>
 </template>
 <script setup>
 import { ref, onMounted } from "vue";
