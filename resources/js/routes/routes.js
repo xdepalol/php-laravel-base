@@ -181,7 +181,16 @@ export default [
                             breadCrumb: 'Estudiantes',
                             hideBreadcrumb: true
                         }
-                    }
+                    },
+                    {
+                        name: 'students.create',
+                        path: 'create',
+                        component: () => import('../views/admin/students/Create.vue'),
+                        meta: {
+                            breadCrumb: 'Nuevo estudiante',
+                            linked: false
+                        }
+                    },
                 ]
             },
 

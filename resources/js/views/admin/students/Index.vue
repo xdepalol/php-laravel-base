@@ -94,10 +94,38 @@
                 <Column field="email" header="Email" sortable filter :filter-placeholder="'Email'" class="min-w-[200px]">
                     <template #body="slotProps">
                         <Skeleton v-if="isLoading" width="12rem" height="1rem" />
-                        <span v-else class="text-sm table-cell-email">{{ slotProps.data.email || '-' }}</span>
+                        <span v-else class="table-cell-email">{{ slotProps.data.email || '-' }}</span>
                     </template>
                     <template #filter="{ filterModel }">
                         <InputText v-model="filterModel.value" placeholder="Email" class="w-full" />
+                    </template>
+                </Column>
+
+                <Column header="Acciones" class="w-[150px]">
+                    <template #body="slotProps">
+                        <Skeleton v-if="isLoading" width="4rem" height="2rem" />
+                        <div v-else class="flex gap-2">
+                            <Button
+                                v-if="can('student-edit')"
+                                v-tooltip.top="'Editar estudiante'"
+                                icon="pi pi-pencil"
+                                rounded
+                                text
+                                severity="secondary"
+                                size="small"
+                                @click="router.push({ name: 'students.edit', params: { id: slotProps.data.id } })"
+                            />
+                            <Button
+                                v-if="can('student-delete')"
+                                v-tooltip.top="'Eliminar estudiante'"
+                                icon="pi pi-trash"
+                                rounded
+                                text
+                                severity="danger"
+                                size="small"
+                                @click="deleteStudent(slotProps.data.id, slotProps.index)"
+                            />
+                        </div>
                     </template>
                 </Column>
             </DataTable>
