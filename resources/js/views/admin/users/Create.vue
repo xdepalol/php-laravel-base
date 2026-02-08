@@ -101,7 +101,14 @@
             </div>
 
             <!-- Buttons -->
-            <div class="mt-4 text-right">
+            <div class="flex mt-4 text-right gap-4">
+                <Button
+                    label="Volver"
+                    icon="pi pi-chevron-left"
+                    severity="secondary"
+                    class="btn-back"
+                    @click="router.push({ name: 'students.index' })"
+                />
                 <Button :disabled="isLoading" type="submit">
                     <div v-show="isLoading" class=""></div>
                     <span v-if="isLoading">Processing...</span>
@@ -113,9 +120,11 @@
 </template>
 <script setup>
     import { onMounted } from "vue";
+    import { useRouter } from "vue-router";
     import useRoles from "@/composables/roles";
     import useUsers from "@/composables/users";
 
+    const router = useRouter();
     const { roles, getRoles } = useRoles();
     const { user, createUser, validationErrors, isLoading, errors } = useUsers();
 

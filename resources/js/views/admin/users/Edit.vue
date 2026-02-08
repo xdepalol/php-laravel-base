@@ -151,12 +151,16 @@
                         {{ getError('role_id') }}
                     </small>
                 </div>
-
-               
-
-            
             </div>
-            <div class="text-right self-end">
+            
+            <div class="flex text-right self-end gap-4">
+                <Button
+                    label="Volver"
+                    icon="pi pi-chevron-left"
+                    severity="secondary"
+                    class="btn-back"
+                    @click="router.push({ name: 'students.index' })"
+                />
                 <Button :disabled="isLoading" @click="submitForm" :loading="isLoading">
                     <span v-if="!isLoading">Guardar</span>
                     <span v-else>Guardando...</span>
@@ -169,13 +173,14 @@
 
 <script setup>
 import { onMounted, ref } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { usePrimeVue } from 'primevue/config';
 import useRoles from "@/composables/roles";
 import useUsers from "@/composables/users";
 
 const $primevue = usePrimeVue();
 const route = useRoute();
+const router = useRouter();
 
 const { roles, getRoles } = useRoles();
 const {user, getUser, updateUser, isLoading, hasError, getError,setUser } = useUsers();

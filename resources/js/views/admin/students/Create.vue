@@ -77,23 +77,19 @@
             </div>
 
             <!-- Buttons -->
-            <div class="flex gap-6">
-                <div class="flex-1">
-                    <Button
-                        label="Volver"
-                        icon="pi pi-chevron-left"
-                        severity="secondary"
-                        class="btn-back"
-                        @click="router.push('/admin/students')"
-                    />
-                </div>
-                <div class="flex-1 text-right">
-                    <Button :disabled="isLoading" type="submit">
-                        <div v-show="isLoading" class=""></div>
-                        <span v-if="isLoading">Procesando...</span>
-                        <span v-else>Save</span>
-                    </Button>
-                </div>
+            <div class="flex text-right self-end gap-4">
+                <Button
+                    label="Volver"
+                    icon="pi pi-chevron-left"
+                    severity="secondary"
+                    class="btn-back"
+                    @click="router.push({ name: 'students.index' })"
+                />
+                <Button :disabled="isLoading" type="submit">
+                    <div v-show="isLoading" class=""></div>
+                    <span v-if="isLoading">Procesando...</span>
+                    <span v-else>Save</span>
+                </Button>
             </div>
         </form>
     </Panel>

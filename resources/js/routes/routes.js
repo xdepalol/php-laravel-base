@@ -191,7 +191,15 @@ export default [
                             linked: false
                         }
                     },
-                ]
+                    {
+                        name: 'students.edit',
+                        path: 'edit/:id',
+                        component: () => import('../views/admin/students/Edit.vue'),
+                        meta: {
+                            breadCrumb: 'Editar estudiante',
+                            linked: false
+                        }
+                    },                ]
             },
 
             {
