@@ -102,9 +102,18 @@
     const router = useRouter();
     const { student, createStudent, validationErrors, isLoading, errors } = useStudents();
 
-    function submitForm() {
-        createStudent(student.value)
-    }
+    const submitForm = async () => {
+        try {
+            const studentData = await createStudent(student.value);
+
+            router.replace({
+                name: 'students.edit',
+                params: { id: studentData.id }
+            });
+        } catch (e) {
+            // Errors handled by composable (toast)
+        }
+    };
 
     onMounted(() => {
     })

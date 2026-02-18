@@ -34,13 +34,13 @@ Route::group(['middleware' => 'auth:sanctum'], function() {
     Route::apiResource('posts', PostController::class)
         ->missing(function($request) {
             $postId = $request->route('post');
-            return response()->json(['message' => "Post not found (#{$postId})"]);
+            return response()->json(['message' => "Post not found (#{$postId})"], 404);
         });
 
     Route::apiResource('students', StudentController::class)
         ->missing(function($request) {
             $studentId = $request->route('student');
-            return response()->json(['message' => "Student not found (#{$studentId})"]);
+            return response()->json(['message' => "Student not found (#{$studentId})"], 404);
         });
 
     Route::get('abilities', function(Request $request) {
