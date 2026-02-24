@@ -159,7 +159,7 @@
                     icon="pi pi-chevron-left"
                     severity="secondary"
                     class="btn-back"
-                    @click="router.push({ name: 'students.index' })"
+                    @click="router.push({ name: 'users.index' })"
                 />
                 <Button :disabled="isLoading" @click="submitForm" :loading="isLoading">
                     <span v-if="!isLoading">Guardar</span>
