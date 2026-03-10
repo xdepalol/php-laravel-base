@@ -14,6 +14,7 @@ export default function useUsers() {
         id: null,
         name: '',
         email: '',
+        birthday_date: null,
         password: '',
         surname1: '',
         surname2: '',
@@ -34,6 +35,7 @@ export default function useUsers() {
     const userSchema = yup.object({
         name: yup.string().required('El nombre es obligatorio'),
         email: yup.string().email('Email inválido').required('El email es obligatorio'),
+        birthday_date: yup.date().nullable().transform((v, o) => (o === '' ? null : v)).typeError('Fecha invalida'),
         password: yup.string().min(8, 'La contraseña debe tener al menos 8 caracteres').nullable(),
         surname1: yup.string().required('El primer apellido es obligatorio'),
         surname2: yup.string().nullable(),
@@ -58,6 +60,7 @@ export default function useUsers() {
             id: data.id ?? null,
             name: data.name ?? '',
             email: data.email ?? '',
+            birthday_date: data.birthday_date ?? null,
             password: '',
             surname1: data.surname1 ?? '',
             surname2: data.surname2 ?? '',

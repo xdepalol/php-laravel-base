@@ -69,6 +69,7 @@ class UserController extends Controller
         $user = new User();
         $user->name = $request->name;
         $user->email = $request->email;
+        $user->birthday_date = $request->birthday_date;
         $user->surname1 = $request->surname1;
         $user->surname2 = $request->surname2;
 
@@ -107,6 +108,7 @@ class UserController extends Controller
 
         $user->name = $request->name;
         $user->email = $request->email;
+        $user->birthday_date = $request->birthday_date;
         $user->surname1 = $request->surname1;
         $user->surname2 = $request->surname2;
 

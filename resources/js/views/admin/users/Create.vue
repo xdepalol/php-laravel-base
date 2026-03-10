@@ -61,6 +61,22 @@
                 </div>
             </div>
 
+            <div class="mb-4">
+                <div class="flex items-center gap-3">
+                    <label for="user-birthday">Fecha nacimiento:</label>
+                    <InputText v-model="user.birthday_date" id="user-birthday" type="date" size="small" :invalid="!!errors.birthday_date" />
+                </div>
+                <div class="text-red-400 mt-1">
+                    {{ errors.birthday_date }}
+                </div>
+                <div class="mt-1">
+                    <div v-for="message in validationErrors?.birthday_date" class="text-red-400">
+                        {{ message }}
+                    </div>
+                </div>
+            </div>
+
+
             <div class="mb-3">
                 <div class="flex items-center gap-3">
                     <label for="user-password">Password:</label>

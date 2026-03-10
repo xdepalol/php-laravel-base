@@ -149,10 +149,44 @@ Desfer el darrer fitxer de migració (si ens hem equivocat i volem repetir-lo pe
 php artisan migrate:rollback
 ```
 
-Crea model amb el control·lador (-c) i model (-m)
+Crea model amb el control·lador (-c) i migration (-m)
 ```
 php artisan make:model Post -c -m
 ```
+
+Crea model amb el control·lador API (--api) + migration (-m) + seeder (-s, o amb make:seeder si volem nom específic)
+```
+php artisan make:model Post -m --api
+php artisan make:seeder PostsTableSeeder
+```
+
+Generar un seeder automàticament amb el contingut actual de la base de dades (--force per sobreescriure sense preguntar)
+```
+php artisan iseed posts
+```
+
+Afegir un camp a una taula
+```
+php artisan make:migration add_birthdate_to_users_table --table=users
+--
+# database/migrations/xxxx_xx_xx_add_birthdate_to_users_table.php
+public function up(): void
+{
+    Schema::table('users', function (Blueprint $table) {
+        // Afegim el camp birthday_date com a date i que accepti nulls
+        $table->date('birthday_date')->nullable()->after('email'); 
+    });
+}
+
+public function down(): void
+{
+    Schema::table('users', function (Blueprint $table) {
+        // Eliminem el camp si fem un rollback
+        $table->dropColumn('birthday_date');
+    });
+}
+```
+
 
 ## Base de dades
 
@@ -168,6 +202,7 @@ php artisan migrate
 
 ```
 composer require symfony/html-sanitizer
+composer require orangehill/iseed
 ```
 
 ### Laravel

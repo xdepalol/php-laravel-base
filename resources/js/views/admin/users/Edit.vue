@@ -117,6 +117,22 @@
 
                 <div class="mb-4">
                     <div class="flex items-center gap-3">
+                        <label for="user-birthday">Fecha nacimiento:</label>
+                        <InputText
+                            v-model="user.birthday_date"
+                            id="user-birthday"
+                            type="date"
+                            size="small"
+                            :class="{ 'p-invalid': hasError('birthday_date') }"
+                        />
+                    </div>
+                    <small v-if="hasError('birthday_date')" class="p-error">
+                        {{ getError('birthday_date') }}
+                    </small>
+                </div>
+
+                <div class="mb-4">
+                    <div class="flex items-center gap-3">
                         <label for="password">Password:</label>
                         <InputText 
                             v-model="user.password" 
