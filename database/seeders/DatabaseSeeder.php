@@ -34,5 +34,6 @@ attempts, userts
 
 */
 
+        $this->call(RoleHasPermissionsTableTableSeeder::class);
     }
 }
