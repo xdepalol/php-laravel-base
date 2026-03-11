@@ -1,0 +1,31 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Teacher extends Model
+{
+    protected $primaryKey = 'user_id';
+    public $incrementing = false;
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
+
+    protected $fillable = [
+        'user_id',
+        'ss_number',
+        'teacher_number',
+    ];
+
+    /**
+     * User navigation
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+}
