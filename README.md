@@ -124,6 +124,11 @@ Accede a la aplicación en: `http://localhost:8000`
 
 ## Comandos scaffolding
 
+Tornar a executar tots els migrates i seeders
+```
+php artisan migrate:fresh --seed
+```
+
 **Crea model** i fitxer de **migració**
 ```
 php artisan make:model Student --migration

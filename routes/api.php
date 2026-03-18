@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AcademicYearController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\PermissionController;
@@ -38,6 +39,7 @@ Route::group(['middleware' => 'auth:sanctum'], function() {
             return response()->json(['message' => "Post not found (#{$postId})"], 404);
         });
 
+    Route::apiResource('academicyears', AcademicYearController::class);
     Route::apiResource('teachers', TeacherController::class);
 
     Route::apiResource('students', StudentController::class)

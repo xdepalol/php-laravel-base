@@ -34,7 +34,9 @@ attempts, userts
 
 */
 
-        $this->call(RoleHasPermissionsTableTableSeeder::class);
+        $this->call(AcademicYearsTableSeeder::class);
+        $this->call(RoleHasPermissionsTableSeeder::class);
         $this->call(TeachersTableSeeder::class);
+        $this->call(StudentSeeder::class);
     }
 }

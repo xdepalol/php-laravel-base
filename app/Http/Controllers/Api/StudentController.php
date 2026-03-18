@@ -83,7 +83,7 @@ class StudentController extends Controller
      */
     public function show(Student $student)
     {
-        $this->authorize('student-list');
+        $this->authorize('student-view');
 
         return $student;
     }

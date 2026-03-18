@@ -22,7 +22,8 @@ class StudentSeeder extends Seeder
 
             $name = $faker->firstName();
             $surname1 = $faker->lastName();
-            $surname2 = rand(0, 1) ? $faker->lastName() : null;
+            // $surname2 = rand(0, 1) ? $faker->lastName() : null;
+            $surname2 = $faker->lastName();
             
             // Normalitzar (treure accents, minúscules)
             $emailBase = Str::slug($name . '.' . $surname1, '.');

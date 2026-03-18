@@ -339,6 +339,86 @@ class PermissionsTableSeeder extends Seeder
                 'created_at' => '2026-02-04 21:19:12',
                 'updated_at' => '2026-02-04 21:19:12',
             ),
+            40 => 
+            array (
+                'id' => 41,
+                'name' => 'teacher-list',
+                'guard_name' => 'web',
+                'created_at' => NULL,
+                'updated_at' => NULL,
+            ),
+            41 => 
+            array (
+                'id' => 42,
+                'name' => 'teacher-view',
+                'guard_name' => 'web',
+                'created_at' => NULL,
+                'updated_at' => NULL,
+            ),
+            42 => 
+            array (
+                'id' => 43,
+                'name' => 'teacher-create',
+                'guard_name' => 'web',
+                'created_at' => NULL,
+                'updated_at' => NULL,
+            ),
+            43 => 
+            array (
+                'id' => 44,
+                'name' => 'teacher-edit',
+                'guard_name' => 'web',
+                'created_at' => NULL,
+                'updated_at' => NULL,
+            ),
+            44 => 
+            array (
+                'id' => 45,
+                'name' => 'teacher-delete',
+                'guard_name' => 'web',
+                'created_at' => NULL,
+                'updated_at' => NULL,
+            ),
+            45 => 
+            array (
+                'id' => 46,
+                'name' => 'academicyear-list',
+                'guard_name' => 'web',
+                'created_at' => NULL,
+                'updated_at' => NULL,
+            ),
+            46 => 
+            array (
+                'id' => 47,
+                'name' => 'academicyear-view',
+                'guard_name' => 'web',
+                'created_at' => NULL,
+                'updated_at' => NULL,
+            ),
+            47 => 
+            array (
+                'id' => 48,
+                'name' => 'academicyear-create',
+                'guard_name' => 'web',
+                'created_at' => NULL,
+                'updated_at' => NULL,
+            ),
+            48 => 
+            array (
+                'id' => 49,
+                'name' => 'academicyear-edit',
+                'guard_name' => 'web',
+                'created_at' => NULL,
+                'updated_at' => NULL,
+            ),
+            49 => 
+            array (
+                'id' => 50,
+                'name' => 'academicyear-delete',
+                'guard_name' => 'web',
+                'created_at' => NULL,
+                'updated_at' => NULL,
+            ),
         ));
         
         
