@@ -13,7 +13,7 @@ use PhpParser\Node\Expr\FuncCall;
 
 class PostController extends Controller
 {
-    const USER_PROJECTION = "id,name,surname1";
+    const USER_PROJECTION = "id,name,surname1,surname2,email";
     const CATEGORY_PROJECTION = "id,name";
 
     /**
