@@ -14,8 +14,8 @@ class Course extends Model
     /**
      * Relació amb els grups
      */
-    // public function groups()
-    // {
-    //     return $this->hasMany(Group::class);
-    // }
+    public function groups()
+    {
+        return $this->hasMany(Group::class);
+    }
 }

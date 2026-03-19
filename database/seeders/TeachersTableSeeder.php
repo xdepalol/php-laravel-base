@@ -27,8 +27,15 @@ class TeachersTableSeeder extends Seeder
                 'created_at' => '2026-03-11 08:02:30',
                 'updated_at' => '2026-03-11 08:02:30',
             ),
+            1 => 
+            array (
+                'user_id' => 4,
+                'ss_number' => '34 7629862061',
+                'teacher_number' => 'TCH-D7P2A9',
+                'created_at' => '2026-03-11 08:02:30',
+                'updated_at' => '2026-03-11 08:02:30',
+            ),
         ));
-        
         
     }
 }
