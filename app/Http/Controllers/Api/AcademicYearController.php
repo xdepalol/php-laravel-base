@@ -40,25 +40,25 @@ class AcademicYearController extends Controller
     /**
      * Display the specified academic year.
      */
-    public function show(AcademicYear $academicyear)
+    public function show(AcademicYear $academicYear)
     {
         $this->authorize('academicyear-view');
-        return new AcademicYearResource($academicyear);
+        return new AcademicYearResource($academicYear);
 
     }
 
     /**
      * Update the specified academic year in storage.
      */
-    public function update(UpdateAcademicYearRequest $request, AcademicYear $academicyear)
+    public function update(UpdateAcademicYearRequest $request, AcademicYear $academicYear)
     {
         $this->authorize('academicyear-edit');
 
-        $academicyear->year_code = $request->year_code;
-        $academicyear->description = $request->description;
-        $academicyear->is_active = $request->is_active;
-        if ($academicyear->save()) {
-            return new AcademicYearResource($academicyear);
+        $academicYear->year_code = $request->year_code;
+        $academicYear->description = $request->description;
+        $academicYear->is_active = $request->is_active;
+        if ($academicYear->save()) {
+            return new AcademicYearResource($academicYear);
         }
         return null;
     }
@@ -66,11 +66,11 @@ class AcademicYearController extends Controller
     /**
      * Remove the specified academic year from storage.
      */
-    public function destroy(AcademicYear $academicyear)
+    public function destroy(AcademicYear $academicYear)
     {
         $this->authorize('academicyear-delete');
 
-        $academicyear->delete();
-        return new AcademicYearResource($academicyear);
+        $academicYear->delete();
+        return new AcademicYearResource($academicYear);
     }
 }
