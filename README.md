@@ -165,6 +165,11 @@ php artisan make:model Post -m --api
 php artisan make:seeder PostsTableSeeder
 ```
 
+Crear un recurs
+```
+php artisan make:resource PostResource
+```
+
 Generar un seeder automàticament amb el contingut actual de la base de dades (--force per sobreescriure sense preguntar)
 ```
 php artisan iseed posts
