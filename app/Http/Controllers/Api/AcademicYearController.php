@@ -27,7 +27,7 @@ class AcademicYearController extends Controller
      */
     public function store(StoreAcademicYearRequest $request)
     {
-        // $this->authorize('academicyear-create');
+        $this->authorize('academicyear-create');
         $academicYear = new AcademicYear();
         $academicYear->year_code = $request->year_code;
         $academicYear->description = $request->description;
@@ -43,9 +43,8 @@ class AcademicYearController extends Controller
     public function show(AcademicYear $academicyear)
     {
         $this->authorize('academicyear-view');
-        return $academicyear;
+        return new AcademicYearResource($academicyear);
 
-        // return new AcademicYearResource($academicYear);
     }
 
     /**
