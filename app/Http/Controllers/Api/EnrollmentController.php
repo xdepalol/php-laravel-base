@@ -13,7 +13,7 @@ use Illuminate\Http\Request;
 class EnrollmentController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display a listing of the enrollment.
      */
     public function index()
     {
@@ -24,7 +24,7 @@ class EnrollmentController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Store a newly created enrollment in storage.
      */
     public function store(StoreEnrollmentRequest $request)
     {
@@ -52,7 +52,7 @@ class EnrollmentController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * Display the specified enrollment.
      */
     public function show(Enrollment $enrollment)
     {
@@ -62,7 +62,7 @@ class EnrollmentController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Update the specified enrollment in storage.
      */
     public function update(UpdateEnrollmentRequest $request, Enrollment $enrollment)
     {
@@ -78,7 +78,7 @@ class EnrollmentController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Remove the specified enrollment from storage.
      */
     public function destroy(Enrollment $enrollment)
     {

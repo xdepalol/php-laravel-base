@@ -42,5 +42,6 @@ attempts, userts
         $this->call(SubjectGroupTableSeeder::class);
         $this->call(StudentsTableSeeder::class);
         $this->call(RoleHasPermissionsTableSeeder::class);
+        $this->call(ActivitysTableSeeder::class);
     }
 }

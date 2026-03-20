@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AcademicYearController;
+use App\Http\Controllers\Api\ActivityController;
 use App\Http\Controllers\Api\SubjectController;
 use App\Http\Controllers\Api\CourseController;
 use App\Http\Controllers\Api\AuthController;
@@ -51,6 +52,7 @@ Route::group(['middleware' => 'auth:sanctum'], function() {
     Route::apiResource('groups', GroupController::class);
     Route::apiResource('subject-groups', SubjectGroupController::class);
     Route::apiResource('enrollments', EnrollmentController::class);
+    Route::apiResource('activities', ActivityController::class);
 
     Route::apiResource('students', StudentController::class)
         ->missing(function($request) {
