@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\PostController;
 use App\Http\Controllers\Api\TeacherController;
 use App\Http\Controllers\Api\StudentController;
+use App\Http\Controllers\Api\SubjectGroupController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -42,11 +43,12 @@ Route::group(['middleware' => 'auth:sanctum'], function() {
             return response()->json(['message' => "Post not found (#{$postId})"], 404);
         });
 
-    Route::apiResource('academicyears', AcademicYearController::class);
+    Route::apiResource('academic-years', AcademicYearController::class);
     Route::apiResource('subjects', SubjectController::class);
     Route::apiResource('courses', CourseController::class);
     Route::apiResource('teachers', TeacherController::class);
     Route::apiResource('groups', GroupController::class);
+    Route::apiResource('subject-groups', SubjectGroupController::class);
 
     Route::apiResource('students', StudentController::class)
         ->missing(function($request) {

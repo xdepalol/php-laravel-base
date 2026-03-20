@@ -13,10 +13,10 @@ class SubjectsTableSeeder extends Seeder
     public function run(): void
     {
         $subjects = [
-            ['acronym' => '0612', 'name' => 'Desenvolupament web en entorn client', 'year_hours' => 99],
-            ['acronym' => '0613', 'name' => 'Desenvolupament web en entorn servidor', 'year_hours' => 99],
-            ['acronym' => '0614', 'name' => 'Desplegament d’aplicacions web', 'year_hours' => 66],
-            ['acronym' => '0615', 'name' => 'Disseny d’interfícies web', 'year_hours' => 66],
+            ['acronym' => 'M0612', 'name' => 'Desenvolupament web en entorn client', 'year_hours' => 99],
+            ['acronym' => 'M0613', 'name' => 'Desenvolupament web en entorn servidor', 'year_hours' => 99],
+            ['acronym' => 'M0614', 'name' => 'Desplegament d’aplicacions web', 'year_hours' => 66],
+            ['acronym' => 'M0615', 'name' => 'Disseny d’interfícies web', 'year_hours' => 66],
         ];
 
         foreach ($subjects as $subject) {

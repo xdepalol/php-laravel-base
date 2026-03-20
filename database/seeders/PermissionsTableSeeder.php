@@ -20,7 +20,7 @@ class PermissionsTableSeeder extends Seeder
         $entities = [
             'role', 'permission', 'user', 'post', 'exercise', 
             'category', 'task', 'course', 'student', 'teacher', 'academicyear',
-            'subject', 'group',
+            'subject', 'group', 'subjectgroup',
         ];
 
         $actions = ['list', 'edit', 'create', 'delete', 'view'];
