@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Student;
 
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -24,11 +24,7 @@ class UpdateStudentRequest extends FormRequest
     public function rules()
     {
         return [
-            'name' => ['required', 'string', 'min:2', 'max:100'],
-            'surname1' => ['required', 'string', 'max:100'],
-            'surname2' => ['nullable', 'string', 'max:100'],
-            'email' => ['required', 'string', 'max:100'],
-            'birthday_date' => ['date']
+            'student_number' => ['required', 'string', 'max:255'],
         ];
     }
 }

@@ -34,12 +34,12 @@ attempts, userts
 
 */
 
-        $this->call(TeachersTableSeeder::class);
-        $this->call(StudentSeeder::class);
         $this->call(AcademicYearsTableSeeder::class);
+        $this->call(TeachersTableSeeder::class);
         $this->call(SubjectsTableSeeder::class);
         $this->call(CourseTableSeeder::class);
         $this->call(GroupTableSeeder::class);
+        $this->call(StudentsTableSeeder::class);
         $this->call(SubjectGroupTableSeeder::class);
         $this->call(RoleHasPermissionsTableSeeder::class);
     }

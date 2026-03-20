@@ -3,67 +3,25 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StoreStudentRequest;
-use App\Http\Requests\UpdateStudentRequest;
+use App\Http\Requests\Student\StoreStudentRequest;
+use App\Http\Requests\Student\UpdateStudentRequest;
+use App\Http\Resources\StudentResource;
 use Illuminate\Http\Request;
 use App\Models\Student;
 use App\Support\PrimeFilter;
+use Illuminate\Database\UniqueConstraintViolationException;
 
 class StudentController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    public function index()
     {
         $this->authorize('student-list');
 
-        $perPage = (int) $request->query('per_page', 10);
-
-        // Camps ordenables
-        $allowedSorts = ['id', 'name', 'surname1', 'surname2', 'email', 'birthday_date', 'created_at'];
-        $sortField = $request->query('sort_field');
-        $sortOrder = request('sort_order', 'desc');
-        if (!in_array($sortOrder, ['asc', 'desc'])) {
-            $sortOrder = 'desc';
-        }
-        
-        $query = Student::query();
-
-        // Filters
-        $allowedFilters = ['name', 'surname1', 'surname2', 'email'];
-        $filters = PrimeFilter::getFiltersFromRequest($request, $allowedFilters);
-
-        // Cerca global
-        if (isset($filters['global'])) {
-            $global = $filters['global'];
-
-            $query->where(function ($q) use ($global, $allowedFilters)
-            {
-                foreach ($allowedFilters as $i => $field)
-                {
-                    $f = new PrimeFilter($field, $global->value, $global->matchMode);
-                    $f->apply($q, $i > 0); // OR a partir del segon
-                }
-            });
-            unset($filters['global']); // per no reaplicar
-        }
-
-        // Filtres locals
-        foreach ($filters as $f)
-        {
-            $f->apply($query);
-        }
-
-        // Ordenació
-        if ($sortField && in_array($sortField, $allowedSorts, true)) {
-            $query->orderBy($sortField, $sortOrder);
-        } else {
-            $query->latest(); // default
-        }        
-
-        $students = $query->paginate($perPage);
-        return $students;
+        $teachers = Student::with(['user'])->get();
+        return StudentResource::collection($teachers);
     }
 
     /**
@@ -73,9 +31,24 @@ class StudentController extends Controller
     {
         $this->authorize('student-create');
 
-        $data = $request->validated();
-        $student = Student::create($data);
-        return $student;
+        // $user = isset($request->user_id) ? User::find($request->user_id) : auth();
+        $student = new Student();
+        $student->user_id = $request->user_id;
+        $student->student_number = $request->student_number;
+
+        try
+        {
+            if ($student->save())
+            {
+                return new StudentResource($student);
+            }
+        } catch (UniqueConstraintViolationException $ex) {
+            return response()->json([
+                "message" => "Duplicated student entry"
+            ], 409);
+        } catch (\Throwable $th) {
+            throw $th;
+        }
     }
 
     /**
@@ -85,7 +58,7 @@ class StudentController extends Controller
     {
         $this->authorize('student-view');
 
-        return $student;
+        return new StudentResource($student);
     }
 
     /**
@@ -95,9 +68,11 @@ class StudentController extends Controller
     {
         $this->authorize('student-edit');
 
-        $data = $request->validated();
-        $student->update($data);
-        return $student;
+        $student->student_number = $request->student_number;
+        if ($student->save()) {
+            return new StudentResource($student);
+        }
+        return null;
     }
 
     /**

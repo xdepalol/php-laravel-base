@@ -12,13 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('students', function (Blueprint $table) {
-            $table->id();
-            $table->string('name', 100);
-            $table->string('surname1', 100);
-            $table->string('surname2', 100)->nullable();
-            $table->string('email', 100);
-            $table->date('birthday_date');
-            
+            $table->foreignId('user_id')->primary()->constrained('users')->onDelete('cascade');
+            $table->string('student_number', 50)->unique();
             $table->timestamps();
         });
     }

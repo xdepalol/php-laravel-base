@@ -66,7 +66,7 @@ class UsersTableSeeder extends Seeder
                 'id' => 4,
                 'name' => 'Xavier',
                 'surname1' => 'de Palol',
-                'surname2' => 'Arregyu',
+                'surname2' => 'Arregui',
                 'alias' => 'xdepalol',
                 'email' => 'xdepalol@gmail.com',
                 'email_verified_at' => NULL,

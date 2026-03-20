@@ -6,6 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class Student extends Model
 {
+    protected $primaryKey = 'user_id';
+    public $incrementing = false;
+
     /**
      * The attributes that are mass assignable.
      *
@@ -13,10 +16,17 @@ class Student extends Model
      */
 
     protected $fillable = [
-        'name',
-        'surname1',
-        'surname2',
-        'email',
-        'birthday_date'
+        'user_id',
+        'student_number',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    // public function enrollments()
+    // {
+    //     return $this->hasMany(Enrollment::class, 'student_id', 'user_id');
+    // }
 }
