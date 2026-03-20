@@ -20,8 +20,8 @@ class StudentController extends Controller
     {
         $this->authorize('student-list');
 
-        $teachers = Student::with(['user'])->get();
-        return StudentResource::collection($teachers);
+        $students = Student::with(['user'])->get();
+        return StudentResource::collection($students);
     }
 
     /**
