@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\ActivityRoleTypeController;
 use App\Http\Controllers\Api\SubjectController;
 use App\Http\Controllers\Api\CourseController;
 use App\Http\Controllers\Api\DeliverableController;
+use App\Http\Controllers\Api\ActivitySubjectGroupController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\EnrollmentController;
@@ -56,6 +57,8 @@ Route::group(['middleware' => 'auth:sanctum'], function() {
     Route::apiResource('subject-groups', SubjectGroupController::class);
     Route::apiResource('enrollments', EnrollmentController::class);
     Route::apiResource('activities', ActivityController::class);
+    Route::get('activities/{activity}/subject-groups', [ActivitySubjectGroupController::class, 'index']);
+    Route::put('activities/{activity}/subject-groups', [ActivitySubjectGroupController::class, 'sync']);
     Route::apiResource('deliverables', DeliverableController::class);
     Route::apiResource('activity-role-types', ActivityRoleTypeController::class);
     Route::apiResource('activity-roles', ActivityRoleController::class);

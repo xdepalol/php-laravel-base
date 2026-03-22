@@ -20,4 +20,11 @@ class SubjectGroup extends Model
     public function group() { return $this->belongsTo(Group::class); }
     public function subject() { return $this->belongsTo(Subject::class); }
     public function academicYear() { return $this->belongsTo(AcademicYear::class); }
+
+    public function activities()
+    {
+        return $this->belongsToMany(Activity::class, 'activity_subject_group')
+            ->withTimestamps();
+    }
 }
+
