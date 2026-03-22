@@ -27,6 +27,7 @@ class StoreActivityRequest extends FormRequest
         return [
             'academic_year_id' => 'required|exists:academic_years,id',
             'title' => 'required|string|max:255',
+            'activity_role_type_id' => 'nullable|exists:activity_role_types,id',
             'type' => [Rule::enum(ActivityType::class)],
             'status' => [Rule::enum(ActivityStatus::class)],
             'subject_groups' => 'required|array|min:1',

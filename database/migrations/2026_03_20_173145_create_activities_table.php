@@ -43,6 +43,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('activity_subject_group');
         Schema::dropIfExists('activities');
     }
 };

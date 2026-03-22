@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Enums\ActivityStatus;
 use App\Enums\ActivityType;
 use App\Models\Activity;
+use App\Models\ActivityRoleType;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -15,6 +16,7 @@ class ActivitysTableSeeder extends Seeder
      */
     public function run(): void
     {
+        $scrumRoleType = ActivityRoleType::where('name', 'Metodologia Scrum')->first();
 
         // Creem una activitat Scrum intermodular
         $projecte = Activity::create([
@@ -23,6 +25,7 @@ class ActivitysTableSeeder extends Seeder
             'description' => 'Desenvolupament complet d\'una aplicació web.',
             'type' => ActivityType::PROJECT,
             'status' => ActivityStatus::DRAFT,
+            'activity_role_type_id' => $scrumRoleType ? $scrumRoleType->id : null,
             'has_sprints' => true,
             'has_backlog' => true,
             'is_intermodular' => true,

@@ -24,6 +24,13 @@ class ActivityResource extends JsonResource
                 'name' => $this->type->name,
                 'label' => method_exists($this->type, 'label') ? $this->type->label() : $this->type->name,
             ],
+            'activity_role_type_id' => $this->activity_role_type_id,
+            'activity_role_type' => $this->when(
+                $this->relationLoaded('activityRoleType'),
+                fn () => $this->activityRoleType
+                    ? new ActivityRoleTypeResource($this->activityRoleType)
+                    : null
+            ),
             'status' => [
                 'value' => $this->status->value,
                 'name' => $this->status->name,

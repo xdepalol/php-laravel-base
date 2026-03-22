@@ -19,7 +19,8 @@ class ActivityController extends Controller
     {
         $this->authorize('activity-list');
 
-        $activitys = Activity::all();
+        $activitys = Activity::with(['subjectGroups', 'activityRoleType'])->get();
+
         return ActivityResource::collection($activitys);
     }
 
@@ -34,6 +35,7 @@ class ActivityController extends Controller
         $activity->academic_year_id = $request->academic_year_id;
         $activity->title = $request->title;
         $activity->description = $request->description;
+        $activity->activity_role_type_id = $request->activity_role_type_id;
         $activity->type = $request->type;
         $activity->has_sprints = $request->has_sprints;
         $activity->has_backlog = $request->has_backlog;
@@ -43,6 +45,8 @@ class ActivityController extends Controller
         $activity->end_date = $request->end_date;
         if ($activity->save()) {
             $activity->subjectGroups()->sync($request->subject_groups);
+            $activity->load(['subjectGroups', 'activityRoleType']);
+
             return new ActivityResource($activity);
         }
     }
@@ -53,6 +57,8 @@ class ActivityController extends Controller
     public function show(Activity $activity)
     {
         $this->authorize('activity-view');
+
+        $activity->load(['subjectGroups', 'activityRoleType']);
 
         return new ActivityResource($activity);
     }
@@ -67,6 +73,7 @@ class ActivityController extends Controller
         $activity->academic_year_id = $request->academic_year_id;
         $activity->title = $request->title;
         $activity->description = $request->description;
+        $activity->activity_role_type_id = $request->activity_role_type_id;
         $activity->type = $request->type;
         $activity->has_sprints = $request->has_sprints;
         $activity->has_backlog = $request->has_backlog;
@@ -76,8 +83,11 @@ class ActivityController extends Controller
         $activity->end_date = $request->end_date;
         if ($activity->save()) {
             $activity->subjectGroups()->sync($request->subject_groups);
+            $activity->load(['subjectGroups', 'activityRoleType']);
+
             return new ActivityResource($activity);
         }
+
         return null;
     }
 
