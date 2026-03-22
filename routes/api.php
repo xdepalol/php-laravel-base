@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Api\AcademicYearController;
 use App\Http\Controllers\Api\ActivityController;
+use App\Http\Controllers\Api\ActivityRoleController;
+use App\Http\Controllers\Api\ActivityRoleTypeController;
 use App\Http\Controllers\Api\SubjectController;
 use App\Http\Controllers\Api\CourseController;
 use App\Http\Controllers\Api\AuthController;
@@ -53,6 +55,8 @@ Route::group(['middleware' => 'auth:sanctum'], function() {
     Route::apiResource('subject-groups', SubjectGroupController::class);
     Route::apiResource('enrollments', EnrollmentController::class);
     Route::apiResource('activities', ActivityController::class);
+    Route::apiResource('activity-role-types', ActivityRoleTypeController::class);
+    Route::apiResource('activity-roles', ActivityRoleController::class);
 
     Route::apiResource('students', StudentController::class)
         ->missing(function($request) {
