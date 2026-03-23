@@ -25,6 +25,14 @@ class Student extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    public function teams()
+    {
+        return $this->belongsToMany(Team::class, 'team_student', 'student_id', 'team_id')
+            ->using(TeamStudent::class)
+            ->withPivot('activity_role_id')
+            ->withTimestamps();
+    }
+
     // public function enrollments()
     // {
     //     return $this->hasMany(Enrollment::class, 'student_id', 'user_id');

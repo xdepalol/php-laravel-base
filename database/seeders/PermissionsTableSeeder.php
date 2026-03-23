@@ -21,7 +21,7 @@ class PermissionsTableSeeder extends Seeder
             'role', 'permission', 'user', 'post', 'exercise', 
             'category', 'task', 'course', 'student', 'teacher', 'academicyear',
             'subject', 'group', 'subjectgroup', 'enrollment', 'activity',
-            'activityroletype', 'activityrole', 'deliverable',
+            'activityroletype', 'activityrole', 'deliverable', 'team',
         ];
 
         $actions = ['list', 'edit', 'create', 'delete', 'view'];

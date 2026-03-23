@@ -8,6 +8,8 @@ use App\Http\Controllers\Api\SubjectController;
 use App\Http\Controllers\Api\CourseController;
 use App\Http\Controllers\Api\DeliverableController;
 use App\Http\Controllers\Api\ActivitySubjectGroupController;
+use App\Http\Controllers\Api\TeamController;
+use App\Http\Controllers\Api\TeamStudentController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\EnrollmentController;
@@ -59,6 +61,10 @@ Route::group(['middleware' => 'auth:sanctum'], function() {
     Route::apiResource('activities', ActivityController::class);
     Route::get('activities/{activity}/subject-groups', [ActivitySubjectGroupController::class, 'index']);
     Route::put('activities/{activity}/subject-groups', [ActivitySubjectGroupController::class, 'sync']);
+
+    Route::apiResource('activities.teams', TeamController::class)->scoped();
+    Route::get('activities/{activity}/teams/{team}/students', [TeamStudentController::class, 'index'])->scopeBindings();
+    Route::put('activities/{activity}/teams/{team}/students', [TeamStudentController::class, 'sync'])->scopeBindings();
     Route::apiResource('deliverables', DeliverableController::class);
     Route::apiResource('activity-role-types', ActivityRoleTypeController::class);
     Route::apiResource('activity-roles', ActivityRoleController::class);

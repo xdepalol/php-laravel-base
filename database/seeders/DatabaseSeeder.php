@@ -44,6 +44,7 @@ attempts, userts
         $this->call(RoleHasPermissionsTableSeeder::class);
         $this->call(ActivitysTableSeeder::class);
         $this->call(ActivityRoleTypesTableSeeder::class);
+        $this->call(ActivityTeamTableSeeder::class);
         $this->call(DeliverablesTableSeeder::class);
     }
 }

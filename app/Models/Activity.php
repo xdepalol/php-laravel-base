@@ -35,4 +35,9 @@ class Activity extends Model
     {
         return $this->belongsTo(ActivityRoleType::class);
     }
+
+    public function teams()
+    {
+        return $this->hasMany(Team::class);
+    }
 }
