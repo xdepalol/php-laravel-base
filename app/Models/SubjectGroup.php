@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SubjectGroup extends Model
 {
@@ -25,6 +26,11 @@ class SubjectGroup extends Model
     {
         return $this->belongsToMany(Activity::class, 'activity_subject_group')
             ->withTimestamps();
+    }
+
+    public function enrollments(): HasMany
+    {
+        return $this->hasMany(Enrollment::class);
     }
 }
 

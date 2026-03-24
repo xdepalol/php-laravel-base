@@ -48,8 +48,8 @@ class Student extends Model
         return $this->hasMany(PhaseStudentRole::class, 'student_id', 'user_id');
     }
 
-    // public function enrollments()
-    // {
-    //     return $this->hasMany(Enrollment::class, 'student_id', 'user_id');
-    // }
+    public function enrollments()
+    {
+        return $this->hasMany(Enrollment::class, 'student_id', 'user_id');
+    }
 }

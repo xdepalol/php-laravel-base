@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\TeamStudentController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\EnrollmentController;
+use App\Http\Controllers\Api\StudentEnrollmentController;
 use App\Http\Controllers\Api\GroupController;
 use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\ProfileController;
@@ -63,7 +64,7 @@ Route::group(['middleware' => 'auth:sanctum'], function() {
     Route::apiResource('teachers', TeacherController::class);
     Route::apiResource('groups', GroupController::class);
     Route::apiResource('subject-groups', SubjectGroupController::class);
-    Route::apiResource('enrollments', EnrollmentController::class);
+    Route::apiResource('subject-groups.enrollments', EnrollmentController::class)->scoped();
     Route::apiResource('activities', ActivityController::class);
     Route::get('activities/{activity}/subject-groups', [ActivitySubjectGroupController::class, 'index']);
     Route::put('activities/{activity}/subject-groups', [ActivitySubjectGroupController::class, 'sync']);
@@ -86,6 +87,7 @@ Route::group(['middleware' => 'auth:sanctum'], function() {
             $studentId = $request->route('student');
             return response()->json(['message' => "Student not found (#{$studentId})"], 404);
         });
+    Route::apiResource('students.enrollments', StudentEnrollmentController::class)->scoped();
 
     Route::get('abilities', function(Request $request) {
         return $request->user()->roles()->with('permissions')
