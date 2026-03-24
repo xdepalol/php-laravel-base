@@ -40,4 +40,19 @@ class Activity extends Model
     {
         return $this->hasMany(Team::class);
     }
+
+    public function backlogItems()
+    {
+        return $this->hasMany(BacklogItem::class);
+    }
+
+    public function phases()
+    {
+        return $this->hasMany(Phase::class);
+    }
+
+    public function submissions()
+    {
+        return $this->hasMany(Submission::class);
+    }
 }

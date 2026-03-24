@@ -7,7 +7,13 @@ use App\Http\Controllers\Api\ActivityRoleTypeController;
 use App\Http\Controllers\Api\SubjectController;
 use App\Http\Controllers\Api\CourseController;
 use App\Http\Controllers\Api\DeliverableController;
+use App\Http\Controllers\Api\BacklogItemController;
 use App\Http\Controllers\Api\ActivitySubjectGroupController;
+use App\Http\Controllers\Api\TaskController;
+use App\Http\Controllers\Api\PhaseTaskController;
+use App\Http\Controllers\Api\PhaseController;
+use App\Http\Controllers\Api\SubmissionController;
+use App\Http\Controllers\Api\PhaseStudentRoleController;
 use App\Http\Controllers\Api\TeamController;
 use App\Http\Controllers\Api\TeamStudentController;
 use App\Http\Controllers\Api\AuthController;
@@ -66,6 +72,12 @@ Route::group(['middleware' => 'auth:sanctum'], function() {
     Route::get('activities/{activity}/teams/{team}/students', [TeamStudentController::class, 'index'])->scopeBindings();
     Route::put('activities/{activity}/teams/{team}/students', [TeamStudentController::class, 'sync'])->scopeBindings();
     Route::apiResource('deliverables', DeliverableController::class);
+    Route::apiResource('activities.phases', PhaseController::class)->scoped();
+    Route::apiResource('activities.submissions', SubmissionController::class)->scoped();
+    Route::apiResource('phase-student-roles', PhaseStudentRoleController::class);
+    Route::apiResource('backlog-items', BacklogItemController::class);
+    Route::apiResource('tasks', TaskController::class);
+    Route::apiResource('phase-tasks', PhaseTaskController::class);
     Route::apiResource('activity-role-types', ActivityRoleTypeController::class);
     Route::apiResource('activity-roles', ActivityRoleController::class);
 

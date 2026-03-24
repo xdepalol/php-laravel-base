@@ -33,6 +33,21 @@ class Student extends Model
             ->withTimestamps();
     }
 
+    public function submissions()
+    {
+        return $this->hasMany(Submission::class, 'student_id', 'user_id');
+    }
+
+    public function phaseTasks()
+    {
+        return $this->hasMany(PhaseTask::class, 'student_id', 'user_id');
+    }
+
+    public function phaseStudentRoles()
+    {
+        return $this->hasMany(PhaseStudentRole::class, 'student_id', 'user_id');
+    }
+
     // public function enrollments()
     // {
     //     return $this->hasMany(Enrollment::class, 'student_id', 'user_id');

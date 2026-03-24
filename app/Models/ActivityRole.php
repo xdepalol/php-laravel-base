@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ActivityRole extends Model
 {
@@ -25,5 +26,10 @@ class ActivityRole extends Model
     public function activityRoleType(): BelongsTo
     {
         return $this->belongsTo(ActivityRoleType::class);
+    }
+
+    public function phaseStudentRoles(): HasMany
+    {
+        return $this->hasMany(PhaseStudentRole::class);
     }
 }

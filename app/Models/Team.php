@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Team extends Model
 {
@@ -24,6 +25,21 @@ class Team extends Model
             ->using(TeamStudent::class)
             ->withPivot('activity_role_id')
             ->withTimestamps();
+    }
+
+    public function backlogItems(): HasMany
+    {
+        return $this->hasMany(BacklogItem::class);
+    }
+
+    public function submissions(): HasMany
+    {
+        return $this->hasMany(Submission::class);
+    }
+
+    public function phaseStudentRoles(): HasMany
+    {
+        return $this->hasMany(PhaseStudentRole::class);
     }
 
     /**

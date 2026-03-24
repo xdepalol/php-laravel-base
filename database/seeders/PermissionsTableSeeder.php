@@ -22,6 +22,7 @@ class PermissionsTableSeeder extends Seeder
             'category', 'task', 'course', 'student', 'teacher', 'academicyear',
             'subject', 'group', 'subjectgroup', 'enrollment', 'activity',
             'activityroletype', 'activityrole', 'deliverable', 'team',
+            'backlogitem', 'phasetask', 'phase', 'submission', 'phasestudentrole',
         ];
 
         $actions = ['list', 'edit', 'create', 'delete', 'view'];
