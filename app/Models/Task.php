@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Task extends Model
 {
     protected $fillable = [
+        'activity_id',
         'backlog_item_id',
         'title',
         'description',
@@ -21,6 +22,11 @@ class Task extends Model
         'status' => TaskStatus::class,
         'position' => 'integer',
     ];
+
+    public function activity(): BelongsTo
+    {
+        return $this->belongsTo(Activity::class);
+    }
 
     public function backlogItem(): BelongsTo
     {

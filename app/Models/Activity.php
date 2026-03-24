@@ -46,6 +46,11 @@ class Activity extends Model
         return $this->hasMany(BacklogItem::class);
     }
 
+    public function tasks()
+    {
+        return $this->hasManyThrough(Task::class, BacklogItem::class);
+    }
+
     public function phases()
     {
         return $this->hasMany(Phase::class);

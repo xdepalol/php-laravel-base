@@ -3,28 +3,30 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\BacklogItem\StoreBacklogItemRequest;
-use App\Http\Requests\BacklogItem\UpdateBacklogItemRequest;
+use App\Http\Requests\BacklogItem\StoreActivityBacklogItemRequest;
+use App\Http\Requests\BacklogItem\UpdateActivityBacklogItemRequest;
 use App\Http\Resources\BacklogItemResource;
+use App\Models\Activity;
 use App\Models\BacklogItem;
 
-class BacklogItemController extends Controller
+class ActivityBacklogController extends Controller
 {
-    public function index()
+    public function index(Activity $activity)
     {
         $this->authorize('backlogitem-list');
 
-        $backlogItems = BacklogItem::with(['activity', 'team', 'tasks'])->get();
+        $backlogItems = $activity->backlogItems()->with(['team', 'tasks'])->get();
+        $backlogItems->each(fn (BacklogItem $b) => $b->setRelation('activity', $activity));
 
         return BacklogItemResource::collection($backlogItems);
     }
 
-    public function store(StoreBacklogItemRequest $request)
+    public function store(StoreActivityBacklogItemRequest $request, Activity $activity)
     {
         $this->authorize('backlogitem-create');
 
         $backlogItem = new BacklogItem();
-        $backlogItem->activity_id = $request->activity_id;
+        $backlogItem->activity_id = $activity->id;
         $backlogItem->team_id = $request->team_id;
         $backlogItem->title = $request->title;
         $backlogItem->description = $request->description;
@@ -33,26 +35,28 @@ class BacklogItemController extends Controller
         $backlogItem->status = $request->status;
         $backlogItem->position = $request->position ?? 0;
         if ($backlogItem->save()) {
-            $backlogItem->load(['activity', 'team', 'tasks']);
+            $backlogItem->load(['team', 'tasks']);
+            $backlogItem->setRelation('activity', $activity);
 
             return new BacklogItemResource($backlogItem);
         }
     }
 
-    public function show(BacklogItem $backlogItem)
+    public function show(Activity $activity, BacklogItem $backlogItem)
     {
         $this->authorize('backlogitem-view');
 
-        $backlogItem->load(['activity', 'team', 'tasks']);
+        $backlogItem->load(['team', 'tasks']);
+        $backlogItem->setRelation('activity', $activity);
 
         return new BacklogItemResource($backlogItem);
     }
 
-    public function update(UpdateBacklogItemRequest $request, BacklogItem $backlogItem)
+    public function update(UpdateActivityBacklogItemRequest $request, Activity $activity, BacklogItem $backlogItem)
     {
         $this->authorize('backlogitem-edit');
 
-        $backlogItem->activity_id = $request->activity_id;
+        $backlogItem->activity_id = $activity->id;
         $backlogItem->team_id = $request->team_id;
         $backlogItem->title = $request->title;
         $backlogItem->description = $request->description;
@@ -61,7 +65,8 @@ class BacklogItemController extends Controller
         $backlogItem->status = $request->status;
         $backlogItem->position = $request->position ?? 0;
         if ($backlogItem->save()) {
-            $backlogItem->load(['activity', 'team', 'tasks']);
+            $backlogItem->load(['team', 'tasks']);
+            $backlogItem->setRelation('activity', $activity);
 
             return new BacklogItemResource($backlogItem);
         }
@@ -69,11 +74,12 @@ class BacklogItemController extends Controller
         return null;
     }
 
-    public function destroy(BacklogItem $backlogItem)
+    public function destroy(Activity $activity, BacklogItem $backlogItem)
     {
         $this->authorize('backlogitem-delete');
 
-        $backlogItem->load(['activity', 'team', 'tasks']);
+        $backlogItem->load(['team', 'tasks']);
+        $backlogItem->setRelation('activity', $activity);
         $backlogItem->delete();
 
         return new BacklogItemResource($backlogItem);

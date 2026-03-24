@@ -7,9 +7,9 @@ use App\Http\Controllers\Api\ActivityRoleTypeController;
 use App\Http\Controllers\Api\SubjectController;
 use App\Http\Controllers\Api\CourseController;
 use App\Http\Controllers\Api\DeliverableController;
-use App\Http\Controllers\Api\BacklogItemController;
+use App\Http\Controllers\Api\ActivityBacklogController;
+use App\Http\Controllers\Api\ActivityTaskController;
 use App\Http\Controllers\Api\ActivitySubjectGroupController;
-use App\Http\Controllers\Api\TaskController;
 use App\Http\Controllers\Api\PhaseTaskController;
 use App\Http\Controllers\Api\PhaseController;
 use App\Http\Controllers\Api\SubmissionController;
@@ -66,6 +66,8 @@ Route::group(['middleware' => 'auth:sanctum'], function() {
     Route::apiResource('subject-groups', SubjectGroupController::class);
     Route::apiResource('subject-groups.enrollments', EnrollmentController::class)->scoped();
     Route::apiResource('activities', ActivityController::class);
+    Route::apiResource('activities.backlog-items', ActivityBacklogController::class)->scoped();
+    Route::apiResource('activities.tasks', ActivityTaskController::class)->scoped();
     Route::get('activities/{activity}/subject-groups', [ActivitySubjectGroupController::class, 'index']);
     Route::put('activities/{activity}/subject-groups', [ActivitySubjectGroupController::class, 'sync']);
 
@@ -76,8 +78,6 @@ Route::group(['middleware' => 'auth:sanctum'], function() {
     Route::apiResource('deliverables.submissions', SubmissionController::class)->scoped();
     Route::apiResource('activities.phases', PhaseController::class)->scoped();
     Route::apiResource('phase-student-roles', PhaseStudentRoleController::class);
-    Route::apiResource('backlog-items', BacklogItemController::class);
-    Route::apiResource('tasks', TaskController::class);
     Route::apiResource('phase-tasks', PhaseTaskController::class);
     Route::apiResource('activity-role-types', ActivityRoleTypeController::class);
     Route::apiResource('activity-roles', ActivityRoleController::class);

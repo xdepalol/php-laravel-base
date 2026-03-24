@@ -4,10 +4,11 @@ namespace App\Http\Requests\BacklogItem;
 
 use App\Enums\BacklogItemPriority;
 use App\Enums\BacklogItemStatus;
+use App\Models\Activity;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class UpdateBacklogItemRequest extends FormRequest
+class UpdateActivityBacklogItemRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -19,9 +20,14 @@ class UpdateBacklogItemRequest extends FormRequest
      */
     public function rules(): array
     {
+        $activity = $this->route('activity');
+        $activityId = $activity instanceof Activity ? $activity->id : $activity;
+
         return [
-            'activity_id' => ['required', 'exists:activities,id'],
-            'team_id' => ['nullable', 'exists:teams,id'],
+            'team_id' => [
+                'nullable',
+                Rule::exists('teams', 'id')->where('activity_id', $activityId),
+            ],
             'title' => ['required', 'string', 'max:150'],
             'description' => ['nullable', 'string'],
             'priority' => [Rule::enum(BacklogItemPriority::class)],
