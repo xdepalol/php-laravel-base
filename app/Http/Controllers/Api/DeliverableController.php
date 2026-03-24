@@ -6,38 +6,40 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Deliverable\StoreDeliverableRequest;
 use App\Http\Requests\Deliverable\UpdateDeliverableRequest;
 use App\Http\Resources\DeliverableResource;
+use App\Models\Activity;
 use App\Models\Deliverable;
 
 class DeliverableController extends Controller
 {
     /**
-     * Display a listing of the deliverable.
+     * Display a listing of deliverables for the activity.
      */
-    public function index()
+    public function index(Activity $activity)
     {
         $this->authorize('deliverable-list');
 
-        $deliverables = Deliverable::with('activity')->get();
+        $deliverables = $activity->deliverables()->get();
+        $deliverables->each(fn (Deliverable $d) => $d->setRelation('activity', $activity));
 
         return DeliverableResource::collection($deliverables);
     }
 
     /**
-     * Store a newly created deliverable in storage.
+     * Store a newly created deliverable for the activity.
      */
-    public function store(StoreDeliverableRequest $request)
+    public function store(StoreDeliverableRequest $request, Activity $activity)
     {
         $this->authorize('deliverable-create');
 
         $deliverable = new Deliverable();
-        $deliverable->activity_id = $request->activity_id;
+        $deliverable->activity_id = $activity->id;
         $deliverable->title = $request->title;
         $deliverable->description = $request->description;
         $deliverable->due_date = $request->due_date;
         $deliverable->status = $request->status;
         $deliverable->is_group_deliverable = $request->boolean('is_group_deliverable');
         if ($deliverable->save()) {
-            $deliverable->load('activity');
+            $deliverable->setRelation('activity', $activity);
 
             return new DeliverableResource($deliverable);
         }
@@ -46,30 +48,30 @@ class DeliverableController extends Controller
     /**
      * Display the specified deliverable.
      */
-    public function show(Deliverable $deliverable)
+    public function show(Activity $activity, Deliverable $deliverable)
     {
         $this->authorize('deliverable-view');
 
-        $deliverable->load('activity');
+        $deliverable->setRelation('activity', $activity);
 
         return new DeliverableResource($deliverable);
     }
 
     /**
-     * Update the specified deliverable in storage.
+     * Update the specified deliverable.
      */
-    public function update(UpdateDeliverableRequest $request, Deliverable $deliverable)
+    public function update(UpdateDeliverableRequest $request, Activity $activity, Deliverable $deliverable)
     {
         $this->authorize('deliverable-edit');
 
-        $deliverable->activity_id = $request->activity_id;
+        $deliverable->activity_id = $activity->id;
         $deliverable->title = $request->title;
         $deliverable->description = $request->description;
         $deliverable->due_date = $request->due_date;
         $deliverable->status = $request->status;
         $deliverable->is_group_deliverable = $request->boolean('is_group_deliverable');
         if ($deliverable->save()) {
-            $deliverable->load('activity');
+            $deliverable->setRelation('activity', $activity);
 
             return new DeliverableResource($deliverable);
         }
@@ -78,13 +80,13 @@ class DeliverableController extends Controller
     }
 
     /**
-     * Remove the specified deliverable from storage.
+     * Remove the specified deliverable.
      */
-    public function destroy(Deliverable $deliverable)
+    public function destroy(Activity $activity, Deliverable $deliverable)
     {
         $this->authorize('deliverable-delete');
 
-        $deliverable->load('activity');
+        $deliverable->setRelation('activity', $activity);
         $deliverable->delete();
 
         return new DeliverableResource($deliverable);

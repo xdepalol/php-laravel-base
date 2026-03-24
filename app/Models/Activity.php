@@ -55,4 +55,9 @@ class Activity extends Model
     {
         return $this->hasMany(Submission::class);
     }
+
+    public function deliverables()
+    {
+        return $this->hasMany(Deliverable::class);
+    }
 }

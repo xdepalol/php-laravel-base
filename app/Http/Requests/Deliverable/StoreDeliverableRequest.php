@@ -24,7 +24,6 @@ class StoreDeliverableRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'activity_id' => ['required', 'exists:activities,id'],
             'title' => ['required', 'string', 'max:100'],
             'description' => ['nullable', 'string'],
             'due_date' => ['nullable', 'date'],

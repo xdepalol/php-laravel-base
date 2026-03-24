@@ -71,7 +71,7 @@ Route::group(['middleware' => 'auth:sanctum'], function() {
     Route::apiResource('activities.teams', TeamController::class)->scoped();
     Route::get('activities/{activity}/teams/{team}/students', [TeamStudentController::class, 'index'])->scopeBindings();
     Route::put('activities/{activity}/teams/{team}/students', [TeamStudentController::class, 'sync'])->scopeBindings();
-    Route::apiResource('deliverables', DeliverableController::class);
+    Route::apiResource('activities.deliverables', DeliverableController::class)->scoped();
     Route::apiResource('activities.phases', PhaseController::class)->scoped();
     Route::apiResource('activities.submissions', SubmissionController::class)->scoped();
     Route::apiResource('phase-student-roles', PhaseStudentRoleController::class);
