@@ -3,7 +3,7 @@
 namespace App\Http\Requests\Submission;
 
 use App\Enums\SubmissionStatus;
-use App\Models\Activity;
+use App\Models\Deliverable;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -19,14 +19,12 @@ class UpdateSubmissionRequest extends FormRequest
      */
     public function rules(): array
     {
-        $activity = $this->route('activity');
-        $activityId = $activity instanceof Activity ? $activity->id : $activity;
+        $deliverable = $this->route('deliverable');
+        $activityId = $deliverable instanceof Deliverable
+            ? $deliverable->activity_id
+            : Deliverable::query()->whereKey($deliverable)->value('activity_id');
 
         return [
-            'deliverable_id' => [
-                'required',
-                Rule::exists('deliverables', 'id')->where('activity_id', $activityId),
-            ],
             'student_id' => ['nullable', 'exists:students,user_id'],
             'team_id' => [
                 'nullable',
@@ -35,7 +33,7 @@ class UpdateSubmissionRequest extends FormRequest
             'content_url' => ['nullable', 'string', 'max:256'],
             'content_text' => ['nullable', 'string'],
             'submitted_at' => ['nullable', 'date'],
-            'status' => [Rule::enum(SubmissionStatus::class)],
+            'status' => ['nullable', Rule::enum(SubmissionStatus::class)],
             'grade' => ['nullable', 'numeric', 'min:0', 'max:99.99'],
             'feedback' => ['nullable', 'string'],
         ];
