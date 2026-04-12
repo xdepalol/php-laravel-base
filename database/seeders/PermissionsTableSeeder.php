@@ -36,7 +36,7 @@ class PermissionsTableSeeder extends Seeder
             }
         }
 
-        $adhoc_permissions = [ 'exercise-all' ];
+        $adhoc_permissions = [ 'exercise-all', 'academicyear-switch' ];
         foreach ($adhoc_permissions as $adhoc_permission) {
             Permission::firstOrCreate([
                 'name' => $adhoc_permission,

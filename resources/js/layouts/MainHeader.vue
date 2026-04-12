@@ -1,7 +1,7 @@
 <template>
     <header class="tail-admin-header sticky top-0 z-999 flex w-full">
         <div class="flex grow items-center justify-between p-1 md:px-6 2xl:px-11">
-            <div class="flex items-center gap-2 sm:gap-4">
+            <div class="flex items-center gap-2 sm:gap-4 shrink-0">
                 <!-- Toggle Button - Mobile -->
                 <button 
                     @click="emit('toggleSidebar')" 
@@ -22,7 +22,43 @@
                 </button>
             </div>
 
-            <div class="flex items-center gap-2 sm:gap-3">
+            <!-- Curso académico (selector o solo lectura) -->
+            <div
+                v-if="auth.authenticated && (showYearSwitcher || showYearReadOnly)"
+                class="flex flex-1 min-w-0 justify-center px-2"
+            >
+                <div
+                    v-if="showYearSwitcher"
+                    class="flex max-w-[20rem] w-full flex-col items-center justify-center gap-0.5 text-center leading-tight md:items-end md:text-right"
+                >
+                    <span
+                        class="hidden md:block text-[10px] font-medium uppercase tracking-wide text-slate-500"
+                    >
+                        Curso académico
+                    </span>
+                    <Select
+                        :modelValue="selectedAcademicYearId"
+                        :options="academicYears"
+                        optionLabel="year_code"
+                        optionValue="id"
+                        placeholder="Curso académico"
+                        class="w-full max-w-[14rem] academic-year-select"
+                        :loading="yearLoading"
+                        size="small"
+                        aria-label="Curso académico"
+                        @update:modelValue="onAcademicYearChange"
+                    />
+                </div>
+                <div
+                    v-else-if="showYearReadOnly"
+                    class="flex max-w-[20rem] flex-col items-center justify-center text-center leading-tight sm:items-end sm:text-right"
+                >
+                    <span class="text-[10px] font-medium uppercase tracking-wide text-slate-500">Curso académico</span>
+                    <span class="truncate text-sm font-semibold text-slate-800">{{ readOnlyYearLabel }}</span>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 sm:gap-3 shrink-0">
                 <ul class="flex items-center gap-1.5 sm:gap-2">
                     <!-- Dark Mode Toggle -->
                     <li>
@@ -91,11 +127,14 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
+import { storeToRefs } from 'pinia';
+import { useAbility } from '@casl/vue';
 import { useLayout } from '../composables/layout';
 import useAuth from '../composables/auth';
 import { authStore } from '../store/auth';
+import { useAcademicYearStore } from '../store/academicYear';
 
 const route = useRoute();
 
@@ -113,11 +152,64 @@ const props = defineProps({
 const emit = defineEmits(['toggleSidebar', 'toggleCollapse']);
 
 const { toggleDarkMode, isDarkTheme } = useLayout();
-const { logout: logoutAuth } = useAuth();
+const authApi = useAuth();
+const { logout: logoutAuth } = authApi;
 const auth = authStore();
+const { can } = useAbility();
+const academicYearStore = useAcademicYearStore();
+const { academicYears, selectedAcademicYearId, loading: yearLoading, currentAcademicYearLabel } =
+    storeToRefs(academicYearStore);
+
 const dropdownOpen = ref(false);
 
 const user = computed(() => auth.user);
+
+const showYearSwitcher = computed(
+    () =>
+        auth.authenticated &&
+        can('academicyear-switch') &&
+        academicYearStore.loaded &&
+        academicYears.value.length > 0
+);
+
+const showYearReadOnly = computed(
+    () =>
+        auth.authenticated &&
+        !can('academicyear-switch') &&
+        academicYearStore.loaded &&
+        !!currentAcademicYearLabel.value
+);
+
+const readOnlyYearLabel = computed(() => currentAcademicYearLabel.value || '');
+
+async function loadAcademicYearBar() {
+    if (!auth.authenticated) return;
+    await authApi.getAbilities();
+    if (!academicYearStore.loaded) {
+        try {
+            await academicYearStore.fetchAll();
+        } catch {
+            /* errores de red / 403: el composable de años ya muestra toast en otros flujos */
+        }
+    }
+    academicYearStore.applySelectionRules(!!can('academicyear-switch'));
+}
+
+function onAcademicYearChange(id) {
+    if (id == null) return;
+    academicYearStore.setWorkingYear(id);
+}
+
+onMounted(() => {
+    loadAcademicYearBar();
+});
+
+watch(
+    () => auth.authenticated,
+    (ok) => {
+        if (ok) loadAcademicYearBar();
+    }
+);
 
 
 const toggleDropdown = () => {
@@ -163,6 +255,16 @@ onUnmounted(() => {
 /* ============================================
    Estilos del Header - Modo Claro (Professional Design)
    ============================================ */
+:deep(.academic-year-select) {
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    font-size: 0.8125rem;
+}
+
+:deep(.academic-year-select .p-select-label) {
+    padding-block: 0.35rem;
+}
+
 header {
     background-color: #ffffff;
     border-bottom: 1px solid #e5e7eb;

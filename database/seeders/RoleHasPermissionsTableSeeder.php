@@ -63,6 +63,8 @@ class RoleHasPermissionsTableSeeder extends Seeder
             }
         }
 
+        $teacherPermissions[] = 'academicyear-switch';
+
         // Actualitzem els rols
         $teacherRole = Role::find(3);
         $teacherRole->syncPermissions($teacherPermissions);

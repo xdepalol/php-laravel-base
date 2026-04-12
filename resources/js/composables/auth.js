@@ -3,6 +3,7 @@ import { useRouter } from "vue-router";
 import { AbilityBuilder, createMongoAbility } from '@casl/ability';
 import { ABILITY_TOKEN } from '@casl/vue';
 import { authStore } from "../store/auth";
+import { useAcademicYearStore } from "../store/academicYear";
 
 let user = reactive({
     name: '',
@@ -182,6 +183,7 @@ export default function useAuth() {
                 user.name = ''
                 user.email = ''
                 auth.logout()
+                useAcademicYearStore().$reset()
                 //store.dispatch('auth/logout')
                 router.push({ name: 'auth.login' })
             })
