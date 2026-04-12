@@ -45,7 +45,8 @@ class SubjectGroupController extends Controller
     public function show(SubjectGroup $subjectGroup)
     {
         $this->authorize('subjectgroup-view');
-        $subjectGroup->load('teachers');
+        $subjectGroup->load(['teachers', 'group', 'subject']);
+
         return new SubjectGroupResource($subjectGroup);
     }
 

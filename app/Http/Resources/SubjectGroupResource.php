@@ -19,6 +19,8 @@ class SubjectGroupResource extends JsonResource
             'academic_year_id' => $this->academic_year_id,
             'group_id' => $this->group_id,
             'subject_id' => $this->subject_id,
+            'group' => new GroupResource($this->whenLoaded('group')),
+            'subject' => new SubjectResource($this->whenLoaded('subject')),
             'teachers' => TeacherResource::collection($this->whenLoaded('teachers')),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

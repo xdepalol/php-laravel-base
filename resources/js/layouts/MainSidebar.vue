@@ -79,10 +79,18 @@
 import { computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAbility } from '@casl/vue';
+import { authStore } from '../store/auth';
 
 const route = useRoute();
 const router = useRouter();
 const { can } = useAbility();
+const auth = authStore();
+
+const userHasRole = (roles) => {
+    if (!roles?.length) return true;
+    const userRoles = auth.user?.roles ?? [];
+    return roles.some((r) => userRoles.some((ur) => ur.name === r));
+};
 
 const props = defineProps({
     sidebarOpen: {
@@ -101,13 +109,43 @@ const props = defineProps({
 
 const emit = defineEmits(['toggleSidebar', 'toggleCollapse']);
 
+const filterMenuByPermission = (items) => {
+    return items
+        .map((item) => {
+            if (item.items) {
+                const sub = item.items.filter((child) => {
+                    if (child.roles?.length && !userHasRole(child.roles)) {
+                        return false;
+                    }
+                    return (
+                        !child.permission ||
+                        child.permission === 'all' ||
+                        can(child.permission)
+                    );
+                });
+                return { ...item, items: sub };
+            }
+            return { ...item };
+        })
+        .filter((item) => {
+            if (item.roles?.length && !userHasRole(item.roles)) {
+                return false;
+            }
+            if (item.permission && item.permission !== 'all' && !can(item.permission)) {
+                return false;
+            }
+            if (item.items) {
+                return item.items.length > 0;
+            }
+            return true;
+        });
+};
+
 const menuModel = computed(() => {
-    // Si se proporcionan items personalizados, usarlos
     if (props.menuItems) {
-        return props.menuItems;
+        return filterMenuByPermission(props.menuItems);
     }
 
-    // Si no, usar los items por defecto del admin
     const items = [
         {
             icon: 'pi pi-home',
@@ -135,19 +173,7 @@ const menuModel = computed(() => {
         }
     ];
 
-    // Filtrar items según permisos
-    return items.filter(item => {
-        if (item.permission && item.permission !== 'all') {
-            if (!can(item.permission)) return false;
-        }
-        if (item.items) {
-            item.items = item.items.filter(child => {
-                return !child.permission || can(child.permission);
-            });
-            return item.items.length > 0;
-        }
-        return true;
-    });
+    return filterMenuByPermission(items);
 });
 </script>
 

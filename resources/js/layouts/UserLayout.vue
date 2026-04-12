@@ -7,7 +7,18 @@ import { ref } from 'vue';
 import MainLayout from './MainLayout.vue';
 
 const items = ref([
-   
+    {
+        label: 'Docencia',
+        items: [
+            {
+                label: 'Mis asignaturas',
+                icon: 'pi pi-book',
+                route: '/app/mis-asignaturas',
+                permission: 'subjectgroup-list',
+                roles: ['teacher'],
+            },
+        ],
+    },
     {
         label: 'Contenido',
         items: [

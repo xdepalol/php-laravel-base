@@ -8,6 +8,7 @@ const API = '/api/subject-groups'
 
 export default function useSubjectGroups() {
   const subjectGroups = ref([])
+  const mySubjectGroups = ref([])
   const isLoading = ref(false)
   const toast = useToast()
 
@@ -16,7 +17,9 @@ export default function useSubjectGroups() {
     academic_year_id: null,
     group_id: null,
     subject_id: null,
-    teachers: []
+    teachers: [],
+    group: null,
+    subject: null
   }
 
   const subjectGroup = ref({ ...initialSubjectGroup })
@@ -62,7 +65,9 @@ export default function useSubjectGroups() {
       group_id: data.group_id ?? null,
       subject_id: data.subject_id ?? null,
       teachers: normalizeTeachers(data),
-      main_teacher_id: data.main_teacher_id ?? null
+      main_teacher_id: data.main_teacher_id ?? null,
+      group: data.group ?? null,
+      subject: data.subject ?? null
     }
     clearErrors()
   }
@@ -98,6 +103,27 @@ export default function useSubjectGroups() {
       return response
     } catch (error) {
       toast.error('Error', 'No se pudieron cargar los grupos de asignatura')
+      throw error
+    }
+  }
+
+  /** Grupos de asignatura que imparte el usuario autenticado en un curso académico. */
+  const getMySubjectGroupsForYear = async (academicYearId) => {
+    if (!academicYearId) {
+      mySubjectGroups.value = []
+      return null
+    }
+    try {
+      const response = await withLoading(() =>
+        axios.get('/api/me/subject-groups', {
+          params: { academic_year_id: academicYearId }
+        })
+      )
+      const data = unwrap(response)
+      mySubjectGroups.value = Array.isArray(data) ? data : []
+      return response
+    } catch (error) {
+      toast.error('Error', 'No se pudieron cargar tus asignaturas')
       throw error
     }
   }
@@ -168,6 +194,7 @@ export default function useSubjectGroups() {
 
   return {
     subjectGroups,
+    mySubjectGroups,
     subjectGroup,
     isLoading,
     errors,
@@ -177,6 +204,7 @@ export default function useSubjectGroups() {
     setSubjectGroup,
     upsertSubjectGroupRecord,
     getSubjectGroups,
+    getMySubjectGroupsForYear,
     getSubjectGroup,
     createSubjectGroup,
     updateSubjectGroup,

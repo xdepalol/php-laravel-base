@@ -98,6 +98,24 @@ export default [
                     breadCrumb: 'Perfil',
                 },
             },
+            {
+                name: 'app.my-subject-groups',
+                path: 'mis-asignaturas',
+                component: () => import('../views/app/teaching/MySubjectGroups.vue'),
+                meta: {
+                    breadCrumb: 'Mis asignaturas',
+                    pageTitle: 'Mis asignaturas',
+                },
+            },
+            {
+                name: 'app.subject-group-manage',
+                path: 'asignaturas/:id',
+                component: () => import('../views/app/teaching/SubjectGroupManage.vue'),
+                meta: {
+                    breadCrumb: 'Gestionar grupo',
+                    pageTitle: 'Grupo de asignatura',
+                },
+            },
 
         ]
     },
