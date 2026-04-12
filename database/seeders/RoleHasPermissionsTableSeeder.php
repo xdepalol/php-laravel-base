@@ -34,6 +34,69 @@ class RoleHasPermissionsTableSeeder extends Seeder
             'student-list',
             'student-view'
         ]);
+
+        /* TEACHER */
+        // Calculem permisos
+        // ReadWrite Access
+        $teacherPermissions = [];
+        $entities = [
+            'activity', 'task', 'deliverable', 'team', 'backlogitem', 'phasetask',
+            'phase', 'submission', 'phasestudentrole'
+        ];
+        $actions = ['list', 'edit', 'create', 'delete', 'view'];
+        foreach ($entities as $entity) {
+            foreach ($actions as $action) {
+                // Formatem segons el teu estàndard: 'entitat-accio'
+                $teacherPermissions[] = "{$entity}-{$action}";
+            }
+        }
+        // Read access
+        $entities = [
+            'exercise', 'category', 'course', 'student', 'teacher', 'academicyear', 'subject', 'group', 'subjectgroup', 'enrollment',
+            'activityroletype', 'activityrole',
+        ];
+        $actions = ['list', 'view'];
+        foreach ($entities as $entity) {
+            foreach ($actions as $action) {
+                // Formatem segons el teu estàndard: 'entitat-accio'
+                $teacherPermissions[] = "{$entity}-{$action}";
+            }
+        }
+
+        // Actualitzem els rols
+        $teacherRole = Role::find(3);
+        $teacherRole->syncPermissions($teacherPermissions);
+
+        /* STUDENT */
+        // Calculem permisos
+        // ReadWrite Access
+        $studentPermissions = [];
+        $entities = [
+            'backlogitem', 'phasetask', 'phasestudentrole'
+        ];
+        $actions = ['list', 'edit', 'create', 'delete', 'view'];
+        foreach ($entities as $entity) {
+            foreach ($actions as $action) {
+                // Formatem segons el teu estàndard: 'entitat-accio'
+                $studentPermissions[] = "{$entity}-{$action}";
+            }
+        }
+        // Read access
+        $entities = [
+            'activity', 'task', 'deliverable', 'team', 'phase', 'submission', 'exercise', 'category', 'course', 'student', 'teacher', 'academicyear', 'subject', 'group', 'subjectgroup', 'enrollment',
+            'activityroletype', 'activityrole',
+        ];
+        $actions = ['list', 'view'];
+        foreach ($entities as $entity) {
+            foreach ($actions as $action) {
+                // Formatem segons el teu estàndard: 'entitat-accio'
+                $studentPermissions[] = "{$entity}-{$action}";
+            }
+        }
+
+        // Actualitzem els rols
+        $studentRole = Role::find(4);
+        $studentRole->syncPermissions($studentPermissions);
         
     }
 }

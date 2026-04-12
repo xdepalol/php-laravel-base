@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Teacher;
 use Illuminate\Database\Seeder;
 
 class TeachersTableSeeder extends Seeder
@@ -36,6 +37,10 @@ class TeachersTableSeeder extends Seeder
                 'updated_at' => '2026-03-11 08:02:30',
             ),
         ));
+        $teachers = Teacher::all();
+        foreach ($teachers as $teacher) {
+            $teacher->user->assignRole('teacher');
+        }
         
     }
 }

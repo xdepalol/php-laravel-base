@@ -13,6 +13,7 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Faker\Factory as Faker;
 use Illuminate\Support\Str;
+use Spatie\Permission\Contracts\Role;
 
 class StudentsTableSeeder extends Seeder
 {
@@ -65,6 +66,9 @@ class StudentsTableSeeder extends Seeder
                     'user_id' => $user->id,
                     'student_number' => $studentNumber,
                 ]);
+                // Afegim el rol alumne
+                $user->assignRole('student');
+
                 // Fem la matricula de l'alumne
                 foreach ($sGroups as $sg) {
                     Enrollment::create([

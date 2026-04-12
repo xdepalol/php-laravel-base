@@ -42,7 +42,7 @@ class ActivityTeamTableSeeder extends Seeder
         $names = ['Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon', 'Zeta', 'Eta', 'Theta', 'Iota', 'Kappa'];
         
         // 4. Partir la col·lecció d'alumnes en trossos de 6 (si l'últim queda de 5, ja ens va bé)
-        $chunks = $studentIds->chunk(6);
+        $chunks = $studentIds->chunk(5);
 
         foreach ($chunks as $index => $chunk) {
             // Si ens quedem sense noms, fem servir el número
