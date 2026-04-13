@@ -3,23 +3,45 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Activity\IndexActivityRequest;
 use App\Http\Requests\Activity\StoreActivityRequest;
 use App\Http\Requests\Activity\UpdateActivityRequest;
 use App\Http\Resources\ActivityResource;
 use App\Models\Activity;
-use Illuminate\Database\UniqueConstraintViolationException;
-use Illuminate\Http\Request;
 
 class ActivityController extends Controller
 {
     /**
      * Display a listing of the activity.
+     *
+     * Optional query: subject_group_ids[], academic_year_id, status.
+     * Supports multiple dashboards (teacher groups, student calendar, etc.).
+     * Sprint/backlog scoping can extend this pattern later (e.g. phase_id, is_sprint).
      */
-    public function index()
+    public function index(IndexActivityRequest $request)
     {
         $this->authorize('activity-list');
 
-        $activitys = Activity::with(['subjectGroups', 'activityRoleType'])->get();
+        $query = Activity::query()->with(['subjectGroups', 'activityRoleType']);
+
+        $filters = $request->validated();
+
+        $groupIds = $filters['subject_group_ids'] ?? null;
+        if (is_array($groupIds) && count($groupIds) > 0) {
+            $query->whereHas('subjectGroups', function ($q) use ($groupIds) {
+                $q->whereIn('subject_groups.id', $groupIds);
+            });
+        }
+
+        if (array_key_exists('academic_year_id', $filters) && $filters['academic_year_id'] !== null) {
+            $query->where('academic_year_id', $filters['academic_year_id']);
+        }
+
+        if (array_key_exists('status', $filters) && $filters['status'] !== null) {
+            $query->where('status', $filters['status']);
+        }
+
+        $activitys = $query->orderBy('id')->get();
 
         return ActivityResource::collection($activitys);
     }

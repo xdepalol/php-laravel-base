@@ -6,6 +6,10 @@ use App\Enums\ActivityStatus;
 use App\Enums\ActivityType;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * Activity with subject groups, teams, deliverables, phases.
+ * Sprint/backlog/task flows can add list filters (e.g. phase, sprint flag) alongside IndexActivityRequest.
+ */
 class Activity extends Model
 {
     protected $fillable = [

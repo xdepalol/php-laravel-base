@@ -148,14 +148,57 @@ export default function useActivities() {
     end_date: data.end_date || null
   })
 
-  const getActivities = async () => {
+  /**
+   * @param {object} [params]
+   * @param {number} [params.academic_year_id]
+   * @param {number} [params.status] ActivityStatus enum value
+   * @param {number[]} [params.subject_group_ids]
+   */
+  const buildActivitiesQuery = (params = {}) => {
+    const search = new URLSearchParams()
+    if (params.academic_year_id != null && params.academic_year_id !== '') {
+      search.append('academic_year_id', String(params.academic_year_id))
+    }
+    if (params.status != null && params.status !== '') {
+      search.append('status', String(params.status))
+    }
+    if (Array.isArray(params.subject_group_ids) && params.subject_group_ids.length) {
+      params.subject_group_ids.forEach((id) => {
+        search.append('subject_group_ids[]', String(id))
+      })
+    }
+    const qs = search.toString()
+    return qs ? `${API}?${qs}` : API
+  }
+
+  const getActivities = async (params = {}) => {
     try {
-      const response = await withLoading(() => axios.get(API))
+      const url = buildActivitiesQuery(params)
+      const response = await withLoading(() => axios.get(url))
       const data = unwrap(response)
       activities.value = Array.isArray(data) ? data : []
       return response
     } catch (error) {
       toast.error('Error', 'No se pudieron cargar las actividades')
+      throw error
+    }
+  }
+
+  /** Nested resource: activities for one subject group (server enforces access). */
+  const getActivitiesForSubjectGroup = async (subjectGroupId) => {
+    if (!subjectGroupId) {
+      activities.value = []
+      return null
+    }
+    try {
+      const response = await withLoading(() =>
+        axios.get(`/api/subject-groups/${subjectGroupId}/activities`)
+      )
+      const data = unwrap(response)
+      activities.value = Array.isArray(data) ? data : []
+      return response
+    } catch (error) {
+      toast.error('Error', 'No se pudieron cargar las actividades del grupo')
       throw error
     }
   }
@@ -237,6 +280,8 @@ export default function useActivities() {
     setActivity,
     upsertActivityRecord,
     getActivities,
+    getActivitiesForSubjectGroup,
+    buildActivitiesQuery,
     getActivity,
     createActivity,
     updateActivity,

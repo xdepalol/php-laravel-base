@@ -46,7 +46,11 @@ import Tooltip from 'primevue/tooltip';
 import Ripple from 'primevue/ripple';
 import FloatLabel from 'primevue/floatlabel';
 import Password from 'primevue/password';
-
+import Tabs from 'primevue/tabs';
+import TabList from 'primevue/tablist';
+import Tab from 'primevue/tab';
+import TabPanels from 'primevue/tabpanels';
+import TabPanel from 'primevue/tabpanel';
 
 import "../css/app.css";
 
@@ -119,6 +123,11 @@ app.component('IconField', IconField);
 app.component('InputIcon', InputIcon);
 app.component('Password', Password);
 app.component('SplitButton', SplitButton);
+app.component('Tabs', Tabs);
+app.component('TabList', TabList);
+app.component('Tab', Tab);
+app.component('TabPanels', TabPanels);
+app.component('TabPanel', TabPanel);
 
 app.directive('tooltip', Tooltip);
 app.directive('ripple', Ripple);

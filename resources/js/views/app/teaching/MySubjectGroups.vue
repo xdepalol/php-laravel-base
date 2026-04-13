@@ -38,7 +38,7 @@
             </template>
             <template #content>
               <router-link
-                :to="{ name: 'app.subject-group-manage', params: { id: sg.id } }"
+                :to="{ name: 'app.subject-group.overview', params: { id: sg.id } }"
                 class="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-700"
               >
                 Gestionar grupo

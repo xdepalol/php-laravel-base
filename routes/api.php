@@ -29,6 +29,7 @@ use App\Http\Controllers\Api\PostController;
 use App\Http\Controllers\Api\TeacherController;
 use App\Http\Controllers\Api\StudentController;
 use App\Http\Controllers\Api\SubjectGroupController;
+use App\Http\Controllers\Api\SubjectGroupActivityController;
 use App\Http\Controllers\Api\TeacherSubjectGroupController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -66,6 +67,7 @@ Route::group(['middleware' => 'auth:sanctum'], function() {
     Route::apiResource('courses', CourseController::class);
     Route::apiResource('teachers', TeacherController::class);
     Route::apiResource('groups', GroupController::class);
+    Route::get('subject-groups/{subject_group}/activities', [SubjectGroupActivityController::class, 'index']);
     Route::apiResource('subject-groups', SubjectGroupController::class);
     Route::apiResource('subject-groups.enrollments', EnrollmentController::class)->scoped();
     Route::apiResource('activities', ActivityController::class);

@@ -108,13 +108,142 @@ export default [
                 },
             },
             {
-                name: 'app.subject-group-manage',
                 path: 'asignaturas/:id',
-                component: () => import('../views/app/teaching/SubjectGroupManage.vue'),
+                component: () => import('../views/app/teaching/subject-group/SubjectGroupLayout.vue'),
                 meta: {
-                    breadCrumb: 'Gestionar grupo',
+                    breadCrumb: 'Grupo de asignatura',
                     pageTitle: 'Grupo de asignatura',
                 },
+                children: [
+                    {
+                        path: '',
+                        redirect: (to) => ({
+                            name: 'app.subject-group.overview',
+                            params: to.params,
+                        }),
+                    },
+                    {
+                        name: 'app.subject-group.overview',
+                        path: 'resumen',
+                        component: () =>
+                            import('../views/app/teaching/subject-group/SubjectGroupOverviewTab.vue'),
+                        meta: {
+                            subjectGroupTab: 'overview',
+                            breadCrumb: 'Resumen',
+                            pageTitle: 'Resumen',
+                        },
+                    },
+                    {
+                        name: 'app.subject-group.students',
+                        path: 'estudiantes',
+                        component: () =>
+                            import('../views/app/teaching/subject-group/SubjectGroupStudentsTab.vue'),
+                        meta: {
+                            subjectGroupTab: 'students',
+                            breadCrumb: 'Estudiantes',
+                            pageTitle: 'Estudiantes',
+                        },
+                    },
+                    {
+                        name: 'app.subject-group.activities',
+                        path: 'actividades',
+                        component: () =>
+                            import('../views/app/teaching/subject-group/SubjectGroupActivitiesTab.vue'),
+                        meta: {
+                            subjectGroupTab: 'activities',
+                            breadCrumb: 'Actividades',
+                            pageTitle: 'Actividades',
+                        },
+                    },
+                ],
+            },
+            {
+                path: 'actividades/:activityId',
+                component: () => import('../views/app/activity/ActivityLayout.vue'),
+                meta: {
+                    breadCrumb: 'Actividad',
+                    pageTitle: 'Actividad',
+                },
+                children: [
+                    {
+                        path: '',
+                        redirect: (to) => ({
+                            name: 'app.activity.overview',
+                            params: to.params,
+                            query: to.query,
+                        }),
+                    },
+                    {
+                        name: 'app.activity.overview',
+                        path: 'resumen',
+                        component: () => import('../views/app/activity/tabs/ActivityOverviewTab.vue'),
+                        meta: {
+                            activityTab: 'overview',
+                            breadCrumb: 'Resumen',
+                            pageTitle: 'Resumen',
+                        },
+                    },
+                    {
+                        name: 'app.activity.teams',
+                        path: 'equipos',
+                        component: () => import('../views/app/activity/tabs/ActivityTeamsTab.vue'),
+                        meta: {
+                            activityTab: 'teams',
+                            breadCrumb: 'Equipos',
+                            pageTitle: 'Equipos',
+                        },
+                    },
+                    {
+                        name: 'app.activity.deliverables',
+                        path: 'entregables',
+                        component: () => import('../views/app/activity/tabs/ActivityDeliverablesTab.vue'),
+                        meta: {
+                            activityTab: 'deliverables',
+                            breadCrumb: 'Entregables',
+                            pageTitle: 'Entregables',
+                        },
+                    },
+                    {
+                        name: 'app.activity.phases',
+                        path: 'fases',
+                        component: () => import('../views/app/activity/tabs/ActivityPhasesTab.vue'),
+                        meta: {
+                            activityTab: 'phases',
+                            breadCrumb: 'Fases',
+                            pageTitle: 'Fases',
+                        },
+                    },
+                    {
+                        name: 'app.activity.backlog',
+                        path: 'backlog',
+                        component: () => import('../views/app/activity/tabs/ActivityBacklogTab.vue'),
+                        meta: {
+                            activityTab: 'backlog',
+                            breadCrumb: 'Backlog',
+                            pageTitle: 'Backlog',
+                        },
+                    },
+                    {
+                        name: 'app.activity.tasks',
+                        path: 'tareas',
+                        component: () => import('../views/app/activity/tabs/ActivityTasksTab.vue'),
+                        meta: {
+                            activityTab: 'tasks',
+                            breadCrumb: 'Tareas',
+                            pageTitle: 'Tareas',
+                        },
+                    },
+                    {
+                        name: 'app.activity.roles',
+                        path: 'roles',
+                        component: () => import('../views/app/activity/tabs/ActivityRolesTab.vue'),
+                        meta: {
+                            activityTab: 'roles',
+                            breadCrumb: 'Roles',
+                            pageTitle: 'Roles',
+                        },
+                    },
+                ],
             },
 
         ]
