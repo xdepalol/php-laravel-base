@@ -1,55 +1,55 @@
 <?php
 
 use App\Http\Controllers\Api\AcademicYearController;
+use App\Http\Controllers\Api\ActivityBacklogController;
+use App\Http\Controllers\Api\ActivityBacklogCsvImportController;
 use App\Http\Controllers\Api\ActivityController;
 use App\Http\Controllers\Api\ActivityRoleController;
 use App\Http\Controllers\Api\ActivityRoleTypeController;
-use App\Http\Controllers\Api\SubjectController;
-use App\Http\Controllers\Api\CourseController;
-use App\Http\Controllers\Api\DeliverableController;
-use App\Http\Controllers\Api\ActivityBacklogController;
-use App\Http\Controllers\Api\ActivityTaskController;
 use App\Http\Controllers\Api\ActivitySubjectGroupController;
-use App\Http\Controllers\Api\PhaseTaskController;
-use App\Http\Controllers\Api\PhaseController;
-use App\Http\Controllers\Api\SubmissionController;
-use App\Http\Controllers\Api\PhaseStudentRoleController;
-use App\Http\Controllers\Api\TeamController;
-use App\Http\Controllers\Api\TeamStudentController;
+use App\Http\Controllers\Api\ActivityTaskController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\CourseController;
+use App\Http\Controllers\Api\DeliverableController;
 use App\Http\Controllers\Api\EnrollmentController;
-use App\Http\Controllers\Api\StudentEnrollmentController;
 use App\Http\Controllers\Api\GroupController;
 use App\Http\Controllers\Api\PermissionController;
+use App\Http\Controllers\Api\PhaseController;
+use App\Http\Controllers\Api\PhaseStudentRoleController;
+use App\Http\Controllers\Api\PhaseTaskController;
+use App\Http\Controllers\Api\PostController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\RoleController;
-use App\Http\Controllers\Api\UserController;
-use App\Http\Controllers\Api\PostController;
-use App\Http\Controllers\Api\TeacherController;
 use App\Http\Controllers\Api\StudentController;
-use App\Http\Controllers\Api\SubjectGroupController;
+use App\Http\Controllers\Api\StudentEnrollmentController;
+use App\Http\Controllers\Api\SubjectController;
 use App\Http\Controllers\Api\SubjectGroupActivityController;
+use App\Http\Controllers\Api\SubjectGroupController;
+use App\Http\Controllers\Api\SubmissionController;
+use App\Http\Controllers\Api\TeacherController;
 use App\Http\Controllers\Api\TeacherSubjectGroupController;
+use App\Http\Controllers\Api\TeamController;
+use App\Http\Controllers\Api\TeamStudentController;
+use App\Http\Controllers\Api\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-
-Route::group(['middleware' => 'auth:sanctum'], function() {
+Route::group(['middleware' => 'auth:sanctum'], function () {
 
     Route::post('/auth/logout', [AuthController::class, 'logout']);
 
     Route::apiResource('users', UserController::class);
-    Route::post('users/updateimg', [UserController::class,'updateimg']);
+    Route::post('users/updateimg', [UserController::class, 'updateimg']);
 
     Route::apiResource('categories', CategoryController::class);
     Route::apiResource('roles', RoleController::class);
-   
+
     Route::get('role-list', [RoleController::class, 'getList']);
     Route::get('role-permissions/{id}', [PermissionController::class, 'getRolePermissions']);
     Route::put('/role-permissions', [PermissionController::class, 'updateRolePermissions']);
     Route::apiResource('permissions', PermissionController::class);
-    
+
     Route::get('me/subject-groups', [TeacherSubjectGroupController::class, 'index']);
 
     Route::get('/user', [ProfileController::class, 'user']);
@@ -57,8 +57,9 @@ Route::group(['middleware' => 'auth:sanctum'], function() {
     Route::put('/user', [ProfileController::class, 'update']);
 
     Route::apiResource('posts', PostController::class)
-        ->missing(function($request) {
+        ->missing(function ($request) {
             $postId = $request->route('post');
+
             return response()->json(['message' => "Post not found (#{$postId})"], 404);
         });
 
@@ -71,6 +72,7 @@ Route::group(['middleware' => 'auth:sanctum'], function() {
     Route::apiResource('subject-groups', SubjectGroupController::class);
     Route::apiResource('subject-groups.enrollments', EnrollmentController::class)->scoped();
     Route::apiResource('activities', ActivityController::class);
+    Route::post('activities/{activity}/backlog-items/csv-import', [ActivityBacklogCsvImportController::class, 'store']);
     Route::apiResource('activities.backlog-items', ActivityBacklogController::class)->scoped();
     Route::apiResource('activities.tasks', ActivityTaskController::class)->scoped();
     Route::get('activities/{activity}/subject-groups', [ActivitySubjectGroupController::class, 'index']);
@@ -88,13 +90,14 @@ Route::group(['middleware' => 'auth:sanctum'], function() {
     Route::apiResource('activity-roles', ActivityRoleController::class);
 
     Route::apiResource('students', StudentController::class)
-        ->missing(function($request) {
+        ->missing(function ($request) {
             $studentId = $request->route('student');
+
             return response()->json(['message' => "Student not found (#{$studentId})"], 404);
         });
     Route::apiResource('students.enrollments', StudentEnrollmentController::class)->scoped();
 
-    Route::get('abilities', function(Request $request) {
+    Route::get('abilities', function (Request $request) {
         return $request->user()->roles()->with('permissions')
             ->get()
             ->pluck('permissions')

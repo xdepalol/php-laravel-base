@@ -90,8 +90,27 @@ const tabQuery = computed(() => {
   return { fromSubjectGroup: String(raw) }
 })
 
-const { activity, isLoading, getActivity } = useActivities()
+const {
+  activity,
+  isLoading,
+  getActivity,
+  updateActivity,
+  clearErrors,
+  hasError,
+  getError,
+} = useActivities()
 const loadError = ref(false)
+
+/**
+ * Merge partial updates into current activity and PUT; refreshes activity from API.
+ * Used by Resumen tab when user has activity-edit.
+ */
+async function saveActivity(updates) {
+  clearErrors()
+  const merged = { ...activity.value, ...updates }
+  await updateActivity(merged)
+  await getActivity(routeActivityId.value)
+}
 
 const statusLabel = computed(() => {
   const s = activity.value.status
@@ -100,14 +119,11 @@ const statusLabel = computed(() => {
   return String(s)
 })
 
+/** Fases, backlog y tareas viven en el espacio de cada equipo. */
 const tabs = [
   { tabKey: 'overview', name: 'app.activity.overview', label: 'Resumen', icon: 'pi pi-info-circle' },
   { tabKey: 'teams', name: 'app.activity.teams', label: 'Equipos', icon: 'pi pi-users' },
   { tabKey: 'deliverables', name: 'app.activity.deliverables', label: 'Entregables', icon: 'pi pi-inbox' },
-  { tabKey: 'phases', name: 'app.activity.phases', label: 'Fases', icon: 'pi pi-list' },
-  { tabKey: 'backlog', name: 'app.activity.backlog', label: 'Backlog', icon: 'pi pi-table' },
-  { tabKey: 'tasks', name: 'app.activity.tasks', label: 'Tareas', icon: 'pi pi-check-square' },
-  { tabKey: 'roles', name: 'app.activity.roles', label: 'Roles', icon: 'pi pi-id-card' },
 ]
 
 const routeNameToTabKey = Object.fromEntries(tabs.map((t) => [t.name, t.tabKey]))
@@ -144,6 +160,8 @@ provide(
   computed(() => routeActivityId.value)
 )
 provide('activity', activity)
+provide('saveActivity', saveActivity)
+provide('activityEditErrors', { hasError, getError, clearErrors })
 
 async function loadActivity() {
   const id = routeActivityId.value

@@ -30,7 +30,7 @@ export default function useActivityTeams() {
   const isLoading = ref(false)
   const toast = useToast()
 
-  const initialTeam = { id: null, name: '' }
+  const initialTeam = { id: null, name: '', students: [] }
   const team = ref({ ...initialTeam })
 
   const { errors, validate, clearErrors, hasError, getError } = useValidation()
@@ -52,8 +52,10 @@ export default function useActivityTeams() {
 
   const setTeam = (data = {}) => {
     team.value = {
+      ...initialTeam,
+      ...data,
       id: data.id ?? null,
-      name: data.name ?? ''
+      name: data.name ?? '',
     }
     clearErrors()
   }

@@ -18,6 +18,8 @@ class TeamResource extends JsonResource
             'id' => $this->id,
             'activity_id' => $this->activity_id,
             'name' => $this->name,
+            'students_count' => (int) ($this->students_count ?? 0),
+            'submissions_delivered_count' => (int) ($this->submissions_delivered_count ?? 0),
             'students' => TeamMemberResource::collection($this->whenLoaded('students')),
             'activity' => new ActivityResource($this->whenLoaded('activity')),
             'created_at' => $this->created_at?->toDateString(),

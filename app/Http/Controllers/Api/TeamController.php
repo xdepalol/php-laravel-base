@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\SubmissionStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Team\StoreTeamRequest;
 use App\Http\Requests\Team\UpdateTeamRequest;
@@ -18,7 +19,18 @@ class TeamController extends Controller
     {
         $this->authorize('team-list');
 
-        $teams = $activity->teams()->with(['students.user'])->get();
+        $teams = $activity->teams()
+            ->with(['students.user'])
+            ->withCount([
+                'students as students_count',
+                'submissions as submissions_delivered_count' => function ($query) {
+                    $query->whereIn('status', [
+                        SubmissionStatus::SUBMITTED->value,
+                        SubmissionStatus::GRADED->value,
+                    ]);
+                },
+            ])
+            ->get();
         $teams->each(fn (Team $t) => $t->loadStudentsForApi());
 
         return TeamResource::collection($teams);
@@ -31,10 +43,19 @@ class TeamController extends Controller
     {
         $this->authorize('team-create');
 
-        $team = new Team();
+        $team = new Team;
         $team->activity_id = $activity->id;
         $team->name = $request->name;
         if ($team->save()) {
+            $team->loadCount([
+                'students as students_count',
+                'submissions as submissions_delivered_count' => function ($query) {
+                    $query->whereIn('status', [
+                        SubmissionStatus::SUBMITTED->value,
+                        SubmissionStatus::GRADED->value,
+                    ]);
+                },
+            ]);
             $team->loadStudentsForApi();
 
             return new TeamResource($team);
@@ -49,6 +70,15 @@ class TeamController extends Controller
         $this->authorize('team-view');
 
         $team->load('activity');
+        $team->loadCount([
+            'students as students_count',
+            'submissions as submissions_delivered_count' => function ($query) {
+                $query->whereIn('status', [
+                    SubmissionStatus::SUBMITTED->value,
+                    SubmissionStatus::GRADED->value,
+                ]);
+            },
+        ]);
         $team->loadStudentsForApi();
 
         return new TeamResource($team);
@@ -64,6 +94,15 @@ class TeamController extends Controller
         $team->name = $request->name;
         if ($team->save()) {
             $team->load('activity');
+            $team->loadCount([
+                'students as students_count',
+                'submissions as submissions_delivered_count' => function ($query) {
+                    $query->whereIn('status', [
+                        SubmissionStatus::SUBMITTED->value,
+                        SubmissionStatus::GRADED->value,
+                    ]);
+                },
+            ]);
             $team->loadStudentsForApi();
 
             return new TeamResource($team);

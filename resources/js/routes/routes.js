@@ -158,6 +158,26 @@ export default [
                 ],
             },
             {
+                name: 'app.activity.deliverable.create',
+                path: 'actividades/:activityId/entregables/nuevo',
+                component: () =>
+                    import('../views/app/activity/ActivityDeliverableFormPage.vue'),
+                meta: {
+                    breadCrumb: 'Nuevo entregable',
+                    pageTitle: 'Nuevo entregable',
+                },
+            },
+            {
+                name: 'app.activity.deliverable.edit',
+                path: 'actividades/:activityId/entregables/:deliverableId/editar',
+                component: () =>
+                    import('../views/app/activity/ActivityDeliverableFormPage.vue'),
+                meta: {
+                    breadCrumb: 'Editar entregable',
+                    pageTitle: 'Editar entregable',
+                },
+            },
+            {
                 path: 'actividades/:activityId',
                 component: () => import('../views/app/activity/ActivityLayout.vue'),
                 meta: {
@@ -204,43 +224,106 @@ export default [
                         },
                     },
                     {
-                        name: 'app.activity.phases',
+                        path: 'roles',
+                        redirect: (to) => ({
+                            name: 'app.activity.overview',
+                            params: to.params,
+                            query: to.query,
+                        }),
+                    },
+                    {
+                        path: 'fases',
+                        redirect: (to) => ({
+                            name: 'app.activity.teams',
+                            params: to.params,
+                            query: to.query,
+                        }),
+                    },
+                    {
+                        path: 'backlog',
+                        redirect: (to) => ({
+                            name: 'app.activity.teams',
+                            params: to.params,
+                            query: to.query,
+                        }),
+                    },
+                    {
+                        path: 'tareas',
+                        redirect: (to) => ({
+                            name: 'app.activity.teams',
+                            params: to.params,
+                            query: to.query,
+                        }),
+                    },
+                ],
+            },
+            {
+                path: 'actividades/:activityId/equipos/:teamId',
+                component: () => import('../views/app/activity/team/TeamWorkspaceLayout.vue'),
+                meta: {
+                    breadCrumb: 'Equipo',
+                    pageTitle: 'Equipo',
+                },
+                children: [
+                    {
+                        path: '',
+                        redirect: (to) => ({
+                            name: 'app.activity.team.overview',
+                            params: to.params,
+                            query: to.query,
+                        }),
+                    },
+                    {
+                        name: 'app.activity.team.overview',
+                        path: 'resumen',
+                        component: () => import('../views/app/activity/team/TeamOverviewTab.vue'),
+                        meta: {
+                            teamTab: 'overview',
+                            breadCrumb: 'Resumen',
+                            pageTitle: 'Resumen',
+                        },
+                    },
+                    {
+                        name: 'app.activity.team.phases',
                         path: 'fases',
                         component: () => import('../views/app/activity/tabs/ActivityPhasesTab.vue'),
                         meta: {
-                            activityTab: 'phases',
+                            teamTab: 'phases',
+                            requiresActivitySprints: true,
                             breadCrumb: 'Fases',
                             pageTitle: 'Fases',
                         },
                     },
                     {
-                        name: 'app.activity.backlog',
+                        name: 'app.activity.team.backlog',
                         path: 'backlog',
-                        component: () => import('../views/app/activity/tabs/ActivityBacklogTab.vue'),
+                        component: () => import('../views/app/activity/team/TeamBacklogTab.vue'),
                         meta: {
-                            activityTab: 'backlog',
+                            teamTab: 'backlog',
+                            requiresActivityBacklog: true,
                             breadCrumb: 'Backlog',
                             pageTitle: 'Backlog',
                         },
                     },
                     {
-                        name: 'app.activity.tasks',
+                        name: 'app.activity.team.tasks',
                         path: 'tareas',
-                        component: () => import('../views/app/activity/tabs/ActivityTasksTab.vue'),
+                        component: () => import('../views/app/activity/team/TeamTasksTab.vue'),
                         meta: {
-                            activityTab: 'tasks',
+                            teamTab: 'tasks',
+                            requiresActivityBacklog: true,
                             breadCrumb: 'Tareas',
                             pageTitle: 'Tareas',
                         },
                     },
                     {
-                        name: 'app.activity.roles',
-                        path: 'roles',
-                        component: () => import('../views/app/activity/tabs/ActivityRolesTab.vue'),
+                        name: 'app.activity.team.deliverables',
+                        path: 'entregas',
+                        component: () => import('../views/app/activity/team/TeamDeliverablesTab.vue'),
                         meta: {
-                            activityTab: 'roles',
-                            breadCrumb: 'Roles',
-                            pageTitle: 'Roles',
+                            teamTab: 'deliverables',
+                            breadCrumb: 'Entregas',
+                            pageTitle: 'Entregas',
                         },
                     },
                 ],

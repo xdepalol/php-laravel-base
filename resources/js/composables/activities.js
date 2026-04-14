@@ -274,6 +274,7 @@ export default function useActivities() {
     activity,
     isLoading,
     errors,
+    clearErrors,
     hasError,
     getError,
     resetActivity,
