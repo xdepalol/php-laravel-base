@@ -186,6 +186,7 @@ import { ref, reactive, computed, onMounted, inject, watch } from "vue";
 import usePermissions from "@/composables/permissions";
 import { useAbility } from '@casl/vue';
 import {FilterMatchMode, FilterOperator} from "@primevue/core/api";
+import { formatUtcIso } from '@/utils/datetime';
 
 const FILTERS_STORAGE_KEY = 'admin_permissions_table_filters';
 const {permissions, permission, getPermissions, createPermission, updatePermission, deletePermission, resetPermission, setPermission, hasError, getError, upsertPermissionRecord, isLoading} = usePermissions();
@@ -305,15 +306,7 @@ const confirmDeletePermission = (currentPermission) => {
     });
 };
 
-const formatDate = (dateString) => {
-    if (!dateString) return '-';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-    });
-};
+const formatDate = (dateString) => formatUtcIso(dateString, 'datetime') ?? '-';
 
 onMounted(() => {
     restoreFiltersFromStorage();

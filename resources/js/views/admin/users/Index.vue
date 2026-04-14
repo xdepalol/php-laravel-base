@@ -152,6 +152,7 @@ import { useRouter } from "vue-router";
 import useUsers from "../../../composables/users";
 import { useAbility } from '@casl/vue';
 import { FilterMatchMode, FilterOperator } from "@primevue/core/api";
+import { formatUtcIso } from '@/utils/datetime';
 
 const router = useRouter();
 const { users, getUsers, deleteUser } = useUsers();
@@ -194,15 +195,7 @@ const filterRoles = (value, filter) => {
     );
 };
 
-const formatDate = (dateString) => {
-    if (!dateString) return '-';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-    });
-};
+const formatDate = (dateString) => formatUtcIso(dateString, 'datetime') ?? '-';
 
 onMounted(() => {
     loading.value = true;

@@ -183,6 +183,7 @@ import { ref, reactive, computed, onMounted, inject, watch } from "vue";
 import useCategories from "@/composables/categories";
 import { useAbility } from '@casl/vue';
 import { FilterMatchMode, FilterOperator  } from "@primevue/core/api";
+import { formatUtcIso } from '@/utils/datetime';
 
 const FILTERS_STORAGE_KEY = 'admin_categories_table_filters';
 const {categories, category, getCategories, createCategory, updateCategory, deleteCategory, resetCategory, setCategory, hasError, getError, upsertCategoryRecord, isLoading } = useCategories();
@@ -300,15 +301,7 @@ const confirmDeleteCategory = (currentCategory) => {
     });
 };
 
-const formatDate = (dateString) => {
-    if (!dateString) return '-';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-    });
-};
+const formatDate = (dateString) => formatUtcIso(dateString, 'datetime') ?? '-';
 
 onMounted(() => {
     restoreFiltersFromStorage();

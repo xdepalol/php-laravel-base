@@ -160,6 +160,7 @@ import useRoles from "@/composables/roles";
 import { useAbility } from '@casl/vue';
 import { FilterMatchMode, FilterOperator  } from "@primevue/core/api";
 import { useRouter } from "vue-router";
+import { formatUtcIso } from '@/utils/datetime';
 
 const FILTERS_STORAGE_KEY = 'admin_roles_table_filters';
 const {roles, role, getRoles, createRole, deleteRole, resetRole, hasError, getError, upsertRoleRecord, isLoading} = useRoles();
@@ -262,15 +263,7 @@ const confirmDeleteRole = (currentRole) => {
     });
 };
 
-const formatDate = (dateString) => {
-    if (!dateString) return '-';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-    });
-};
+const formatDate = (dateString) => formatUtcIso(dateString, 'datetime') ?? '-';
 
 onMounted(() => {
     restoreFiltersFromStorage();

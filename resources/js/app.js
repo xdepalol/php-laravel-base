@@ -10,6 +10,8 @@ import { installI18n, loadMessages } from "./plugins/i18n";
 import { langStore } from "@/store/lang";
 import './plugins/axios.js';
 import App from './main.vue'
+import UtcFormatted from './components/datetime/UtcFormatted.vue'
+import localDateDirective from './directives/localDate'
 
 /*PRIMEVUE */
 import PrimeVue from "primevue/config";
@@ -128,9 +130,11 @@ app.component('TabList', TabList);
 app.component('Tab', Tab);
 app.component('TabPanels', TabPanels);
 app.component('TabPanel', TabPanel);
+app.component('UtcFormatted', UtcFormatted);
 
 app.directive('tooltip', Tooltip);
 app.directive('ripple', Ripple);
+app.directive('local-date', localDateDirective);
 
 // Inicializar modo oscuro desde localStorage antes de montar
 // Esto asegura que el tema se aplique inmediatamente sin flash

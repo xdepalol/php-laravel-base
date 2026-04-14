@@ -1,16 +1,11 @@
 import { ref, inject } from 'vue'
 import { useRouter } from 'vue-router'
+import { formatUtcIso } from '@/utils/datetime'
 
 export default function useUtils() {
 
     const formatDate = (data) => {
-        return new Date(data).toLocaleDateString('es-ES', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
+        return formatUtcIso(data, 'datetime') ?? '—';
     };
 
     const isClose = (date) => {

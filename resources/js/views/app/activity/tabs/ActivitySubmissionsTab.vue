@@ -31,7 +31,7 @@
         </Column>
         <Column header="Última entrega" class="whitespace-nowrap w-40">
           <template #body="{ data }">
-            {{ formatDateTime(data.lastSubmittedAt) }}
+            <UtcFormatted :value="data.lastSubmittedAt" variant="datetime" />
           </template>
         </Column>
         <Column header="Estado" class="w-36">
@@ -103,16 +103,6 @@ function formatMemberName(member) {
   if (!u) return `Estudiante #${member?.student_id ?? '—'}`
   const parts = [u.name, u.surname1, u.surname2].filter(Boolean)
   return parts.length ? parts.join(' ') : `Usuario #${u.id ?? member.student_id}`
-}
-
-function formatDateTime(iso) {
-  if (!iso) return '—'
-  const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return '—'
-  return d.toLocaleString('es-ES', {
-    dateStyle: 'short',
-    timeStyle: 'short',
-  })
 }
 
 function statusLabel(sub) {

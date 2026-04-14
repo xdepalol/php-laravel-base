@@ -40,7 +40,9 @@
           </div>
           <div>
             <dt class="text-slate-500 font-medium">Entregada el</dt>
-            <dd class="mt-1 text-slate-800">{{ formatDateTime(submission.submitted_at) }}</dd>
+            <dd class="mt-1 text-slate-800">
+              <UtcFormatted :value="submission.submitted_at" variant="datetime" />
+            </dd>
           </div>
           <div v-if="submission.grade != null">
             <dt class="text-slate-500 font-medium">Calificación</dt>
@@ -105,16 +107,6 @@ const backTo = computed(() => ({
 
 function unwrap(response) {
   return response.data?.data ?? response.data
-}
-
-function formatDateTime(iso) {
-  if (!iso) return '—'
-  const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return '—'
-  return d.toLocaleString('es-ES', {
-    dateStyle: 'short',
-    timeStyle: 'short',
-  })
 }
 
 const SUBMISSION_STATUS = {

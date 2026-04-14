@@ -12,7 +12,7 @@
         <Column field="title" header="Entregable" />
         <Column field="due_date" header="Fecha límite" class="whitespace-nowrap w-32">
           <template #body="{ data }">
-            {{ data.due_date || '—' }}
+            <UtcFormatted :value="data.due_date" variant="datetime" />
           </template>
         </Column>
         <Column header="Entregas (equipo)" class="w-36">

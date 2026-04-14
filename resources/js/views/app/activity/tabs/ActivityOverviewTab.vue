@@ -31,8 +31,10 @@
           </div>
           <div>
             <dt class="text-slate-500 font-medium">Fechas</dt>
-            <dd class="mt-1 text-slate-800">
-              {{ activity.start_date || '—' }} → {{ activity.end_date || '—' }}
+            <dd class="mt-1 text-slate-800 flex flex-wrap items-center gap-1">
+              <UtcFormatted :value="activity.start_date" variant="date" />
+              <span aria-hidden="true">→</span>
+              <UtcFormatted :value="activity.end_date" variant="date" />
             </dd>
           </div>
           <div class="sm:col-span-2">

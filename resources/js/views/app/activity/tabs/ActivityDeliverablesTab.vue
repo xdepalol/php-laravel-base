@@ -20,7 +20,7 @@
         <Column field="title" header="Título" />
         <Column field="due_date" header="Entrega" class="whitespace-nowrap">
           <template #body="{ data }">
-            {{ data.due_date || '—' }}
+            <UtcFormatted :value="data.due_date" variant="datetime" />
           </template>
         </Column>
         <Column header="Estado" class="w-36">

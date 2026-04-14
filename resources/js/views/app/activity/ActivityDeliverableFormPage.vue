@@ -44,17 +44,25 @@
             }}</small>
           </div>
           <div class="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label for="deliverable-due" class="text-sm font-medium text-slate-700 block mb-1"
-                >Fecha de entrega</label
+            <div class="sm:col-span-2">
+              <label for="deliverable-due-input" class="text-sm font-medium text-slate-700 block mb-1"
+                >Fecha y hora de entrega</label
               >
-              <InputText
-                id="deliverable-due"
-                v-model="deliverable.due_date"
-                type="date"
+              <DatePicker
+                v-model="duePicker"
+                show-time
+                hour-format="24"
+                date-format="dd/mm/yy"
+                show-icon
+                show-button-bar
+                show-clear
+                input-id="deliverable-due-input"
                 class="w-full"
-                :class="{ 'p-invalid': hasError('due_date') }"
+                :invalid="hasError('due_date')"
               />
+              <p class="mt-1 text-xs text-slate-500">
+                Se guarda en UTC; se muestra en la zona horaria del navegador.
+              </p>
               <small v-if="hasError('due_date')" class="text-red-500">{{ getError('due_date') }}</small>
             </div>
             <div>
@@ -99,6 +107,7 @@
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import useActivityDeliverables from '@/composables/activityDeliverables'
+import { jsDateToUtcIso, utcIsoToJsDate } from '@/utils/datetime'
 
 const route = useRoute()
 const router = useRouter()
@@ -113,6 +122,16 @@ const {
   createDeliverable,
   updateDeliverable,
 } = useActivityDeliverables()
+
+/** DatePicker trabaja con Date local; el composable guarda ISO UTC en `due_date`. */
+const duePicker = computed({
+  get() {
+    return utcIsoToJsDate(deliverable.value?.due_date)
+  },
+  set(v) {
+    deliverable.value.due_date = jsDateToUtcIso(v)
+  },
+})
 
 const activityId = computed(() => Number(route.params.activityId))
 const deliverableId = computed(() =>
