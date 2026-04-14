@@ -14,7 +14,12 @@
     </template>
     <template #content>
       <p class="text-sm text-slate-600 mb-4">
-        Abre un equipo para ver fases, backlog y tareas (si aplica) y las entregas del equipo.
+        <template v-if="isStudentOnlyView">
+          Tu equipo en esta actividad. Ábrelo para ver fases, backlog, tareas y entregas del grupo.
+        </template>
+        <template v-else>
+          Abre un equipo para ver fases, backlog y tareas (si aplica) y las entregas del equipo.
+        </template>
       </p>
       <DataTable :value="teams" :loading="isLoading" data-key="id" striped-rows class="text-sm">
         <template #empty>
@@ -100,7 +105,9 @@ import { computed, inject, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAbility } from '@casl/vue'
 import useActivityTeams from '@/composables/activityTeams'
+import { useActivityViewerRole } from '@/composables/useActivityViewerRole'
 
+const { isStudentOnlyView } = useActivityViewerRole()
 const { can } = useAbility()
 const route = useRoute()
 const activityId = inject('activityId')

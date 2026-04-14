@@ -7,7 +7,12 @@
       <div v-if="groupDeliverables.length && teamRows.length">
         <h3 class="text-sm font-semibold text-slate-800 mb-2">Entregas por equipo</h3>
         <p class="text-xs text-slate-500 mb-2">
-          Filas = equipos · Columnas = entregables de grupo. Celdas = última entrega (si existe).
+          <template v-if="studentMatrixUserId">
+            Solo tu equipo · Columnas = entregables de grupo. «Ver» abre el detalle de la entrega.
+          </template>
+          <template v-else>
+            Filas = equipos · Columnas = entregables de grupo. Celdas = última entrega (si existe).
+          </template>
         </p>
         <div class="overflow-x-auto border border-slate-200 rounded-lg">
           <DataTable
@@ -54,7 +59,8 @@
       <div v-if="individualDeliverables.length && studentRows.length">
         <h3 class="text-sm font-semibold text-slate-800 mb-2">Entregas individuales</h3>
         <p class="text-xs text-slate-500 mb-2">
-          Filas = estudiantes · Columnas = entregables individuales.
+          <template v-if="studentMatrixUserId"> Tus entregas personales · «Ver» abre el detalle. </template>
+          <template v-else> Filas = estudiantes · Columnas = entregables individuales. </template>
         </p>
         <div class="overflow-x-auto border border-slate-200 rounded-lg">
           <DataTable
@@ -110,6 +116,7 @@ import { computed, inject, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import axios from 'axios'
 import { deliverableMatrixHeaderLabel } from '@/utils/deliverableUi'
+import { sortDeliverablesByDueDateThenId } from '@/utils/deliverablesSort'
 import ActivityDeliverablesMatrixCell from './ActivityDeliverablesMatrixCell.vue'
 
 const SUBMISSION_STATUS = {
@@ -120,6 +127,10 @@ const SUBMISSION_STATUS = {
 
 const props = defineProps({
   deliverables: { type: Array, default: () => [] },
+  /** Vista alumno: una fila individual (student_id = user id). */
+  studentMatrixUserId: { type: Number, default: null },
+  /** Etiqueta de fila para entregas individuales del alumno. */
+  studentMatrixRowLabel: { type: String, default: '' },
 })
 
 const activityId = inject('activityId')
@@ -137,11 +148,13 @@ const loading = ref(false)
 const teamRows = ref([])
 const studentRows = ref([])
 
+const orderedDeliverables = computed(() => sortDeliverablesByDueDateThenId(props.deliverables))
+
 const groupDeliverables = computed(() =>
-  props.deliverables.filter((d) => d.is_group_deliverable)
+  orderedDeliverables.value.filter((d) => d.is_group_deliverable)
 )
 const individualDeliverables = computed(() =>
-  props.deliverables.filter((d) => !d.is_group_deliverable)
+  orderedDeliverables.value.filter((d) => !d.is_group_deliverable)
 )
 
 const matrixHasContent = computed(() => {
@@ -229,7 +242,7 @@ async function loadMatrix() {
 
     const subMap = {}
     await Promise.all(
-      props.deliverables.map(async (d) => {
+      orderedDeliverables.value.map(async (d) => {
         try {
           const sRes = await axios.get(`/api/deliverables/${d.id}/submissions`)
           const subs = unwrap(sRes)
@@ -263,7 +276,7 @@ async function loadMatrix() {
     teamRows.value = tRows
 
     const iDel = individualDeliverables.value
-    const sRows = []
+    let sRows = []
     for (const st of studentsUnique.values()) {
       const cells = {}
       for (const d of iDel) {
@@ -282,6 +295,35 @@ async function loadMatrix() {
         cells,
       })
     }
+
+    const scopedId = props.studentMatrixUserId
+    if (scopedId != null) {
+      sRows = sRows.filter((r) => r.rowKey === `student-${scopedId}`)
+      if (iDel.length && sRows.length === 0) {
+        const cells = {}
+        for (const d of iDel) {
+          const subs = subMap[d.id] || []
+          const forSt = subs.filter((s) => Number(s.student_id) === Number(scopedId))
+          const last = pickLastSubmission(forSt)
+          cells[d.id] = {
+            last,
+            statusLabel: statusLabel(last),
+            submissionId: last?.id ?? null,
+          }
+        }
+        const label =
+          props.studentMatrixRowLabel?.trim() ||
+          `Estudiante #${scopedId}`
+        sRows = [
+          {
+            rowKey: `student-${scopedId}`,
+            rowLabel: label,
+            cells,
+          },
+        ]
+      }
+    }
+
     studentRows.value = sRows
   } finally {
     loading.value = false
@@ -289,7 +331,12 @@ async function loadMatrix() {
 }
 
 watch(
-  () => [activityId?.value, props.deliverables],
+  () => [
+    activityId?.value,
+    props.deliverables,
+    props.studentMatrixUserId,
+    props.studentMatrixRowLabel,
+  ],
   () => {
     loadMatrix()
   },

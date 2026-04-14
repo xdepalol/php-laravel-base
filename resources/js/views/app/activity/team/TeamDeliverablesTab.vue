@@ -34,6 +34,7 @@
 <script setup>
 import { inject, ref, watch } from 'vue'
 import axios from 'axios'
+import { sortDeliverablesByDueDateThenId } from '@/utils/deliverablesSort'
 
 const activityId = inject('activityId')
 const teamId = inject('teamId')
@@ -60,7 +61,7 @@ async function load() {
   try {
     const dRes = await axios.get(`/api/activities/${aid}/deliverables`)
     const dList = unwrap(dRes)
-    const deliverables = Array.isArray(dList) ? dList : []
+    const deliverables = sortDeliverablesByDueDateThenId(Array.isArray(dList) ? dList : [])
     const enriched = await Promise.all(
       deliverables.map(async (d) => {
         const id = d.id

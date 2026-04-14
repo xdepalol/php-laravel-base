@@ -18,7 +18,7 @@ class DeliverableController extends Controller
     {
         $this->authorize('deliverable-list');
 
-        $deliverables = $activity->deliverables()->get();
+        $deliverables = $activity->deliverables()->orderedByDueDateThenId()->get();
         $deliverables->each(fn (Deliverable $d) => $d->setRelation('activity', $activity));
 
         return DeliverableResource::collection($deliverables);

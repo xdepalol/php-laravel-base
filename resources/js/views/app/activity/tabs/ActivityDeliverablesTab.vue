@@ -47,7 +47,7 @@
             <div class="flex gap-1">
               <Button
                 v-if="can('submission-list')"
-                v-tooltip.top="'Ver entregas'"
+                v-tooltip.top="isStudentOnlyView ? 'Ver mis entregas de este entregable' : 'Ver entregas'"
                 icon="pi pi-inbox"
                 rounded
                 text
@@ -88,6 +88,9 @@ import { computed, inject, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAbility } from '@casl/vue'
 import useActivityDeliverables from '@/composables/activityDeliverables'
+import { useActivityViewerRole } from '@/composables/useActivityViewerRole'
+
+const { isStudentOnlyView } = useActivityViewerRole()
 
 const DELIVERABLE_STATUS_LABELS = {
   0: 'Borrador',

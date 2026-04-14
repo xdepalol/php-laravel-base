@@ -9,17 +9,19 @@ use App\Http\Requests\Team\UpdateTeamRequest;
 use App\Http\Resources\TeamResource;
 use App\Models\Activity;
 use App\Models\Team;
+use Illuminate\Http\Request;
 
 class TeamController extends Controller
 {
     /**
      * Display a listing of teams for the activity.
+     * Alumnos (sin rol docente): solo equipos en los que están matriculados en el pivot.
      */
-    public function index(Activity $activity)
+    public function index(Request $request, Activity $activity)
     {
         $this->authorize('team-list');
 
-        $teams = $activity->teams()
+        $query = $activity->teams()
             ->with(['students.user'])
             ->withCount([
                 'students as students_count',
@@ -29,11 +31,32 @@ class TeamController extends Controller
                         SubmissionStatus::GRADED->value,
                     ]);
                 },
-            ])
-            ->get();
+            ]);
+
+        if ($this->shouldLimitTeamsToCurrentStudent($request->user())) {
+            $userId = $request->user()->id;
+            $query->whereHas('students', function ($q) use ($userId) {
+                $q->where('students.user_id', $userId);
+            });
+        }
+
+        $teams = $query->get();
         $teams->each(fn (Team $t) => $t->loadStudentsForApi());
 
         return TeamResource::collection($teams);
+    }
+
+    /**
+     * Docentes: listado completo. Alumnos: solo su(s) equipo(s).
+     * (Un permiso tipo `teams-all` podría eximir del filtro a coordinadores sin rol teacher.)
+     */
+    private function shouldLimitTeamsToCurrentStudent(\Illuminate\Contracts\Auth\Authenticatable $user): bool
+    {
+        if (! method_exists($user, 'hasRole')) {
+            return false;
+        }
+
+        return $user->hasRole('student') && ! $user->hasRole('teacher');
     }
 
     /**
@@ -65,9 +88,17 @@ class TeamController extends Controller
     /**
      * Display the specified team.
      */
-    public function show(Activity $activity, Team $team)
+    public function show(Request $request, Activity $activity, Team $team)
     {
         $this->authorize('team-view');
+
+        if ($this->shouldLimitTeamsToCurrentStudent($request->user())) {
+            $userId = $request->user()->id;
+            $belongs = $team->students()->where('students.user_id', $userId)->exists();
+            if (! $belongs) {
+                abort(403);
+            }
+        }
 
         $team->load('activity');
         $team->loadCount([

@@ -4,6 +4,7 @@ import axios from 'axios'
 import { useToast } from './useToast'
 import { useValidation } from './useValidation'
 import { normalizeDueDateFromApi } from '@/utils/datetime'
+import { sortDeliverablesByDueDateThenId } from '@/utils/deliverablesSort'
 
 const baseUrl = (activityId) => `/api/activities/${activityId}/deliverables`
 
@@ -115,7 +116,7 @@ export default function useActivityDeliverables() {
     try {
       const response = await withLoading(() => axios.get(baseUrl(activityId)))
       const data = unwrap(response)
-      deliverables.value = Array.isArray(data) ? data : []
+      deliverables.value = sortDeliverablesByDueDateThenId(Array.isArray(data) ? data : [])
       return response
     } catch (error) {
       toast.error('Error', 'No se pudieron cargar los entregables')
