@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\ActivityAvailableTeamStudentsController;
 use App\Http\Controllers\Api\ActivityBacklogController;
 use App\Http\Controllers\Api\ActivityBacklogCsvImportController;
 use App\Http\Controllers\Api\ActivityController;
+use App\Http\Controllers\Api\ActivityPhaseCsvImportController;
 use App\Http\Controllers\Api\ActivityRoleController;
 use App\Http\Controllers\Api\ActivityRoleTypeController;
 use App\Http\Controllers\Api\ActivitySubjectGroupController;
@@ -87,6 +88,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::put('activities/{activity}/teams/{team}/students', [TeamStudentController::class, 'sync'])->scopeBindings();
     Route::apiResource('activities.deliverables', DeliverableController::class)->scoped();
     Route::apiResource('deliverables.submissions', SubmissionController::class)->scoped();
+    Route::post('activities/{activity}/phases/csv-import', [ActivityPhaseCsvImportController::class, 'store'])->scopeBindings();
     Route::apiResource('activities.phases', PhaseController::class)->scoped();
     Route::apiResource('phase-student-roles', PhaseStudentRoleController::class);
     Route::apiResource('phase-tasks', PhaseTaskController::class);

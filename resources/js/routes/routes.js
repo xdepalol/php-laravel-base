@@ -247,6 +247,46 @@ export default [
                         },
                     },
                     {
+                        name: 'app.activity.phase.create',
+                        path: 'fases/nueva',
+                        component: () => import('../views/app/activity/ActivityPhaseFormPage.vue'),
+                        meta: {
+                            activityTab: 'phases',
+                            breadCrumb: 'Nueva fase',
+                            pageTitle: 'Nueva fase',
+                        },
+                    },
+                    {
+                        name: 'app.activity.phase.edit',
+                        path: 'fases/:phaseId/editar',
+                        component: () => import('../views/app/activity/ActivityPhaseFormPage.vue'),
+                        meta: {
+                            activityTab: 'phases',
+                            breadCrumb: 'Editar fase',
+                            pageTitle: 'Editar fase',
+                        },
+                    },
+                    {
+                        name: 'app.activity.phase.show',
+                        path: 'fases/:phaseId',
+                        component: () => import('../views/app/activity/ActivityPhaseDetailPage.vue'),
+                        meta: {
+                            activityTab: 'phases',
+                            breadCrumb: 'Fase',
+                            pageTitle: 'Fase',
+                        },
+                    },
+                    {
+                        name: 'app.activity.phases',
+                        path: 'fases',
+                        component: () => import('../views/app/activity/tabs/ActivityPhasesTab.vue'),
+                        meta: {
+                            activityTab: 'phases',
+                            breadCrumb: 'Fases',
+                            pageTitle: 'Fases',
+                        },
+                    },
+                    {
                         name: 'app.activity.deliverables',
                         path: 'entregables',
                         component: () => import('../views/app/activity/tabs/ActivityDeliverablesTab.vue'),
@@ -271,14 +311,6 @@ export default [
                         path: 'roles',
                         redirect: (to) => ({
                             name: 'app.activity.overview',
-                            params: to.params,
-                            query: to.query,
-                        }),
-                    },
-                    {
-                        path: 'fases',
-                        redirect: (to) => ({
-                            name: 'app.activity.teams',
                             params: to.params,
                             query: to.query,
                         }),

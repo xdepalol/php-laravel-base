@@ -121,7 +121,7 @@ const statusLabel = computed(() => {
   return String(s)
 })
 
-/** Fases, backlog y tareas viven en el espacio de cada equipo. */
+/** Fases a nivel actividad; backlog y tareas por equipo. */
 const tabs = computed(() => {
   const base = [
     {
@@ -136,13 +136,21 @@ const tabs = computed(() => {
       label: 'Equipos',
       icon: 'pi pi-users',
     },
-    {
-      tabKey: 'deliverables',
-      name: 'app.activity.deliverables',
-      label: 'Entregables',
-      icon: 'pi pi-inbox',
-    },
   ]
+  if (can('phase-list')) {
+    base.push({
+      tabKey: 'phases',
+      name: 'app.activity.phases',
+      label: 'Fases',
+      icon: 'pi pi-list',
+    })
+  }
+  base.push({
+    tabKey: 'deliverables',
+    name: 'app.activity.deliverables',
+    label: 'Entregables',
+    icon: 'pi pi-inbox',
+  })
   if (can('submission-list')) {
     base.push({
       tabKey: 'submissions',

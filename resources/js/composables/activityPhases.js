@@ -179,6 +179,25 @@ export default function useActivityPhases() {
     }
   }
 
+  /**
+   * Importación masiva (CSV / pegado Excel). Requiere permiso phase-create en el servidor.
+   *
+   * @returns {Promise<{ created: number, skipped: number, errors: { row: number, message: string }[] }>}
+   */
+  const importPhasesCsv = async (activityId, csvText) => {
+    if (!activityId) throw new Error('activityId requerido')
+    try {
+      const response = await withLoading(() =>
+        axios.post(`${baseUrl(activityId)}/csv-import`, { csv: csvText })
+      )
+      const data = unwrap(response)
+      return data
+    } catch (error) {
+      toast.error('Error', 'No se pudo importar el CSV de fases')
+      throw error
+    }
+  }
+
   return {
     phases,
     phase,
@@ -186,6 +205,7 @@ export default function useActivityPhases() {
     errors,
     hasError,
     getError,
+    clearErrors,
     resetPhase,
     setPhase,
     upsertPhaseRecord,
@@ -193,6 +213,7 @@ export default function useActivityPhases() {
     getPhase,
     createPhase,
     updatePhase,
-    deletePhase
+    deletePhase,
+    importPhasesCsv
   }
 }
