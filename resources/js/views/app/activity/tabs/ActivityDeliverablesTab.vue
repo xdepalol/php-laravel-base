@@ -35,12 +35,26 @@
           </template>
         </Column>
         <Column
-          v-if="can('deliverable-edit') || can('deliverable-delete')"
+          v-if="
+            can('submission-list') ||
+            can('deliverable-edit') ||
+            can('deliverable-delete')
+          "
           header="Acciones"
-          class="w-32"
+          class="w-40"
         >
           <template #body="{ data }">
             <div class="flex gap-1">
+              <Button
+                v-if="can('submission-list')"
+                v-tooltip.top="'Ver entregas'"
+                icon="pi pi-inbox"
+                rounded
+                text
+                severity="secondary"
+                size="small"
+                @click="goSubmissions(data.id)"
+              />
               <Button
                 v-if="can('deliverable-edit')"
                 v-tooltip.top="'Editar'"
@@ -106,6 +120,14 @@ function goCreate() {
 function goEdit(deliverableId) {
   router.push({
     name: 'app.activity.deliverable.edit',
+    params: { activityId: activityId?.value, deliverableId },
+    query: { ...tabQuery.value },
+  })
+}
+
+function goSubmissions(deliverableId) {
+  router.push({
+    name: 'app.activity.deliverable.submissions',
     params: { activityId: activityId?.value, deliverableId },
     query: { ...tabQuery.value },
   })

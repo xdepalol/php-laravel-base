@@ -119,59 +119,15 @@
       </template>
     </Card>
 
-    <Card
-      v-if="isEdit && can('submission-list')"
-      class="max-w-4xl"
-    >
-      <template #title>Entregas registradas (este entregable)</template>
-      <template #subtitle>
-        Listado de entregas asociadas solo a este entregable.
-      </template>
-      <template #content>
-        <div v-if="subsLoading" class="flex justify-center py-8 text-blue-600">
-          <i class="pi pi-spin pi-spinner text-xl" aria-hidden="true" />
-        </div>
-        <DataTable
-          v-else
-          :value="submissionsList"
-          data-key="id"
-          size="small"
-          striped-rows
-          class="text-sm"
-        >
-          <template #empty>
-            <span class="text-slate-500">Aún no hay entregas.</span>
-          </template>
-          <Column header="Participante">
-            <template #body="{ data }">
-              {{ participantLabel(data) }}
-            </template>
-          </Column>
-          <Column header="Estado" class="w-32">
-            <template #body="{ data }">
-              <Tag :value="submissionStatusLabel(data)" severity="secondary" />
-            </template>
-          </Column>
-          <Column header="Entregada" class="w-40">
-            <template #body="{ data }">
-              <UtcFormatted :value="data.submitted_at" variant="datetime" />
-            </template>
-          </Column>
-          <Column class="w-28">
-            <template #body="{ data }">
-              <router-link
-                v-if="can('submission-view')"
-                :to="submissionDetailTo(data.id)"
-                class="text-blue-700 hover:underline text-sm font-medium"
-              >
-                Ver detalle
-              </router-link>
-              <span v-else class="text-slate-400">—</span>
-            </template>
-          </Column>
-        </DataTable>
-      </template>
-    </Card>
+    <div v-if="isEdit && can('submission-list')" class="max-w-2xl">
+      <router-link
+        :to="submissionsPageTo"
+        class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-800 shadow-sm hover:bg-slate-50"
+      >
+        <i class="pi pi-inbox text-slate-600" aria-hidden="true" />
+        Ver entregas de este entregable
+      </router-link>
+    </div>
   </div>
 </template>
 
@@ -179,7 +135,6 @@
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAbility } from '@casl/vue'
-import axios from 'axios'
 import useActivityDeliverables from '@/composables/activityDeliverables'
 import { jsDateToUtcIso, utcIsoToJsDate } from '@/utils/datetime'
 
@@ -218,73 +173,22 @@ const deliverableId = computed(() =>
 
 const isEdit = computed(() => deliverableId.value != null && Number.isFinite(deliverableId.value))
 
-const subsLoading = ref(false)
-const submissionsList = ref([])
-
-function unwrap(response) {
-  return response.data?.data ?? response.data
-}
-
-const SUBMISSION_STATUS = {
-  0: 'Pendiente',
-  1: 'Entregada',
-  2: 'Calificada',
-}
-
-function submissionStatusLabel(row) {
-  const s = row?.status
-  const v = typeof s === 'object' && s !== null ? s.value : s
-  if (v == null) return '—'
-  return SUBMISSION_STATUS[v] ?? String(v)
-}
-
-function participantLabel(s) {
-  if (s.team_id != null) {
-    const n = s.team?.name
-    return n ? `Equipo: ${n}` : `Equipo #${s.team_id}`
-  }
-  if (s.student_id != null) {
-    const u = s.student?.user
-    if (u) {
-      const parts = [u.name, u.surname1, u.surname2].filter(Boolean)
-      return parts.length ? parts.join(' ') : `Estudiante #${s.student_id}`
-    }
-    return `Estudiante #${s.student_id}`
-  }
-  return '—'
-}
-
-function submissionDetailTo(submissionId) {
-  return {
-    name: 'app.activity.submission.detail',
-    params: {
-      activityId: activityId.value,
-      deliverableId: deliverableId.value,
-      submissionId,
-    },
-    query: { ...tabQuery.value },
-  }
-}
-
-async function loadSubmissionsForDeliverable() {
-  const did = deliverableId.value
-  if (!did || !isEdit.value) {
-    submissionsList.value = []
-    return
-  }
-  subsLoading.value = true
-  try {
-    const res = await axios.get(`/api/deliverables/${did}/submissions`)
-    const data = unwrap(res)
-    submissionsList.value = Array.isArray(data) ? data : []
-  } catch {
-    submissionsList.value = []
-  } finally {
-    subsLoading.value = false
-  }
-}
-
 const pageHeading = computed(() => (isEdit.value ? 'Editar entregable' : 'Nuevo entregable'))
+
+const tabQuery = computed(() => {
+  const raw = route.query.fromSubjectGroup
+  if (raw == null || raw === '') return {}
+  return { fromSubjectGroup: String(raw) }
+})
+
+const submissionsPageTo = computed(() => ({
+  name: 'app.activity.deliverable.submissions',
+  params: {
+    activityId: activityId.value,
+    deliverableId: deliverableId.value,
+  },
+  query: { ...tabQuery.value },
+}))
 
 const statusOptions = [
   { label: 'Borrador', value: 0 },
@@ -294,12 +198,6 @@ const statusOptions = [
 
 /** Solo carga inicial en modo edición; el composable también marca isLoading al guardar. */
 const pageBusy = ref(false)
-
-const tabQuery = computed(() => {
-  const raw = route.query.fromSubjectGroup
-  if (raw == null || raw === '') return {}
-  return { fromSubjectGroup: String(raw) }
-})
 
 const backTo = computed(() => ({
   name: 'app.activity.deliverables',
@@ -330,14 +228,6 @@ watch(
   () => [activityId.value, deliverableId.value, route.name],
   () => {
     load()
-  },
-  { immediate: true }
-)
-
-watch(
-  () => [isEdit.value, deliverableId.value],
-  () => {
-    loadSubmissionsForDeliverable()
   },
   { immediate: true }
 )

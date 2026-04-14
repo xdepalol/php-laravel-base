@@ -6,7 +6,7 @@
         class="inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900"
       >
         <i class="pi pi-arrow-left" />
-        Volver a entregas
+        Volver al listado de entregas
       </router-link>
     </div>
 
@@ -100,8 +100,11 @@ const tabQuery = computed(() => {
 })
 
 const backTo = computed(() => ({
-  name: 'app.activity.submissions',
-  params: { activityId: activityId.value },
+  name: 'app.activity.deliverable.submissions',
+  params: {
+    activityId: activityId.value,
+    deliverableId: deliverableId.value,
+  },
   query: { ...tabQuery.value },
 }))
 

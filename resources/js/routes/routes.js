@@ -178,6 +178,16 @@ export default [
                 },
             },
             {
+                name: 'app.activity.deliverable.submissions',
+                path: 'actividades/:activityId/entregables/:deliverableId/entregas',
+                component: () =>
+                    import('../views/app/activity/ActivityDeliverableSubmissionsPage.vue'),
+                meta: {
+                    breadCrumb: 'Entregas del entregable',
+                    pageTitle: 'Entregas',
+                },
+            },
+            {
                 name: 'app.activity.submission.detail',
                 path: 'actividades/:activityId/entregables/:deliverableId/entregas/:submissionId',
                 component: () =>
