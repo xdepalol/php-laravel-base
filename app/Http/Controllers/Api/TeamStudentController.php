@@ -33,7 +33,7 @@ class TeamStudentController extends Controller
         foreach ($request->students as $row) {
             $studentId = $row['student_id'];
             $syncPayload[$studentId] = [
-                'activity_role_id' => $row['activity_role_id'],
+                'activity_role_id' => $row['activity_role_id'] ?? null,
             ];
         }
 

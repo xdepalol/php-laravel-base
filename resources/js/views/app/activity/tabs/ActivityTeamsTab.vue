@@ -40,6 +40,24 @@
             {{ data.submissions_delivered_count ?? 0 }}
           </template>
         </Column>
+        <Column v-if="can('team-delete')" header="" class="w-14">
+          <template #body="{ data }">
+            <Button
+              v-if="memberCount(data) === 0"
+              v-tooltip.top="'Eliminar equipo vacío'"
+              icon="pi pi-trash"
+              rounded
+              text
+              severity="danger"
+              size="small"
+              :aria-label="`Eliminar equipo ${data.name || data.id}`"
+              @click="confirmDeleteTeam(data)"
+            />
+            <span v-else class="text-slate-400 text-xs select-none" title="Quita todos los miembros para poder eliminar el equipo"
+              >—</span
+            >
+          </template>
+        </Column>
       </DataTable>
     </template>
   </Card>
@@ -86,7 +104,8 @@ import useActivityTeams from '@/composables/activityTeams'
 const { can } = useAbility()
 const route = useRoute()
 const activityId = inject('activityId')
-const { teams, isLoading, getTeams, createTeam, hasError, getError, upsertTeamRecord } =
+const swal = inject('$swal')
+const { teams, isLoading, getTeams, createTeam, deleteTeam, hasError, getError, upsertTeamRecord } =
   useActivityTeams()
 
 const createDialogOpen = ref(false)
@@ -122,6 +141,31 @@ function openCreateDialog() {
 
 function onDialogHide() {
   newTeamName.value = ''
+}
+
+function confirmDeleteTeam(row) {
+  const id = activityId?.value
+  if (!id || memberCount(row) > 0) return
+
+  const run = () =>
+    deleteTeam(id, row.id).then(() => getTeams(id))
+
+  if (!swal) {
+    run()
+    return
+  }
+
+  swal({
+    icon: 'warning',
+    title: '¿Eliminar equipo?',
+    text: `Se eliminará «${row.name || 'este equipo'}» de forma permanente.`,
+    showCancelButton: true,
+    confirmButtonText: 'Sí, eliminar',
+    cancelButtonText: 'Cancelar',
+    confirmButtonColor: '#ef4444',
+  }).then((result) => {
+    if (result.isConfirmed) run()
+  })
 }
 
 async function submitNewTeam() {

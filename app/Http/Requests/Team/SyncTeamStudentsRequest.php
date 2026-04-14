@@ -22,9 +22,10 @@ class SyncTeamStudentsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'students' => ['required', 'array'],
+            // `present` permite array vacío; `required` falla con [] y impedía dejar el equipo sin miembros.
+            'students' => ['present', 'array'],
             'students.*.student_id' => ['required', 'integer', 'distinct', 'exists:students,user_id'],
-            'students.*.activity_role_id' => ['required', 'integer', 'exists:activity_roles,id'],
+            'students.*.activity_role_id' => ['nullable', 'integer', 'exists:activity_roles,id'],
         ];
     }
 }

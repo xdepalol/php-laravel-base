@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AcademicYearController;
+use App\Http\Controllers\Api\ActivityAvailableTeamStudentsController;
 use App\Http\Controllers\Api\ActivityBacklogController;
 use App\Http\Controllers\Api\ActivityBacklogCsvImportController;
 use App\Http\Controllers\Api\ActivityController;
@@ -8,6 +9,7 @@ use App\Http\Controllers\Api\ActivityRoleController;
 use App\Http\Controllers\Api\ActivityRoleTypeController;
 use App\Http\Controllers\Api\ActivitySubjectGroupController;
 use App\Http\Controllers\Api\ActivityTaskController;
+use App\Http\Controllers\Api\ActivityTeamMemberRolesController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\CourseController;
@@ -72,6 +74,8 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::apiResource('subject-groups', SubjectGroupController::class);
     Route::apiResource('subject-groups.enrollments', EnrollmentController::class)->scoped();
     Route::apiResource('activities', ActivityController::class);
+    Route::get('activities/{activity}/team-member-roles', ActivityTeamMemberRolesController::class)->scopeBindings();
+    Route::get('activities/{activity}/students-available-for-teams', ActivityAvailableTeamStudentsController::class)->scopeBindings();
     Route::post('activities/{activity}/backlog-items/csv-import', [ActivityBacklogCsvImportController::class, 'store']);
     Route::apiResource('activities.backlog-items', ActivityBacklogController::class)->scoped();
     Route::apiResource('activities.tasks', ActivityTaskController::class)->scoped();

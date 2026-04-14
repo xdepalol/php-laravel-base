@@ -50,13 +50,18 @@ class Team extends Model
         $this->loadMissing(['students.user']);
         $ids = $this->students->pluck('pivot.activity_role_id')->unique()->filter()->values();
         if ($ids->isEmpty()) {
+            foreach ($this->students as $student) {
+                $student->pivot->setRelation('activityRole', null);
+            }
+
             return $this;
         }
         $roles = ActivityRole::with('activityRoleType')->whereIn('id', $ids)->get()->keyBy('id');
         foreach ($this->students as $student) {
+            $rid = $student->pivot->activity_role_id;
             $student->pivot->setRelation(
                 'activityRole',
-                $roles->get($student->pivot->activity_role_id)
+                $rid ? $roles->get($rid) : null
             );
         }
 

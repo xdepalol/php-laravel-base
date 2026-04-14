@@ -203,6 +203,15 @@ async function bootstrap() {
 }
 
 watch([routeActivityId, routeTeamId], bootstrap, { immediate: true })
+
+async function reloadTeam() {
+  const aid = routeActivityId.value
+  const tid = routeTeamId.value
+  if (!aid || !tid) return
+  await getTeam(aid, tid)
+}
+
+provide('reloadTeam', reloadTeam)
 </script>
 
 <style scoped>

@@ -7,6 +7,10 @@ import { useValidation } from './useValidation'
 const teamsBase = (activityId) => `/api/activities/${activityId}/teams`
 const studentsUrl = (activityId, teamId) =>
   `/api/activities/${activityId}/teams/${teamId}/students`
+const teamMemberRolesUrl = (activityId) =>
+  `/api/activities/${activityId}/team-member-roles`
+const studentsAvailableForTeamsUrl = (activityId) =>
+  `/api/activities/${activityId}/students-available-for-teams`
 
 const teamSchema = yup.object({
   name: yup.string().trim().required('El nombre es obligatorio').max(255)
@@ -18,7 +22,7 @@ const syncStudentsSchema = yup.object({
     .of(
       yup.object({
         student_id: yup.number().required().integer().positive(),
-        activity_role_id: yup.number().required().integer().positive()
+        activity_role_id: yup.number().nullable().integer().positive()
       })
     )
     .required()
@@ -164,7 +168,52 @@ export default function useActivityTeams() {
     }
   }
 
-  /** @param {{ student_id: number, activity_role_id: number }[]} rows */
+  /**
+   * Roles de equipo para la actividad (sin loading global; permite varias llamadas en paralelo).
+   */
+  const getTeamMemberRoles = async (activityId) => {
+    if (!activityId) throw new Error('activityId requerido')
+    try {
+      const response = await axios.get(teamMemberRolesUrl(activityId))
+      const data = unwrap(response)
+      return Array.isArray(data) ? data : []
+    } catch (error) {
+      toast.error('Error', 'No se pudieron cargar los roles de equipo')
+      throw error
+    }
+  }
+
+  /**
+   * Estudiantes matriculados en la actividad que no están en ningún equipo (libres).
+   */
+  const getStudentsAvailableForTeams = async (activityId) => {
+    if (!activityId) throw new Error('activityId requerido')
+    try {
+      const response = await axios.get(studentsAvailableForTeamsUrl(activityId))
+      const data = unwrap(response)
+      return Array.isArray(data) ? data : []
+    } catch (error) {
+      toast.error('Error', 'No se pudieron cargar los estudiantes disponibles')
+      throw error
+    }
+  }
+
+  /**
+   * Miembros actuales del equipo (solo datos; no actualiza teamStudents ni loading global).
+   */
+  const getTeamStudentsList = async (activityId, teamId) => {
+    if (!activityId || !teamId) throw new Error('IDs requeridos')
+    try {
+      const response = await axios.get(studentsUrl(activityId, teamId))
+      const data = unwrap(response)
+      return Array.isArray(data) ? data : []
+    } catch (error) {
+      toast.error('Error', 'No se pudieron cargar los miembros del equipo')
+      throw error
+    }
+  }
+
+  /** @param {{ student_id: number, activity_role_id?: number | null }[]} rows */
   const syncTeamStudents = async (activityId, teamId, rows) => {
     if (!activityId || !teamId) throw new Error('IDs requeridos')
     const payload = { students: rows ?? [] }
@@ -204,6 +253,9 @@ export default function useActivityTeams() {
     updateTeam,
     deleteTeam,
     getTeamStudents,
+    getTeamMemberRoles,
+    getStudentsAvailableForTeams,
+    getTeamStudentsList,
     syncTeamStudents
   }
 }

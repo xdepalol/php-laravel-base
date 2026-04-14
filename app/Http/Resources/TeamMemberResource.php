@@ -2,7 +2,6 @@
 
 namespace App\Http\Resources;
 
-use App\Models\TeamStudent;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -19,17 +18,15 @@ class TeamMemberResource extends JsonResource
     public function toArray(Request $request): array
     {
         $pivot = $this->pivot;
-        $roleLoaded = $pivot instanceof TeamStudent
-            && $pivot->relationLoaded('activityRole')
-            && $pivot->activityRole !== null;
+
+        $role = $pivot->activity_role_id === null
+            ? null
+            : $pivot->activityRole;
 
         return [
             'student_id' => $this->user_id,
             'activity_role_id' => $pivot->activity_role_id,
-            'activity_role' => $this->when(
-                $roleLoaded,
-                fn () => new ActivityRoleResource($pivot->activityRole)
-            ),
+            'activity_role' => $role === null ? null : new ActivityRoleResource($role),
             'student' => new StudentResource($this),
         ];
     }
