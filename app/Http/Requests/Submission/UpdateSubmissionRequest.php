@@ -11,7 +11,11 @@ class UpdateSubmissionRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        if ($this->user()->can('submission-edit')) {
+            return true;
+        }
+
+        return $this->user()->hasRole('student') && ! $this->user()->hasRole('teacher');
     }
 
     /**
@@ -20,9 +24,23 @@ class UpdateSubmissionRequest extends FormRequest
     public function rules(): array
     {
         $deliverable = $this->route('deliverable');
-        $activityId = $deliverable instanceof Deliverable
-            ? $deliverable->activity_id
-            : Deliverable::query()->whereKey($deliverable)->value('activity_id');
+        if (! $deliverable instanceof Deliverable) {
+            $deliverable = Deliverable::query()->findOrFail($this->route('deliverable'));
+        }
+
+        if ($this->user()->can('submission-edit')) {
+            return $this->teacherRules($deliverable);
+        }
+
+        return $this->studentRules();
+    }
+
+    /**
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array|string>
+     */
+    private function teacherRules(Deliverable $deliverable): array
+    {
+        $activityId = $deliverable->activity_id;
 
         return [
             'student_id' => ['nullable', 'exists:students,user_id'],
@@ -36,6 +54,19 @@ class UpdateSubmissionRequest extends FormRequest
             'status' => ['nullable', Rule::enum(SubmissionStatus::class)],
             'grade' => ['nullable', 'numeric', 'min:0', 'max:99.99'],
             'feedback' => ['nullable', 'string'],
+        ];
+    }
+
+    /**
+     * Alumno: solo contenido; el controlador no modifica nota ni estado salvo lógica explícita.
+     *
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array|string>
+     */
+    private function studentRules(): array
+    {
+        return [
+            'content_url' => ['nullable', 'string', 'max:256'],
+            'content_text' => ['nullable', 'string', 'max:65535'],
         ];
     }
 }

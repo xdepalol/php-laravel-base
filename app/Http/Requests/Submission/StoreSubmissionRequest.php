@@ -11,7 +11,11 @@ class StoreSubmissionRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        if ($this->user()->can('submission-create')) {
+            return true;
+        }
+
+        return $this->user()->hasRole('student') && ! $this->user()->hasRole('teacher');
     }
 
     /**
@@ -20,9 +24,23 @@ class StoreSubmissionRequest extends FormRequest
     public function rules(): array
     {
         $deliverable = $this->route('deliverable');
-        $activityId = $deliverable instanceof Deliverable
-            ? $deliverable->activity_id
-            : Deliverable::query()->whereKey($deliverable)->value('activity_id');
+        if (! $deliverable instanceof Deliverable) {
+            $deliverable = Deliverable::query()->findOrFail($this->route('deliverable'));
+        }
+
+        if ($this->user()->can('submission-create')) {
+            return $this->teacherRules($deliverable);
+        }
+
+        return $this->studentRules($deliverable);
+    }
+
+    /**
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array|string>
+     */
+    private function teacherRules(Deliverable $deliverable): array
+    {
+        $activityId = $deliverable->activity_id;
 
         return [
             'student_id' => ['nullable', 'exists:students,user_id'],
@@ -36,6 +54,24 @@ class StoreSubmissionRequest extends FormRequest
             'status' => ['nullable', Rule::enum(SubmissionStatus::class)],
             'grade' => ['nullable', 'numeric', 'min:0', 'max:99.99'],
             'feedback' => ['nullable', 'string'],
+        ];
+    }
+
+    /**
+     * Entrega por miembro de equipo: URL y comentarios opcionales; team_id para comprobar pertenencia.
+     *
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array|string>
+     */
+    private function studentRules(Deliverable $deliverable): array
+    {
+        return [
+            'content_url' => ['nullable', 'string', 'max:256'],
+            'content_text' => ['nullable', 'string', 'max:65535'],
+            'team_id' => [
+                'required',
+                'integer',
+                Rule::exists('teams', 'id')->where('activity_id', $deliverable->activity_id),
+            ],
         ];
     }
 }
