@@ -3,6 +3,7 @@ import * as yup from 'yup'
 import axios from 'axios'
 import { useToast } from './useToast'
 import { useValidation } from './useValidation'
+import { toDateInputValue } from '@/utils/dateInput'
 
 const baseUrl = (activityId) => `/api/activities/${activityId}/deliverables`
 
@@ -14,7 +15,7 @@ function normalizeDeliverable(data) {
     id: data.id ?? null,
     title: data.title ?? '',
     description: data.description ?? null,
-    due_date: data.due_date ?? null,
+    due_date: toDateInputValue(data.due_date),
     status: data.status?.value ?? data.status ?? 0,
     is_group_deliverable: !!data.is_group_deliverable
   }

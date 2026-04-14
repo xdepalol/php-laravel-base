@@ -178,6 +178,16 @@ export default [
                 },
             },
             {
+                name: 'app.activity.submission.detail',
+                path: 'actividades/:activityId/entregables/:deliverableId/entregas/:submissionId',
+                component: () =>
+                    import('../views/app/activity/ActivitySubmissionDetailPage.vue'),
+                meta: {
+                    breadCrumb: 'Entrega',
+                    pageTitle: 'Entrega',
+                },
+            },
+            {
                 path: 'actividades/:activityId',
                 component: () => import('../views/app/activity/ActivityLayout.vue'),
                 meta: {
@@ -221,6 +231,17 @@ export default [
                             activityTab: 'deliverables',
                             breadCrumb: 'Entregables',
                             pageTitle: 'Entregables',
+                        },
+                    },
+                    {
+                        name: 'app.activity.submissions',
+                        path: 'entregas',
+                        component: () =>
+                            import('../views/app/activity/tabs/ActivitySubmissionsTab.vue'),
+                        meta: {
+                            activityTab: 'submissions',
+                            breadCrumb: 'Entregas',
+                            pageTitle: 'Entregas',
                         },
                     },
                     {

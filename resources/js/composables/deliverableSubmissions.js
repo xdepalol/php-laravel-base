@@ -74,23 +74,28 @@ export default function useDeliverableSubmissions() {
 
   const setSubmission = (data = {}) => {
     const n = normalizeSubmission(data)
-    submission.value = n
-      ? {
-          id: n.id,
-          student_id: n.student_id,
-          team_id: n.team_id,
-          content_url: n.content_url,
-          content_text: n.content_text,
-          submitted_at: n.submitted_at,
-          status: n.status,
-          grade: n.grade,
-          feedback: n.feedback
-        }
-      : { ...initialSubmission }
+    if (!n) {
+      submission.value = { ...initialSubmission }
+      clearErrors()
+      return
+    }
+    submission.value = {
+      ...initialSubmission,
+      ...n,
+      status: data.status ?? n.status,
+      student: data.student ?? null,
+      team: data.team ?? null,
+    }
     clearErrors()
   }
 
   const unwrap = (response) => response.data?.data ?? response.data
+
+  const statusToNumber = (s) => {
+    if (s == null) return null
+    if (typeof s === 'object' && s.value != null) return s.value
+    return s
+  }
 
   const buildPayload = (data) => {
     const body = {}
@@ -99,7 +104,8 @@ export default function useDeliverableSubmissions() {
     if (data.content_url != null) body.content_url = data.content_url
     if (data.content_text != null) body.content_text = data.content_text
     if (data.submitted_at != null) body.submitted_at = data.submitted_at
-    if (data.status != null) body.status = data.status
+    const st = statusToNumber(data.status)
+    if (st != null) body.status = st
     if (data.grade != null) body.grade = data.grade
     if (data.feedback != null) body.feedback = data.feedback
     return body
@@ -135,7 +141,8 @@ export default function useDeliverableSubmissions() {
 
   const createSubmission = async (deliverableId, payload) => {
     if (!deliverableId) throw new Error('deliverableId requerido')
-    const data = payload ?? submission.value
+    const data = { ...(payload ?? submission.value) }
+    data.status = statusToNumber(data.status) ?? data.status
     const { isValid } = validate(submissionBodySchema, data)
     if (!isValid) {
       toast.error('Error de validación', 'Revisa los campos resaltados.')
@@ -157,6 +164,7 @@ export default function useDeliverableSubmissions() {
   const updateSubmission = async (deliverableId, submissionId, payload) => {
     if (!deliverableId || !submissionId) throw new Error('IDs requeridos')
     const data = { ...(payload ?? submission.value) }
+    data.status = statusToNumber(data.status) ?? data.status
     const { isValid } = validate(submissionBodySchema, data)
     if (!isValid) {
       toast.error('Error de validación', 'Revisa los campos resaltados.')

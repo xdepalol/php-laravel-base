@@ -70,10 +70,12 @@
 <script setup>
 import { computed, provide, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useAbility } from '@casl/vue'
 import useActivities from '@/composables/activities'
 
 const route = useRoute()
 const router = useRouter()
+const { can } = useAbility()
 
 const routeActivityId = computed(() => Number(route.params.activityId))
 
@@ -120,24 +122,52 @@ const statusLabel = computed(() => {
 })
 
 /** Fases, backlog y tareas viven en el espacio de cada equipo. */
-const tabs = [
-  { tabKey: 'overview', name: 'app.activity.overview', label: 'Resumen', icon: 'pi pi-info-circle' },
-  { tabKey: 'teams', name: 'app.activity.teams', label: 'Equipos', icon: 'pi pi-users' },
-  { tabKey: 'deliverables', name: 'app.activity.deliverables', label: 'Entregables', icon: 'pi pi-inbox' },
-]
+const tabs = computed(() => {
+  const base = [
+    {
+      tabKey: 'overview',
+      name: 'app.activity.overview',
+      label: 'Resumen',
+      icon: 'pi pi-info-circle',
+    },
+    {
+      tabKey: 'teams',
+      name: 'app.activity.teams',
+      label: 'Equipos',
+      icon: 'pi pi-users',
+    },
+    {
+      tabKey: 'deliverables',
+      name: 'app.activity.deliverables',
+      label: 'Entregables',
+      icon: 'pi pi-inbox',
+    },
+  ]
+  if (can('submission-list')) {
+    base.push({
+      tabKey: 'submissions',
+      name: 'app.activity.submissions',
+      label: 'Entregas',
+      icon: 'pi pi-send',
+    })
+  }
+  return base
+})
 
-const routeNameToTabKey = Object.fromEntries(tabs.map((t) => [t.name, t.tabKey]))
+const routeNameToTabKey = computed(() =>
+  Object.fromEntries(tabs.value.map((t) => [t.name, t.tabKey]))
+)
 
-const activeTabKey = ref(tabs[0].tabKey)
+const activeTabKey = ref('overview')
 
 function resolveTabKeyFromRoute() {
   const metaKey = route.meta?.activityTab
-  if (metaKey && tabs.some((t) => t.tabKey === metaKey)) return metaKey
-  return routeNameToTabKey[route.name] ?? tabs[0].tabKey
+  if (metaKey && tabs.value.some((t) => t.tabKey === metaKey)) return metaKey
+  return routeNameToTabKey.value[route.name] ?? tabs.value[0]?.tabKey ?? 'overview'
 }
 
 watch(
-  () => [route.name, route.meta?.activityTab],
+  () => [route.name, route.meta?.activityTab, tabs.value],
   () => {
     activeTabKey.value = resolveTabKeyFromRoute()
   },
@@ -146,7 +176,7 @@ watch(
 
 function onTabChange(nextKey) {
   if (!nextKey || nextKey === activeTabKey.value) return
-  const tab = tabs.find((t) => t.tabKey === nextKey)
+  const tab = tabs.value.find((t) => t.tabKey === nextKey)
   if (!tab) return
   router.push({
     name: tab.name,
