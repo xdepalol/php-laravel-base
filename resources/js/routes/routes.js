@@ -1,4 +1,4 @@
-import { authStore } from "../store/auth";
+import { authStore } from '../store/auth'
 
 const AuthenticatedLayout = () => import('../layouts/AdminLayout.vue');
 const AuthenticatedUserLayout = () => import('../layouts/UserLayout.vue');
@@ -17,6 +17,16 @@ async function requireLogin(to, from, next) {
 
 const hasAdmin = (roles = []) =>
     roles.some((role) => role?.name?.toLowerCase().includes('admin'));
+
+/** Alumnos sin rol docente: entrada al grupo en Actividades; docentes: Resumen. */
+function subjectGroupDefaultRedirect(to) {
+    const roles = authStore().user?.roles?.map((r) => r.name) ?? []
+    const studentOnly = roles.includes('student') && !roles.includes('teacher')
+    return {
+        name: studentOnly ? 'app.subject-group.activities' : 'app.subject-group.overview',
+        params: to.params,
+    }
+}
 
 async function guest(to, from, next) {
     const auth = authStore()
@@ -117,10 +127,7 @@ export default [
                 children: [
                     {
                         path: '',
-                        redirect: (to) => ({
-                            name: 'app.subject-group.overview',
-                            params: to.params,
-                        }),
+                        redirect: subjectGroupDefaultRedirect,
                     },
                     {
                         name: 'app.subject-group.overview',

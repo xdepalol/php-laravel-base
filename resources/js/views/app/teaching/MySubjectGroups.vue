@@ -38,7 +38,7 @@
             </template>
             <template #content>
               <router-link
-                :to="{ name: 'app.subject-group.overview', params: { id: sg.id } }"
+                :to="{ name: subjectGroupEntryRoute, params: { id: sg.id } }"
                 class="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-700"
               >
                 {{ entryLinkLabel }}
@@ -83,7 +83,11 @@ const emptyMessage = computed(() => {
   return 'No tienes grupos de asignatura asignados en este curso académico.'
 })
 
-const entryLinkLabel = computed(() => (isStudentView.value ? 'Ver asignatura' : 'Gestionar grupo'))
+const entryLinkLabel = computed(() => (isStudentView.value ? 'Ver actividades' : 'Gestionar grupo'))
+
+const subjectGroupEntryRoute = computed(() =>
+  isStudentView.value ? 'app.subject-group.activities' : 'app.subject-group.overview'
+)
 
 const academicYearId = computed(() => selectedAcademicYearId.value)
 

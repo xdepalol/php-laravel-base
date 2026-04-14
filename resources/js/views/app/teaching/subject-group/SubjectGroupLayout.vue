@@ -37,7 +37,7 @@
         >
           <TabList>
             <Tab
-              v-for="tab in tabs"
+              v-for="tab in visibleTabs"
               :key="tab.tabKey"
               :value="tab.tabKey"
               class="text-sm font-medium"
@@ -61,6 +61,7 @@
 <script setup>
 import { computed, provide, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { authStore } from '@/store/auth'
 import useSubjectGroups from '@/composables/subjectGroups'
 import useSubjectGroupEnrollments from '@/composables/subjectGroupEnrollments'
 import useActivities from '@/composables/activities'
@@ -73,6 +74,11 @@ const groupId = computed(() => Number(route.params.id))
 const { subjectGroup, isLoading, getSubjectGroup } = useSubjectGroups()
 const enrollmentsApi = useSubjectGroupEnrollments()
 const { enrollments, isLoading: enrollmentsLoading, getEnrollments } = enrollmentsApi
+
+const isStudentOnlyView = computed(() => {
+  const roles = authStore().user?.roles?.map((r) => r.name) ?? []
+  return roles.includes('student') && !roles.includes('teacher')
+})
 const {
   activities: groupActivities,
   isLoading: activitiesLoading,
@@ -91,24 +97,35 @@ const headerSubtitle = computed(() => {
   return g?.name || `Grupo #${subjectGroup.value.group_id}`
 })
 
-const tabs = [
+const allSubjectGroupTabs = [
   { tabKey: 'overview', name: 'app.subject-group.overview', label: 'Resumen', icon: 'pi pi-info-circle' },
   { tabKey: 'students', name: 'app.subject-group.students', label: 'Estudiantes', icon: 'pi pi-users' },
   { tabKey: 'activities', name: 'app.subject-group.activities', label: 'Actividades', icon: 'pi pi-inbox' },
 ]
 
-const routeNameToTabKey = Object.fromEntries(tabs.map((t) => [t.name, t.tabKey]))
+const visibleTabs = computed(() => {
+  if (isStudentOnlyView.value) {
+    return allSubjectGroupTabs.filter((t) => t.tabKey !== 'students')
+  }
+  return allSubjectGroupTabs
+})
 
-const activeTabKey = ref(tabs[0].tabKey)
+const routeNameToTabKey = computed(() =>
+  Object.fromEntries(visibleTabs.value.map((t) => [t.name, t.tabKey]))
+)
+
+const activeTabKey = ref(allSubjectGroupTabs[0].tabKey)
 
 function resolveTabKeyFromRoute() {
   const metaKey = route.meta?.subjectGroupTab
-  if (metaKey && tabs.some((t) => t.tabKey === metaKey)) return metaKey
-  return routeNameToTabKey[route.name] ?? tabs[0].tabKey
+  if (metaKey && visibleTabs.value.some((t) => t.tabKey === metaKey)) {
+    return metaKey
+  }
+  return routeNameToTabKey.value[route.name] ?? visibleTabs.value[0]?.tabKey ?? 'overview'
 }
 
 watch(
-  () => [route.name, route.meta?.subjectGroupTab],
+  () => [route.name, route.meta?.subjectGroupTab, visibleTabs.value],
   () => {
     activeTabKey.value = resolveTabKeyFromRoute()
   },
@@ -117,13 +134,26 @@ watch(
 
 function onTabChange(nextKey) {
   if (!nextKey || nextKey === activeTabKey.value) return
-  const tab = tabs.find((t) => t.tabKey === nextKey)
+  const tab = visibleTabs.value.find((t) => t.tabKey === nextKey)
   if (!tab) return
   router.push({
     name: tab.name,
     params: { id: String(groupId.value) },
   })
 }
+
+watch(
+  () => [route.name, isStudentOnlyView.value, groupId.value],
+  () => {
+    if (isStudentOnlyView.value && route.name === 'app.subject-group.students') {
+      router.replace({
+        name: 'app.subject-group.activities',
+        params: { id: String(groupId.value) },
+      })
+    }
+  },
+  { immediate: true }
+)
 
 provide('subjectGroupId', groupId)
 provide('subjectGroup', subjectGroup)
@@ -148,7 +178,11 @@ async function loadGroup() {
   loadError.value = false
   try {
     await getSubjectGroup(id)
-    await getEnrollments(id)
+    if (!isStudentOnlyView.value) {
+      await getEnrollments(id)
+    } else {
+      enrollments.value = []
+    }
     await getActivitiesForSubjectGroup(id)
   } catch {
     loadError.value = true
@@ -156,7 +190,7 @@ async function loadGroup() {
 }
 
 watch(
-  groupId,
+  () => [groupId.value, isStudentOnlyView.value],
   () => {
     loadGroup()
   },
