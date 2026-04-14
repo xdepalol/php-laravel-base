@@ -3,7 +3,7 @@
     <Card>
       <template #title>Mis asignaturas</template>
       <template #subtitle>
-        Grupos de asignatura en los que figuras como profesor para el curso académico seleccionado en la barra superior.
+        {{ pageSubtitle }}
         <span v-if="yearLabel" class="block mt-1 font-medium text-slate-700">{{ yearLabel }}</span>
       </template>
       <template #content>
@@ -14,7 +14,7 @@
           <i class="pi pi-spin pi-spinner text-3xl" aria-hidden="true" />
         </div>
         <div v-else-if="!mySubjectGroups.length" class="text-slate-500 text-sm py-8 text-center">
-          No tienes grupos de asignatura asignados en este curso académico.
+          {{ emptyMessage }}
         </div>
         <div
           v-else
@@ -41,7 +41,7 @@
                 :to="{ name: 'app.subject-group.overview', params: { id: sg.id } }"
                 class="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-700"
               >
-                Gestionar grupo
+                {{ entryLinkLabel }}
                 <i class="pi pi-arrow-right text-xs" />
               </router-link>
             </template>
@@ -56,10 +56,34 @@
 import { computed, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useAcademicYearStore } from '@/store/academicYear'
+import { authStore } from '@/store/auth'
 import useSubjectGroups from '@/composables/subjectGroups'
 
 const academicYearStore = useAcademicYearStore()
 const { selectedAcademicYearId, currentAcademicYearLabel } = storeToRefs(academicYearStore)
+
+const { user } = storeToRefs(authStore())
+
+const isTeacher = computed(() => user.value?.roles?.some((r) => r.name === 'teacher'))
+const isStudentView = computed(
+  () => user.value?.roles?.some((r) => r.name === 'student') && !isTeacher.value
+)
+
+const pageSubtitle = computed(() => {
+  if (isStudentView.value) {
+    return 'Grupos del curso académico seleccionado en la barra superior en los que estás matriculado/a.'
+  }
+  return 'Grupos de asignatura en los que figuras como profesor para el curso académico seleccionado en la barra superior.'
+})
+
+const emptyMessage = computed(() => {
+  if (isStudentView.value) {
+    return 'No tienes matrículas activas en este curso académico.'
+  }
+  return 'No tienes grupos de asignatura asignados en este curso académico.'
+})
+
+const entryLinkLabel = computed(() => (isStudentView.value ? 'Ver asignatura' : 'Gestionar grupo'))
 
 const academicYearId = computed(() => selectedAcademicYearId.value)
 

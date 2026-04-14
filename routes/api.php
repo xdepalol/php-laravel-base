@@ -26,6 +26,7 @@ use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\StudentController;
 use App\Http\Controllers\Api\StudentEnrollmentController;
+use App\Http\Controllers\Api\StudentSubjectGroupController;
 use App\Http\Controllers\Api\SubjectController;
 use App\Http\Controllers\Api\SubjectGroupActivityController;
 use App\Http\Controllers\Api\SubjectGroupController;
@@ -54,6 +55,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::apiResource('permissions', PermissionController::class);
 
     Route::get('me/subject-groups', [TeacherSubjectGroupController::class, 'index']);
+    Route::get('me/student/subject-groups', [StudentSubjectGroupController::class, 'index']);
 
     Route::get('/user', [ProfileController::class, 'user']);
     Route::get('/user/signin', [ProfileController::class, 'user']);

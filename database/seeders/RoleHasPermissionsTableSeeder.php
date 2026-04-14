@@ -3,12 +3,11 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class RoleHasPermissionsTableSeeder extends Seeder
 {
-
     /**
      * Auto generated seed file
      *
@@ -16,12 +15,14 @@ class RoleHasPermissionsTableSeeder extends Seeder
      */
     public function run()
     {
-        
+
         /* ADMIN */
         // 1. Busquem el rol d'admin (per ID o per nom, millor per nom si pots)
-        $adminRole = Role::find(1); 
+        $adminRole = Role::find(1);
         // 2. Obtenim tots els noms de permisos
-        $permissions = Permission::all();
+        $permissions = Permission::all()->reject(function ($permission) {
+            return in_array($permission->name, ['own-enrollments']);
+        });
         // 3. Sincronitzem (això elimina els anteriors i posa els nous)
         $adminRole->syncPermissions($permissions);
 
@@ -32,7 +33,7 @@ class RoleHasPermissionsTableSeeder extends Seeder
             'exercise-all',
             'exercise-delete',
             'student-list',
-            'student-view'
+            'student-view',
         ]);
 
         /* TEACHER */
@@ -41,7 +42,7 @@ class RoleHasPermissionsTableSeeder extends Seeder
         $teacherPermissions = [];
         $entities = [
             'activity', 'task', 'deliverable', 'team', 'backlogitem', 'phasetask',
-            'phase', 'submission', 'phasestudentrole'
+            'phase', 'submission', 'phasestudentrole',
         ];
         $actions = ['list', 'edit', 'create', 'delete', 'view'];
         foreach ($entities as $entity) {
@@ -74,7 +75,7 @@ class RoleHasPermissionsTableSeeder extends Seeder
         // ReadWrite Access
         $studentPermissions = [];
         $entities = [
-            'backlogitem', 'phasetask', 'phasestudentrole'
+            'backlogitem', 'phasetask', 'phasestudentrole',
         ];
         $actions = ['list', 'edit', 'create', 'delete', 'view'];
         foreach ($entities as $entity) {
@@ -95,10 +96,12 @@ class RoleHasPermissionsTableSeeder extends Seeder
                 $studentPermissions[] = "{$entity}-{$action}";
             }
         }
+        // adhoc permissions
+        $studentPermissions[] = 'own-enrollments';
 
         // Actualitzem els rols
         $studentRole = Role::find(4);
         $studentRole->syncPermissions($studentPermissions);
-        
+
     }
 }

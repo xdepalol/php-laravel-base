@@ -1,8 +1,25 @@
 import { ref } from 'vue'
 import * as yup from 'yup'
 import axios from 'axios'
+import { authStore } from '@/store/auth'
 import { useToast } from './useToast'
 import { useValidation } from './useValidation'
+
+/**
+ * Docentes: grupos donde imparte. Estudiantes (sin rol docente): grupos con matrícula activa.
+ * Si el usuario es docente, tiene prioridad la vista docente.
+ */
+function mySubjectGroupsListUrl() {
+  const roles = authStore().user?.roles ?? []
+  const names = roles.map((r) => r.name)
+  if (names.includes('teacher')) {
+    return '/api/me/subject-groups'
+  }
+  if (names.includes('student')) {
+    return '/api/me/student/subject-groups'
+  }
+  return '/api/me/subject-groups'
+}
 
 const API = '/api/subject-groups'
 
@@ -107,7 +124,7 @@ export default function useSubjectGroups() {
     }
   }
 
-  /** Grupos de asignatura que imparte el usuario autenticado en un curso académico. */
+  /** Grupos de asignatura (docencia o matrículas del alumno) en un curso académico. */
   const getMySubjectGroupsForYear = async (academicYearId) => {
     if (!academicYearId) {
       mySubjectGroups.value = []
@@ -115,7 +132,7 @@ export default function useSubjectGroups() {
     }
     try {
       const response = await withLoading(() =>
-        axios.get('/api/me/subject-groups', {
+        axios.get(mySubjectGroupsListUrl(), {
           params: { academic_year_id: academicYearId }
         })
       )

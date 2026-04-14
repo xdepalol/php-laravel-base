@@ -15,7 +15,8 @@ const items = ref([
                 icon: 'pi pi-book',
                 route: '/app/mis-asignaturas',
                 permission: 'subjectgroup-list',
-                roles: ['teacher'],
+                /** Docentes y estudiantes: el acceso fino sigue siendo por `subjectgroup-list`. */
+                roles: ['teacher', 'student'],
             },
         ],
     },

@@ -2,12 +2,11 @@
 
 namespace Database\Seeders;
 
-use Spatie\Permission\Models\Permission;
 use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Permission;
 
 class PermissionsTableSeeder extends Seeder
 {
-
     /**
      * Auto generated seed file
      *
@@ -18,7 +17,7 @@ class PermissionsTableSeeder extends Seeder
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
         $entities = [
-            'role', 'permission', 'user', 'post', 'exercise', 
+            'role', 'permission', 'user', 'post', 'exercise',
             'category', 'task', 'course', 'student', 'teacher', 'academicyear',
             'subject', 'group', 'subjectgroup', 'enrollment', 'activity',
             'activityroletype', 'activityrole', 'deliverable', 'team',
@@ -36,7 +35,7 @@ class PermissionsTableSeeder extends Seeder
             }
         }
 
-        $adhoc_permissions = [ 'exercise-all', 'academicyear-switch' ];
+        $adhoc_permissions = ['exercise-all', 'academicyear-switch', 'own-enrollments'];
         foreach ($adhoc_permissions as $adhoc_permission) {
             Permission::firstOrCreate([
                 'name' => $adhoc_permission,
