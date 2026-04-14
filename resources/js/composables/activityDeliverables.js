@@ -9,11 +9,14 @@ const baseUrl = (activityId) => `/api/activities/${activityId}/deliverables`
 
 const DELIVERABLE_STATUSES = [0, 1, 2]
 
+const SHORT_CODE_REGEX = /^[a-zA-Z0-9][a-zA-Z0-9_-]*$/
+
 function normalizeDeliverable(data) {
   if (!data) return null
   return {
     id: data.id ?? null,
     title: data.title ?? '',
+    short_code: data.short_code ?? '',
     description: data.description ?? null,
     due_date: normalizeDueDateFromApi(data.due_date),
     status: data.status?.value ?? data.status ?? 0,
@@ -29,6 +32,7 @@ export default function useActivityDeliverables() {
   const initialDeliverable = {
     id: null,
     title: '',
+    short_code: '',
     description: null,
     due_date: null,
     status: 0,
@@ -41,6 +45,15 @@ export default function useActivityDeliverables() {
 
   const deliverableSchema = yup.object({
     title: yup.string().trim().required('El título es obligatorio').max(100),
+    short_code: yup
+      .string()
+      .trim()
+      .required('El código corto es obligatorio')
+      .max(32, 'Máximo 32 caracteres')
+      .matches(
+        SHORT_CODE_REGEX,
+        'Letras, números, guiones; debe empezar por letra o número'
+      ),
     description: yup.string().nullable(),
     due_date: yup.string().nullable(),
     status: yup.number().required().integer().oneOf(DELIVERABLE_STATUSES),
@@ -68,6 +81,7 @@ export default function useActivityDeliverables() {
       ? {
           id: n.id,
           title: n.title,
+          short_code: n.short_code,
           description: n.description,
           due_date: n.due_date,
           status: n.status,
@@ -89,6 +103,7 @@ export default function useActivityDeliverables() {
 
   const buildPayload = (data) => ({
     title: data.title,
+    short_code: (data.short_code || '').trim(),
     description: data.description || null,
     due_date: data.due_date || null,
     status: data.status,

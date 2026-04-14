@@ -18,6 +18,7 @@ class DeliverableResource extends JsonResource
             'id' => $this->id,
             'activity_id' => $this->activity_id,
             'title' => $this->title,
+            'short_code' => $this->short_code,
             'description' => $this->description,
             'due_date' => $this->due_date?->toIso8601String(),
             'status' => [

@@ -6,6 +6,10 @@ use App\Enums\DeliverableStatus;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
+/**
+ * @property-read \App\Models\Activity|null $activity
+ * @property-read \App\Models\Deliverable|null $deliverable
+ */
 class UpdateDeliverableRequest extends FormRequest
 {
     /**
@@ -23,8 +27,20 @@ class UpdateDeliverableRequest extends FormRequest
      */
     public function rules(): array
     {
+        $activity = $this->route('activity');
+        $deliverable = $this->route('deliverable');
+
         return [
             'title' => ['required', 'string', 'max:100'],
+            'short_code' => [
+                'required',
+                'string',
+                'max:32',
+                'regex:/^[a-zA-Z0-9][a-zA-Z0-9_-]*$/',
+                Rule::unique('deliverables', 'short_code')
+                    ->where(fn ($q) => $q->where('activity_id', $activity?->id))
+                    ->ignore($deliverable),
+            ],
             'description' => ['nullable', 'string'],
             'due_date' => ['nullable', 'date'],
             'status' => [Rule::enum(DeliverableStatus::class)],

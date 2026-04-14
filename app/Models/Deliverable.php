@@ -12,6 +12,7 @@ class Deliverable extends Model
     protected $fillable = [
         'activity_id',
         'title',
+        'short_code',
         'description',
         'due_date',
         'status',

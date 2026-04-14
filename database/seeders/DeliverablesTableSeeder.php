@@ -18,10 +18,13 @@ class DeliverablesTableSeeder extends Seeder
         // Busquem el projecte que hem creat abans per l'ID o el Títol
         $projecte = Activity::where('title', 'Projecte Fullstack')->first();
 
-        if (!$projecte) return;
+        if (! $projecte) {
+            return;
+        }
 
         $deliverables = [
             [
+                'short_code' => 'REQ',
                 'title' => 'Requeriments funcionals i Model Relacional',
                 'description' => 'Documentació detallada de les User Stories i el diagrama ER de la base de dades.',
                 'due_date' => Carbon::parse($projecte->start_date)->addWeeks(1),
@@ -29,6 +32,7 @@ class DeliverablesTableSeeder extends Seeder
                 'is_group_deliverable' => true,
             ],
             [
+                'short_code' => 'FIG',
                 'title' => 'Prototip Figma',
                 'description' => 'Disseny de la interfície d’usuari (UI) amb els fluxos de navegació principals.',
                 'due_date' => Carbon::parse($projecte->start_date)->addWeeks(2),
@@ -36,6 +40,7 @@ class DeliverablesTableSeeder extends Seeder
                 'is_group_deliverable' => true,
             ],
             [
+                'short_code' => 'MEM',
                 'title' => 'Memòria tècnica del producte final',
                 'description' => 'Document final que recull l’arquitectura, les decisions tecnològiques i el manual d’usuari.',
                 'due_date' => Carbon::parse($projecte->end_date)->subDays(2),

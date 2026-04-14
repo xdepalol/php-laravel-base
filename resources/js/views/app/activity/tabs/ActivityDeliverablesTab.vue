@@ -17,6 +17,7 @@
         <template #empty>
           <span class="text-slate-500">No hay entregables.</span>
         </template>
+        <Column field="short_code" header="Código" class="w-28" />
         <Column field="title" header="Título" />
         <Column field="due_date" header="Entrega" class="whitespace-nowrap">
           <template #body="{ data }">

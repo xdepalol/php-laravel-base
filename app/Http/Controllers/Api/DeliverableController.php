@@ -31,9 +31,10 @@ class DeliverableController extends Controller
     {
         $this->authorize('deliverable-create');
 
-        $deliverable = new Deliverable();
+        $deliverable = new Deliverable;
         $deliverable->activity_id = $activity->id;
         $deliverable->title = $request->title;
+        $deliverable->short_code = $request->short_code;
         $deliverable->description = $request->description;
         $deliverable->due_date = $request->due_date;
         $deliverable->status = $request->status;
@@ -66,6 +67,7 @@ class DeliverableController extends Controller
 
         $deliverable->activity_id = $activity->id;
         $deliverable->title = $request->title;
+        $deliverable->short_code = $request->short_code;
         $deliverable->description = $request->description;
         $deliverable->due_date = $request->due_date;
         $deliverable->status = $request->status;
