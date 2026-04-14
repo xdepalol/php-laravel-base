@@ -145,6 +145,19 @@ export default [
                         },
                     },
                     {
+                        name: 'app.subject-group.activity.create',
+                        path: 'actividades/nueva',
+                        component: () =>
+                            import(
+                                '../views/app/teaching/subject-group/SubjectGroupActivityCreatePage.vue'
+                            ),
+                        meta: {
+                            subjectGroupTab: 'activities',
+                            breadCrumb: 'Nueva actividad',
+                            pageTitle: 'Nueva actividad',
+                        },
+                    },
+                    {
                         name: 'app.subject-group.activities',
                         path: 'actividades',
                         component: () =>

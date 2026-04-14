@@ -136,6 +136,11 @@ provide(
     activitiesLoading,
   })
 )
+provide('reloadSubjectGroupActivities', async () => {
+  const id = groupId.value
+  if (!id) return
+  await getActivitiesForSubjectGroup(id)
+})
 
 async function loadGroup() {
   const id = groupId.value
