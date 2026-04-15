@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Enums\DeliverableStatus;
 use App\Enums\SubmissionStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Submission\GradeSubmissionRequest;
 use App\Http\Requests\Submission\StoreSubmissionRequest;
 use App\Http\Requests\Submission\UpdateSubmissionRequest;
 use App\Http\Resources\SubmissionResource;
@@ -51,8 +52,13 @@ class SubmissionController extends Controller
             $submission->content_text = $request->content_text;
             $submission->submitted_at = $request->submitted_at;
             $submission->status = $request->input('status') ?? SubmissionStatus::PENDING;
-            $submission->grade = $request->grade;
-            $submission->feedback = $request->feedback;
+            if ($request->user()->can('submission-grading')) {
+                $submission->grade = $request->grade;
+                $submission->feedback = $request->feedback;
+            } else {
+                $submission->grade = null;
+                $submission->feedback = null;
+            }
         } else {
             if (! $this->studentMayStoreSubmission($request, $deliverable)) {
                 abort(403);
@@ -126,8 +132,10 @@ class SubmissionController extends Controller
             if ($request->exists('status')) {
                 $submission->status = $request->input('status') ?? SubmissionStatus::PENDING;
             }
-            $submission->grade = $request->grade;
-            $submission->feedback = $request->feedback;
+            if ($request->user()->can('submission-grading')) {
+                $submission->grade = $request->grade;
+                $submission->feedback = $request->feedback;
+            }
         } else {
             if (! $this->studentMayUpdateSubmission($request, $deliverable, $submission)) {
                 abort(403);
@@ -184,6 +192,45 @@ class SubmissionController extends Controller
         }
 
         return (int) $submission->student_id === (int) $userId;
+    }
+
+    /**
+     * Calificación y retroalimentación (permiso submission-grading).
+     */
+    public function grade(GradeSubmissionRequest $request, Deliverable $deliverable, Submission $submission)
+    {
+        $this->authorize('submission-grading');
+
+        if ((int) $submission->deliverable_id !== (int) $deliverable->id) {
+            abort(404);
+        }
+
+        $validated = $request->validated();
+        if (array_key_exists('grade', $validated)) {
+            $submission->grade = $validated['grade'];
+        }
+        if (array_key_exists('feedback', $validated)) {
+            $submission->feedback = $validated['feedback'];
+        }
+
+        if (array_key_exists('status', $validated) && $validated['status'] !== null) {
+            $submission->status = SubmissionStatus::from((int) $validated['status']);
+        } elseif (
+            array_key_exists('grade', $validated)
+            && $validated['grade'] !== null
+            && $validated['grade'] !== ''
+        ) {
+            $submission->status = SubmissionStatus::GRADED;
+        }
+
+        if ($submission->save()) {
+            $submission->load(['deliverable', 'activity', 'student.user', 'team']);
+            $submission->setRelation('deliverable', $deliverable);
+
+            return new SubmissionResource($submission);
+        }
+
+        return null;
     }
 
     public function destroy(Deliverable $deliverable, Submission $submission)

@@ -89,6 +89,9 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::get('activities/{activity}/teams/{team}/students', [TeamStudentController::class, 'index'])->scopeBindings();
     Route::put('activities/{activity}/teams/{team}/students', [TeamStudentController::class, 'sync'])->scopeBindings();
     Route::apiResource('activities.deliverables', DeliverableController::class)->scoped();
+    Route::patch('deliverables/{deliverable}/submissions/{submission}/grade', [SubmissionController::class, 'grade'])
+        ->scopeBindings()
+        ->name('deliverables.submissions.grade');
     Route::apiResource('deliverables.submissions', SubmissionController::class)->scoped();
     Route::post('activities/{activity}/phases/csv-import', [ActivityPhaseCsvImportController::class, 'store'])->scopeBindings();
     Route::apiResource('activities.phases', PhaseController::class)->scoped();

@@ -44,7 +44,7 @@
               <UtcFormatted :value="submission.submitted_at" variant="datetime" />
             </dd>
           </div>
-          <div v-if="submission.grade != null">
+          <div v-if="submission.grade != null && submission.grade !== ''">
             <dt class="text-slate-500 font-medium">Calificación</dt>
             <dd class="mt-1 text-slate-800">{{ submission.grade }}</dd>
           </div>
@@ -71,6 +71,60 @@
         </dl>
       </template>
     </Card>
+
+    <Card v-if="can('submission-grading') && submission?.id && !pageBusy" class="max-w-3xl">
+      <template #title>Calificar entrega</template>
+      <template #content>
+        <div class="flex flex-col gap-4 max-w-lg">
+          <div class="flex flex-col gap-1.5">
+            <label for="grading-grade" class="text-sm font-medium text-slate-700">Nota (opcional)</label>
+            <InputNumber
+              id="grading-grade"
+              v-model="gradingGrade"
+              :min="0"
+              :max="100"
+              :min-fraction-digits="0"
+              :max-fraction-digits="2"
+              class="w-full"
+              input-class="w-full"
+              placeholder="—"
+              :disabled="gradingSaving"
+            />
+            <span class="text-xs text-slate-500">Escala 0–100; admite decimales.</span>
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <label for="grading-status" class="text-sm font-medium text-slate-700">Estado</label>
+            <Select
+              id="grading-status"
+              v-model="gradingStatus"
+              :options="gradingStatusOptions"
+              option-label="label"
+              option-value="value"
+              class="w-full"
+              :disabled="gradingSaving"
+            />
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <label for="grading-feedback" class="text-sm font-medium text-slate-700">Retroalimentación (opcional)</label>
+            <Textarea
+              id="grading-feedback"
+              v-model="gradingFeedback"
+              rows="5"
+              auto-resize
+              class="w-full"
+              :disabled="gradingSaving"
+            />
+          </div>
+          <Button
+            label="Guardar calificación"
+            icon="pi pi-save"
+            :loading="gradingSaving"
+            :disabled="gradingSaving"
+            @click="saveGrading"
+          />
+        </div>
+      </template>
+    </Card>
   </div>
 </template>
 
@@ -85,7 +139,7 @@ const route = useRoute()
 const router = useRouter()
 const { can } = useAbility()
 const { fetchDeliverableById } = useActivityDeliverables()
-const { submission, getSubmission } = useDeliverableSubmissions()
+const { submission, getSubmission, gradeSubmission } = useDeliverableSubmissions()
 
 const activityId = computed(() => Number(route.params.activityId))
 const deliverableId = computed(() => Number(route.params.deliverableId))
@@ -93,6 +147,16 @@ const submissionId = computed(() => Number(route.params.submissionId))
 
 const pageBusy = ref(false)
 const deliverableTitle = ref('—')
+
+const gradingGrade = ref(null)
+const gradingFeedback = ref('')
+const gradingStatus = ref(1)
+const gradingSaving = ref(false)
+
+const gradingStatusOptions = [
+  { value: 1, label: 'Entregada' },
+  { value: 2, label: 'Calificada' },
+]
 
 const tabQuery = computed(() => {
   const raw = route.query.fromSubjectGroup
@@ -138,6 +202,16 @@ const teamLabel = computed(() => {
   return t.name || `Equipo #${t.id}`
 })
 
+function syncGradingFormFromSubmission() {
+  const s = submission.value
+  if (!s?.id) return
+  const g = s.grade
+  gradingGrade.value = g != null && g !== '' ? Number(g) : null
+  gradingFeedback.value = s.feedback ? String(s.feedback) : ''
+  const st = s.status?.value ?? s.status
+  gradingStatus.value = st === 2 ? 2 : 1
+}
+
 async function loadDeliverableTitle() {
   const aid = activityId.value
   const did = deliverableId.value
@@ -154,8 +228,28 @@ async function load() {
   try {
     await loadDeliverableTitle()
     await getSubmission(did, sid)
+    syncGradingFormFromSubmission()
   } finally {
     pageBusy.value = false
+  }
+}
+
+async function saveGrading() {
+  const did = deliverableId.value
+  const sid = submissionId.value
+  if (!did || !sid) return
+  gradingSaving.value = true
+  try {
+    await gradeSubmission(did, sid, {
+      grade: gradingGrade.value,
+      feedback: gradingFeedback.value?.trim() || null,
+      status: gradingStatus.value,
+    })
+    syncGradingFormFromSubmission()
+  } catch {
+    /* toast en composable */
+  } finally {
+    gradingSaving.value = false
   }
 }
 
@@ -165,6 +259,13 @@ watch(
     load()
   },
   { immediate: true }
+)
+
+watch(
+  () => submission.value?.id,
+  () => {
+    syncGradingFormFromSubmission()
+  }
 )
 
 onMounted(() => {

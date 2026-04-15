@@ -6,6 +6,9 @@ import { useValidation } from './useValidation'
 
 const baseUrl = (deliverableId) => `/api/deliverables/${deliverableId}/submissions`
 
+const gradeUrl = (deliverableId, submissionId) =>
+  `${baseUrl(deliverableId)}/${submissionId}/grade`
+
 const SUBMISSION_STATUSES = [0, 1, 2]
 
 function normalizeSubmission(data) {
@@ -197,6 +200,30 @@ export default function useDeliverableSubmissions() {
     }
   }
 
+  const gradeSubmission = async (deliverableId, submissionId, payload, options = {}) => {
+    const { notifySuccess = true, notifyError = true } = options
+    if (!deliverableId || !submissionId) throw new Error('IDs requeridos')
+    const body = {
+      grade: payload?.grade ?? null,
+      feedback: payload?.feedback ?? null,
+    }
+    if (payload?.status != null) {
+      body.status = payload.status
+    }
+    try {
+      const response = await withLoading(() =>
+        axios.patch(gradeUrl(deliverableId, submissionId), body)
+      )
+      const updated = unwrap(response)
+      setSubmission(updated)
+      if (notifySuccess) toast.success('Calificación guardada')
+      return updated
+    } catch (error) {
+      if (notifyError) toast.error('Error', 'No se pudo guardar la calificación')
+      throw error
+    }
+  }
+
   const deleteSubmission = async (deliverableId, submissionId) => {
     if (!deliverableId || !submissionId) throw new Error('IDs requeridos')
     try {
@@ -225,6 +252,7 @@ export default function useDeliverableSubmissions() {
     getSubmission,
     createSubmission,
     updateSubmission,
+    gradeSubmission,
     deleteSubmission,
     SUBMISSION_STATUSES
   }

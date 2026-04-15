@@ -65,6 +65,7 @@ class RoleHasPermissionsTableSeeder extends Seeder
         }
 
         $teacherPermissions[] = 'academicyear-switch';
+        $teacherPermissions[] = 'submission-grading';
 
         // Actualitzem els rols
         $teacherRole = Role::find(3);
