@@ -147,6 +147,29 @@ export default function usePhaseStudentRoles() {
     }
   }
 
+  /**
+   * Profesorado: crear, actualizar o quitar rol en fase (sin withLoading; el caller controla toasts).
+   *
+   * @param {{ existingId?: number|null, phase_id: number, student_id: number, team_id: number, activity_role_id?: number|null }} params
+   */
+  const saveTeacherPhaseStudentAssignment = async (params) => {
+    const { existingId, phase_id, student_id, team_id, activity_role_id } = params
+    if (existingId && (activity_role_id == null || activity_role_id === '')) {
+      await axios.delete(`${API}/${existingId}`)
+      return null
+    }
+    if (activity_role_id == null || activity_role_id === '') {
+      return null
+    }
+    const body = { phase_id, student_id, team_id, activity_role_id }
+    if (existingId) {
+      const response = await axios.put(`${API}/${existingId}`, body)
+      return unwrap(response)
+    }
+    const response = await axios.post(API, body)
+    return unwrap(response)
+  }
+
   return {
     phaseStudentRoles,
     phaseStudentRole,
@@ -161,6 +184,7 @@ export default function usePhaseStudentRoles() {
     getPhaseStudentRole,
     createPhaseStudentRole,
     updatePhaseStudentRole,
-    deletePhaseStudentRole
+    deletePhaseStudentRole,
+    saveTeacherPhaseStudentAssignment,
   }
 }

@@ -117,9 +117,10 @@ const visibleTabs = computed(() => {
   })
 })
 
-const routeNameToTabKey = computed(() =>
-  Object.fromEntries(allTabs.map((t) => [t.name, t.tabKey]))
-)
+const routeNameToTabKey = computed(() => ({
+  ...Object.fromEntries(allTabs.map((t) => [t.name, t.tabKey])),
+  'app.activity.team.phase.show': 'phases',
+}))
 
 const activeTabKey = ref(allTabs[0].tabKey)
 
@@ -155,7 +156,11 @@ watch(
       })
       return
     }
-    if (activity.value?.id && !activity.value?.has_sprints && route.name === 'app.activity.team.phases') {
+    if (
+      activity.value?.id &&
+      !activity.value?.has_sprints &&
+      (route.name === 'app.activity.team.phases' || route.name === 'app.activity.team.phase.show')
+    ) {
       router.replace({
         name: 'app.activity.team.overview',
         params: { activityId: String(routeActivityId.value), teamId: String(routeTeamId.value) },

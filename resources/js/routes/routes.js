@@ -367,6 +367,17 @@ export default [
                         },
                     },
                     {
+                        name: 'app.activity.team.phase.show',
+                        path: 'fases/:phaseId',
+                        component: () => import('../views/app/activity/ActivityPhaseDetailPage.vue'),
+                        meta: {
+                            teamTab: 'phases',
+                            requiresActivitySprints: true,
+                            breadCrumb: 'Fase',
+                            pageTitle: 'Fase',
+                        },
+                    },
+                    {
                         name: 'app.activity.team.phases',
                         path: 'fases',
                         component: () => import('../views/app/activity/tabs/ActivityPhasesTab.vue'),

@@ -2,7 +2,12 @@
   <Card>
     <template #title>
       <div class="flex flex-wrap items-center justify-between gap-3 w-full">
-        <span>{{ row.title || 'Fase' }}</span>
+        <div class="min-w-0">
+          <span>{{ row.title || 'Fase' }}</span>
+          <p v-if="contextTeamId && teamName" class="text-xs font-normal text-slate-500 mt-1 truncate">
+            Equipo: {{ teamName }}
+          </p>
+        </div>
         <div class="flex flex-wrap gap-2">
           <Button
             v-if="canEdit"
@@ -86,36 +91,125 @@
           <p class="text-slate-800 whitespace-pre-wrap">{{ row.teacher_feedback }}</p>
         </div>
 
-        <div class="grid gap-4 sm:grid-cols-2 pt-2 border-t border-slate-100">
-          <div>
-            <h3 class="text-sm font-semibold text-slate-800 mb-2">
-              Tareas en fase ({{ row.phase_tasks?.length ?? 0 }})
-            </h3>
-            <ul v-if="row.phase_tasks?.length" class="list-disc pl-5 text-slate-600 space-y-1">
-              <li v-for="pt in row.phase_tasks" :key="pt.id">
-                {{ pt.task?.title || `Tarea #${pt.task_id}` }}
-              </li>
-            </ul>
-            <p v-else class="text-slate-500">Ninguna.</p>
-          </div>
-          <div>
-            <h3 class="text-sm font-semibold text-slate-800 mb-2">
-              Roles por estudiante ({{ row.phase_student_roles?.length ?? 0 }})
-            </h3>
-            <p v-if="!row.phase_student_roles?.length" class="text-slate-500">Ninguno.</p>
+        <div class="pt-2 border-t border-slate-100">
+          <h3 class="text-sm font-semibold text-slate-800 mb-2">
+            Tareas en fase ({{ row.phase_tasks?.length ?? 0 }})
+          </h3>
+          <ul v-if="row.phase_tasks?.length" class="list-disc pl-5 text-slate-600 space-y-1">
+            <li v-for="pt in row.phase_tasks" :key="pt.id">
+              {{ pt.task?.title || `Tarea #${pt.task_id}` }}
+            </li>
+          </ul>
+          <p v-else class="text-slate-500">Ninguna.</p>
+        </div>
+
+        <div v-if="contextTeamId" class="pt-2 border-t border-slate-100 space-y-3">
+          <h3 class="text-sm font-semibold text-slate-800 mb-2">Roles por estudiante en esta fase (este equipo)</h3>
+
+          <template v-if="canManagePhaseStudentRoles && activityHasRoleTypes">
+            <p class="text-xs text-slate-500 mb-3">
+              Pulsa el lápiz para asignar o cambiar el rol de la actividad de cada miembro en esta fase. Puedes
+              dejar «Sin rol» y guardar para quitar la asignación.
+            </p>
+            <div v-if="assignmentsPanelLoading" class="flex justify-center py-8 text-slate-500">
+              <i class="pi pi-spin pi-spinner text-xl" aria-hidden="true" />
+            </div>
+            <DataTable
+              v-else
+              :value="assignmentRows"
+              data-key="rowKey"
+              size="small"
+              striped-rows
+              class="text-sm"
+            >
+              <template #empty>
+                <span class="text-slate-500">No hay miembros en este equipo.</span>
+              </template>
+              <Column header="Estudiante" class="min-w-[10rem]">
+                <template #body="{ data }">
+                  <span class="font-medium text-slate-800">{{ data.studentLabel }}</span>
+                </template>
+              </Column>
+              <Column header="Rol" class="min-w-[8rem]">
+                <template #body="{ data }">
+                  {{ data.roleDisplayName }}
+                </template>
+              </Column>
+              <Column class="w-16">
+                <template #header>
+                  <span class="sr-only">Cambiar rol</span>
+                </template>
+                <template #body="{ data }">
+                  <Button
+                    v-tooltip.top="'Cambiar rol'"
+                    icon="pi pi-pencil"
+                    rounded
+                    text
+                    severity="secondary"
+                    size="small"
+                    :aria-label="`Cambiar rol en fase de ${data.studentLabel}`"
+                    @click="openPhaseRoleDialog(data)"
+                  />
+                </template>
+              </Column>
+            </DataTable>
+          </template>
+
+          <template v-else>
+            <p v-if="!phaseStudentRolesForTeam.length" class="text-slate-500">Ninguno.</p>
             <ul v-else class="list-disc pl-5 text-slate-600 space-y-1">
-              <li v-for="psr in row.phase_student_roles" :key="psr.id">
+              <li v-for="psr in phaseStudentRolesForTeam" :key="psr.id">
                 {{ studentLabel(psr) }}
                 <template v-if="psr.activity_role?.name"> — {{ psr.activity_role.name }}</template>
               </li>
             </ul>
-          </div>
+          </template>
         </div>
 
         <Button label="Volver a la lista" icon="pi pi-arrow-left" severity="secondary" text @click="goList" />
       </div>
     </template>
   </Card>
+
+  <Dialog
+    v-model:visible="phaseRoleDialogVisible"
+    modal
+    header="Rol en la fase"
+    :style="{ width: '420px' }"
+    @hide="phaseRoleEditRow = null"
+  >
+    <div v-if="phaseRoleEditRow" class="flex flex-col gap-4">
+      <p class="text-sm text-slate-700">
+        <span class="font-medium">{{ phaseRoleEditRow.studentLabel }}</span>
+      </p>
+      <div>
+        <label for="phase-member-role-select" class="text-sm font-medium text-slate-700 block mb-1">Rol</label>
+        <Select
+          id="phase-member-role-select"
+          v-model="phaseRoleEditSelectedId"
+          :options="assignmentRoleOptions"
+          option-label="name"
+          option-value="id"
+          placeholder="Sin rol (asignar después)"
+          show-clear
+          class="w-full"
+        />
+      </div>
+    </div>
+    <template #footer>
+      <Button label="Cancelar" severity="secondary" text @click="phaseRoleDialogVisible = false" />
+      <Button
+        label="Guardar"
+        icon="pi pi-check"
+        :loading="phaseRoleSaveLoading"
+        :disabled="
+          phaseRoleEditRow &&
+          samePhaseRole(phaseRoleEditSelectedId, phaseRoleEditRow.savedRoleId)
+        "
+        @click="savePhaseRoleFromDialog"
+      />
+    </template>
+  </Dialog>
 </template>
 
 <script setup>
@@ -123,25 +217,63 @@ import { computed, inject, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAbility } from '@casl/vue'
 import useActivityPhases from '@/composables/activityPhases'
+import useActivityTeams from '@/composables/activityTeams'
+import usePhaseStudentRoles from '@/composables/phaseStudentRoles'
+import { useToast } from '@/composables/useToast'
 import { formatStudentDisplayName } from '@/utils/studentDisplayName'
 
 const route = useRoute()
 const router = useRouter()
 const { can } = useAbility()
+const toast = useToast()
 const activityRef = inject('activity')
 const activityId = inject('activityId')
+const teamRef = inject('team', null)
 
 const canEdit = computed(() => can('phase-edit'))
 const canDelete = computed(() => can('phase-delete'))
 
+const canManagePhaseStudentRoles = computed(
+  () =>
+    can('phasestudentrole-create') &&
+    can('phasestudentrole-edit') &&
+    can('phasestudentrole-delete')
+)
+
+const activityHasRoleTypes = computed(() => !!activityRef?.value?.activity_role_type_id)
+
 const { getPhase, deletePhase } = useActivityPhases()
+const { getTeamStudentsList, getTeamMemberRoles } = useActivityTeams()
+const { saveTeacherPhaseStudentAssignment } = usePhaseStudentRoles()
 
 const loading = ref(true)
 const loadError = ref(false)
 const row = ref({})
 
+const assignmentRows = ref([])
+const assignmentRoleOptions = ref([])
+const assignmentsPanelLoading = ref(false)
+const phaseRoleDialogVisible = ref(false)
+const phaseRoleEditRow = ref(null)
+const phaseRoleEditSelectedId = ref(null)
+const phaseRoleSaveLoading = ref(false)
+
 const phaseId = computed(() => Number(route.params.phaseId) || 0)
 const aid = computed(() => activityId?.value)
+/** Solo en ruta `app.activity.team.phase.show` (detalle desde el espacio de un equipo). */
+const contextTeamId = computed(() => {
+  const raw = route.params.teamId
+  const n = Number(raw)
+  return Number.isFinite(n) && n > 0 ? n : 0
+})
+
+const teamName = computed(() => teamRef?.value?.name || '')
+
+const phaseStudentRolesForTeam = computed(() => {
+  const tid = contextTeamId.value
+  if (!tid) return []
+  return (row.value.phase_student_roles || []).filter((p) => Number(p.team_id) === tid)
+})
 
 const tabQuery = computed(() => {
   const raw = route.query.fromSubjectGroup
@@ -158,7 +290,113 @@ function studentLabel(psr) {
   return formatStudentDisplayName(psr.student, psr.student_id)
 }
 
+function samePhaseRole(a, b) {
+  const na = a == null || a === '' ? null : Number(a)
+  const nb = b == null || b === '' ? null : Number(b)
+  if (na === null && nb === null) return true
+  if (na === null || nb === null) return false
+  return na === nb
+}
+
+function roleNameById(roleId) {
+  if (roleId == null || roleId === '') return null
+  const id = Number(roleId)
+  const opt = assignmentRoleOptions.value.find((r) => Number(r.id) === id)
+  return opt?.name ?? null
+}
+
+async function loadAssignmentEditor() {
+  const activityIdVal = aid.value
+  const pid = phaseId.value
+  const tid = contextTeamId.value
+  if (
+    !activityIdVal ||
+    !pid ||
+    !tid ||
+    !canManagePhaseStudentRoles.value ||
+    !activityHasRoleTypes.value
+  ) {
+    assignmentRows.value = []
+    return
+  }
+  assignmentsPanelLoading.value = true
+  try {
+    assignmentRoleOptions.value = await getTeamMemberRoles(activityIdVal)
+    const psrs = row.value.phase_student_roles || []
+    const members = await getTeamStudentsList(activityIdVal, tid)
+    const rows = []
+    for (const m of members) {
+      const sid = Number(m.student_id)
+      const psr = psrs.find(
+        (p) => Number(p.student_id) === sid && Number(p.team_id) === tid
+      )
+      const saved = psr?.activity_role_id ?? null
+      const roleDisplayName =
+        psr?.activity_role?.name ?? roleNameById(saved) ?? '—'
+      rows.push({
+        rowKey: `${tid}-${sid}`,
+        team_id: tid,
+        student_id: sid,
+        studentLabel: formatStudentDisplayName(
+          m.student ?? { user: m.student?.user ?? m.user, student_number: m.student?.student_number },
+          sid
+        ),
+        psr_id: psr?.id ?? null,
+        savedRoleId: saved,
+        roleDisplayName,
+      })
+    }
+    assignmentRows.value = rows
+  } catch {
+    assignmentRows.value = []
+    assignmentRoleOptions.value = []
+  } finally {
+    assignmentsPanelLoading.value = false
+  }
+}
+
+function openPhaseRoleDialog(row) {
+  phaseRoleEditRow.value = row
+  phaseRoleEditSelectedId.value = row.savedRoleId ?? null
+  phaseRoleDialogVisible.value = true
+}
+
+async function savePhaseRoleFromDialog() {
+  const r = phaseRoleEditRow.value
+  const aidVal = aid.value
+  const pid = phaseId.value
+  if (!r || !aidVal || !pid) return
+  phaseRoleSaveLoading.value = true
+  try {
+    await saveTeacherPhaseStudentAssignment({
+      existingId: r.psr_id,
+      phase_id: pid,
+      student_id: r.student_id,
+      team_id: r.team_id,
+      activity_role_id: phaseRoleEditSelectedId.value ?? null,
+    })
+    toast.success('Rol en fase', 'Asignación guardada.')
+    phaseRoleDialogVisible.value = false
+    phaseRoleEditRow.value = null
+    await load()
+    await loadAssignmentEditor()
+  } catch {
+    toast.error('Error', 'No se pudo guardar el rol en la fase.')
+  } finally {
+    phaseRoleSaveLoading.value = false
+  }
+}
+
 function goList() {
+  const tid = contextTeamId.value
+  if (tid) {
+    router.push({
+      name: 'app.activity.team.phases',
+      params: { activityId: String(aid.value), teamId: String(tid) },
+      query: { ...tabQuery.value },
+    })
+    return
+  }
   router.push({
     name: 'app.activity.phases',
     params: { activityId: String(aid.value) },
@@ -210,6 +448,12 @@ async function load() {
   try {
     const p = await getPhase(aid.value, phaseId.value)
     row.value = p && typeof p === 'object' ? { ...p } : {}
+    if (contextTeamId.value && canManagePhaseStudentRoles.value && activityHasRoleTypes.value) {
+      await loadAssignmentEditor()
+    } else {
+      assignmentRows.value = []
+      assignmentRoleOptions.value = []
+    }
   } catch {
     loadError.value = true
     row.value = {}
@@ -219,8 +463,22 @@ async function load() {
 }
 
 watch(
-  () => [aid.value, phaseId.value],
+  () => [aid.value, phaseId.value, contextTeamId.value],
   () => load(),
   { immediate: true }
+)
+
+watch(
+  () => activityRef?.value?.activity_role_type_id,
+  () => {
+    if (
+      row.value?.id &&
+      contextTeamId.value &&
+      canManagePhaseStudentRoles.value &&
+      activityHasRoleTypes.value
+    ) {
+      loadAssignmentEditor()
+    }
+  }
 )
 </script>

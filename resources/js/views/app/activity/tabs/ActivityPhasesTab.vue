@@ -234,6 +234,7 @@ const canView = computed(() => can('phase-view'))
 const route = useRoute()
 const router = useRouter()
 const activityId = inject('activityId')
+/** En espacio de equipo, enlaces de fase van al detalle por equipo. */
 const teamId = inject('teamId', null)
 const activityRef = inject('activity', null)
 const toast = useToast()
@@ -280,6 +281,18 @@ const tabQuery = computed(() => {
 })
 
 function phaseShowLink(phaseId) {
+  const tid = teamId?.value
+  if (tid) {
+    return {
+      name: 'app.activity.team.phase.show',
+      params: {
+        activityId: String(activityId?.value),
+        teamId: String(tid),
+        phaseId: String(phaseId),
+      },
+      query: { ...tabQuery.value },
+    }
+  }
   return {
     name: 'app.activity.phase.show',
     params: { activityId: activityId?.value, phaseId: String(phaseId) },
