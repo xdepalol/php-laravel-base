@@ -115,7 +115,8 @@
 
 <script setup>
 import { inject, ref, watch } from 'vue'
-import axios from 'axios'
+import useActivityDeliverables from '@/composables/activityDeliverables'
+import useDeliverableSubmissions from '@/composables/deliverableSubmissions'
 import { sortDeliverablesByDueDateThenId } from '@/utils/deliverablesSort'
 import { useActivityViewerRole } from '@/composables/useActivityViewerRole'
 import { useToast } from '@/composables/useToast'
@@ -125,6 +126,10 @@ const teamId = inject('teamId')
 
 const { isStudentOnlyView } = useActivityViewerRole()
 const toast = useToast()
+const { deliverables, getDeliverables } = useActivityDeliverables()
+const { fetchSubmissionsList, createSubmission, updateSubmission } = useDeliverableSubmissions()
+
+const notifyOff = { notifySuccess: false, notifyError: false }
 
 const rows = ref([])
 const loading = ref(false)
@@ -146,10 +151,6 @@ const SUBMISSION_STATUS = {
 
 /** DeliverableStatus.CLOSED */
 const DELIVERABLE_CLOSED = 2
-
-function unwrap(response) {
-  return response.data?.data ?? response.data
-}
 
 function deliverableStatusValue(d) {
   const s = d?.status
@@ -205,10 +206,10 @@ async function confirmSubmit() {
   try {
     if (submitMode.value === 'edit' && row.last_submission_id) {
       const { team_id: _t, ...putBody } = payload
-      await axios.put(`/api/deliverables/${did}/submissions/${row.last_submission_id}`, putBody)
+      await updateSubmission(did, row.last_submission_id, putBody, notifyOff)
       toast.success('Entrega actualizada')
     } else {
-      await axios.post(`/api/deliverables/${did}/submissions`, payload)
+      await createSubmission(did, payload, notifyOff)
       toast.success('Entrega registrada', 'El docente podrá revisarla y calificarla.')
     }
     submitDialogOpen.value = false
@@ -234,17 +235,14 @@ async function load() {
   loading.value = true
   rows.value = []
   try {
-    const dRes = await axios.get(`/api/activities/${aid}/deliverables`)
-    const dList = unwrap(dRes)
-    const deliverables = sortDeliverablesByDueDateThenId(Array.isArray(dList) ? dList : [])
+    await getDeliverables(aid)
+    const dList = sortDeliverablesByDueDateThenId(deliverables.value || [])
     const enriched = await Promise.all(
-      deliverables.map(async (d) => {
+      dList.map(async (d) => {
         const id = d.id
         const deliverable_status = deliverableStatusValue(d)
         try {
-          const sRes = await axios.get(`/api/deliverables/${id}/submissions`)
-          const subs = unwrap(sRes)
-          const list = Array.isArray(subs) ? subs : []
+          const list = await fetchSubmissionsList(id)
           const forTeam = list.filter((s) => Number(s.team_id) === Number(tid))
           const delivered = forTeam.filter((s) => {
             const st = s.status?.value ?? s.status

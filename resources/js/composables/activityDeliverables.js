@@ -139,6 +139,17 @@ export default function useActivityDeliverables() {
     }
   }
 
+  /** GET sin toast ni estado global (p. ej. título en otra vista). */
+  const fetchDeliverableById = async (activityId, deliverableId) => {
+    if (!activityId || !deliverableId) return null
+    try {
+      const response = await axios.get(`${baseUrl(activityId)}/${deliverableId}`)
+      return unwrap(response)
+    } catch {
+      return null
+    }
+  }
+
   const createDeliverable = async (activityId, payload) => {
     if (!activityId) throw new Error('activityId requerido')
     const data = payload ?? deliverable.value
@@ -207,6 +218,7 @@ export default function useActivityDeliverables() {
     upsertDeliverableRecord,
     getDeliverables,
     getDeliverable,
+    fetchDeliverableById,
     createDeliverable,
     updateDeliverable,
     deleteDeliverable,

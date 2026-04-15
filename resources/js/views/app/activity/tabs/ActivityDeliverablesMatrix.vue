@@ -114,7 +114,8 @@
 <script setup>
 import { computed, inject, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import axios from 'axios'
+import useActivityTeams from '@/composables/activityTeams'
+import useDeliverableSubmissions from '@/composables/deliverableSubmissions'
 import { deliverableMatrixHeaderLabel } from '@/utils/deliverableUi'
 import { sortDeliverablesByDueDateThenId } from '@/utils/deliverablesSort'
 import ActivityDeliverablesMatrixCell from './ActivityDeliverablesMatrixCell.vue'
@@ -135,6 +136,8 @@ const props = defineProps({
 
 const activityId = inject('activityId')
 const route = useRoute()
+const { fetchTeamsList, fetchTeamStudentsList } = useActivityTeams()
+const { fetchSubmissionsList } = useDeliverableSubmissions()
 
 const numericActivityId = computed(() => Number(activityId?.value) || 0)
 
@@ -163,10 +166,6 @@ const matrixHasContent = computed(() => {
     (individualDeliverables.value.length && studentRows.value.length)
   )
 })
-
-function unwrap(response) {
-  return response.data?.data ?? response.data
-}
 
 function pickLastSubmission(subs) {
   if (!Array.isArray(subs) || !subs.length) return null
@@ -215,16 +214,10 @@ async function loadMatrix() {
 
   loading.value = true
   try {
-    const tRes = await axios.get(`/api/activities/${aid}/teams`)
-    const teamList = Array.isArray(unwrap(tRes)) ? unwrap(tRes) : []
+    const teamList = await fetchTeamsList(aid)
 
     const memberLists = await Promise.all(
-      teamList.map((team) =>
-        axios
-          .get(`/api/activities/${aid}/teams/${team.id}/students`)
-          .then((r) => unwrap(r))
-          .catch(() => [])
-      )
+      teamList.map((team) => fetchTeamStudentsList(aid, team.id))
     )
 
     const studentsUnique = new Map()
@@ -243,13 +236,7 @@ async function loadMatrix() {
     const subMap = {}
     await Promise.all(
       orderedDeliverables.value.map(async (d) => {
-        try {
-          const sRes = await axios.get(`/api/deliverables/${d.id}/submissions`)
-          const subs = unwrap(sRes)
-          subMap[d.id] = Array.isArray(subs) ? subs : []
-        } catch {
-          subMap[d.id] = []
-        }
+        subMap[d.id] = await fetchSubmissionsList(d.id)
       })
     )
 

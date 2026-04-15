@@ -84,6 +84,30 @@ export default function useActivityTeams() {
     }
   }
 
+  /** Listado sin toast ni loading global (matrices, tablas auxiliares). */
+  const fetchTeamsList = async (activityId) => {
+    if (!activityId) return []
+    try {
+      const response = await axios.get(teamsBase(activityId))
+      const data = unwrap(response)
+      return Array.isArray(data) ? data : []
+    } catch {
+      return []
+    }
+  }
+
+  /** Miembros del equipo sin toast ni loading global. */
+  const fetchTeamStudentsList = async (activityId, teamId) => {
+    if (!activityId || !teamId) return []
+    try {
+      const response = await axios.get(studentsUrl(activityId, teamId))
+      const data = unwrap(response)
+      return Array.isArray(data) ? data : []
+    } catch {
+      return []
+    }
+  }
+
   const getTeam = async (activityId, teamId) => {
     if (!activityId || !teamId) return null
     try {
@@ -248,6 +272,8 @@ export default function useActivityTeams() {
     setTeam,
     upsertTeamRecord,
     getTeams,
+    fetchTeamsList,
+    fetchTeamStudentsList,
     getTeam,
     createTeam,
     updateTeam,

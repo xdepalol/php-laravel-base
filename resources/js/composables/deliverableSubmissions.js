@@ -124,6 +124,18 @@ export default function useDeliverableSubmissions() {
     }
   }
 
+  /** Listado sin toast ni loading global (matrices, filas en paralelo). */
+  const fetchSubmissionsList = async (deliverableId) => {
+    if (!deliverableId) return []
+    try {
+      const response = await axios.get(baseUrl(deliverableId))
+      const data = unwrap(response)
+      return Array.isArray(data) ? data : []
+    } catch {
+      return []
+    }
+  }
+
   const getSubmission = async (deliverableId, submissionId) => {
     if (!deliverableId || !submissionId) return null
     try {
@@ -139,13 +151,14 @@ export default function useDeliverableSubmissions() {
     }
   }
 
-  const createSubmission = async (deliverableId, payload) => {
+  const createSubmission = async (deliverableId, payload, options = {}) => {
+    const { notifySuccess = true, notifyError = true } = options
     if (!deliverableId) throw new Error('deliverableId requerido')
     const data = { ...(payload ?? submission.value) }
     data.status = statusToNumber(data.status) ?? data.status
     const { isValid } = validate(submissionBodySchema, data)
     if (!isValid) {
-      toast.error('Error de validación', 'Revisa los campos resaltados.')
+      if (notifyError) toast.error('Error de validación', 'Revisa los campos resaltados.')
       throw new Error('Validación')
     }
     try {
@@ -153,21 +166,22 @@ export default function useDeliverableSubmissions() {
         axios.post(baseUrl(deliverableId), buildPayload(data))
       )
       const created = unwrap(response)
-      toast.crud.created('Entrega')
+      if (notifySuccess) toast.crud.created('Entrega')
       return created
     } catch (error) {
-      toast.error('Error', 'No se pudo crear la entrega')
+      if (notifyError) toast.error('Error', 'No se pudo crear la entrega')
       throw error
     }
   }
 
-  const updateSubmission = async (deliverableId, submissionId, payload) => {
+  const updateSubmission = async (deliverableId, submissionId, payload, options = {}) => {
+    const { notifySuccess = true, notifyError = true } = options
     if (!deliverableId || !submissionId) throw new Error('IDs requeridos')
     const data = { ...(payload ?? submission.value) }
     data.status = statusToNumber(data.status) ?? data.status
     const { isValid } = validate(submissionBodySchema, data)
     if (!isValid) {
-      toast.error('Error de validación', 'Revisa los campos resaltados.')
+      if (notifyError) toast.error('Error de validación', 'Revisa los campos resaltados.')
       throw new Error('Validación')
     }
     try {
@@ -175,10 +189,10 @@ export default function useDeliverableSubmissions() {
         axios.put(`${baseUrl(deliverableId)}/${submissionId}`, buildPayload(data))
       )
       const updated = unwrap(response)
-      toast.crud.updated('Entrega')
+      if (notifySuccess) toast.crud.updated('Entrega')
       return updated
     } catch (error) {
-      toast.error('Error', 'No se pudo actualizar la entrega')
+      if (notifyError) toast.error('Error', 'No se pudo actualizar la entrega')
       throw error
     }
   }
@@ -207,6 +221,7 @@ export default function useDeliverableSubmissions() {
     resetSubmission,
     setSubmission,
     getSubmissions,
+    fetchSubmissionsList,
     getSubmission,
     createSubmission,
     updateSubmission,

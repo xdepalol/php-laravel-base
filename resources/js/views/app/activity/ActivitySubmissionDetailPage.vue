@@ -78,12 +78,13 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAbility } from '@casl/vue'
-import axios from 'axios'
+import useActivityDeliverables from '@/composables/activityDeliverables'
 import useDeliverableSubmissions from '@/composables/deliverableSubmissions'
 
 const route = useRoute()
 const router = useRouter()
 const { can } = useAbility()
+const { fetchDeliverableById } = useActivityDeliverables()
 const { submission, getSubmission } = useDeliverableSubmissions()
 
 const activityId = computed(() => Number(route.params.activityId))
@@ -107,10 +108,6 @@ const backTo = computed(() => ({
   },
   query: { ...tabQuery.value },
 }))
-
-function unwrap(response) {
-  return response.data?.data ?? response.data
-}
 
 const SUBMISSION_STATUS = {
   0: 'Pendiente',
@@ -145,13 +142,8 @@ async function loadDeliverableTitle() {
   const aid = activityId.value
   const did = deliverableId.value
   if (!aid || !did) return
-  try {
-    const res = await axios.get(`/api/activities/${aid}/deliverables/${did}`)
-    const data = unwrap(res)
-    deliverableTitle.value = data?.title || `Entregable #${did}`
-  } catch {
-    deliverableTitle.value = `Entregable #${did}`
-  }
+  const data = await fetchDeliverableById(aid, did)
+  deliverableTitle.value = data?.title || `Entregable #${did}`
 }
 
 async function load() {

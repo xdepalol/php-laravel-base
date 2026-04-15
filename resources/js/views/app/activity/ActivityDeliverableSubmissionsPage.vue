@@ -95,8 +95,8 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAbility } from '@casl/vue'
-import axios from 'axios'
 import useActivityDeliverables from '@/composables/activityDeliverables'
+import useActivityTeams from '@/composables/activityTeams'
 import useDeliverableSubmissions from '@/composables/deliverableSubmissions'
 
 const { can } = useAbility()
@@ -104,6 +104,7 @@ const route = useRoute()
 const router = useRouter()
 
 const { deliverable, getDeliverable } = useActivityDeliverables()
+const { fetchTeamsList, fetchTeamStudentsList } = useActivityTeams()
 const { submissions, getSubmissions } = useDeliverableSubmissions()
 
 const activityId = computed(() => Number(route.params.activityId))
@@ -221,10 +222,6 @@ function rowFromSubmission(sub, rowKey, subjectLabel) {
   }
 }
 
-function unwrap(response) {
-  return response.data?.data ?? response.data
-}
-
 const pageBusy = ref(false)
 
 async function buildRows() {
@@ -239,8 +236,7 @@ async function buildRows() {
   const subs = Array.isArray(submissions.value) ? submissions.value : []
   const isGroup = !!d.is_group_deliverable
 
-  const tRes = await axios.get(`/api/activities/${aid}/teams`)
-  const teamList = Array.isArray(unwrap(tRes)) ? unwrap(tRes) : []
+  const teamList = await fetchTeamsList(aid)
 
   if (isGroup) {
     const built = []
@@ -255,12 +251,7 @@ async function buildRows() {
   }
 
   const memberLists = await Promise.all(
-    teamList.map((team) =>
-      axios
-        .get(`/api/activities/${aid}/teams/${team.id}/students`)
-        .then((r) => unwrap(r))
-        .catch(() => [])
-    )
+    teamList.map((team) => fetchTeamStudentsList(aid, team.id))
   )
 
   const studentsUnique = new Map()

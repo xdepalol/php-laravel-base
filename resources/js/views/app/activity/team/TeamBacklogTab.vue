@@ -219,7 +219,6 @@
 
 <script setup>
 import { computed, inject, reactive, ref, useTemplateRef, watch } from 'vue'
-import axios from 'axios'
 import { useToast } from '@/composables/useToast'
 import useActivityBacklogItems from '@/composables/activityBacklogItems'
 
@@ -238,6 +237,7 @@ const {
   hasError,
   getError,
   clearErrors,
+  importBacklogCsv,
 } = useActivityBacklogItems()
 
 const canEditTeamBacklog = computed(() => !!teamId?.value && !!activityId?.value)
@@ -476,7 +476,7 @@ async function runImport() {
 
   importDialog.running = true
   try {
-    const { data } = await axios.post(`/api/activities/${aid}/backlog-items/csv-import`, {
+    const data = await importBacklogCsv(aid, {
       csv: importDialog.text,
       team_id: Number(tid),
     })
