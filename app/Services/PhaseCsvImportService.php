@@ -93,10 +93,7 @@ class PhaseCsvImportService
                 'is_sprint' => $isSprint,
                 'start_date' => $start,
                 'end_date' => $end,
-                'retro_well' => null,
-                'retro_bad' => null,
-                'retro_improvement' => null,
-                'teacher_feedback' => null,
+                'teams_may_assign_phase_roles' => false,
             ]);
             $created++;
         }

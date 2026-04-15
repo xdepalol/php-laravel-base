@@ -21,10 +21,6 @@ class StorePhaseRequest extends FormRequest
             'is_sprint' => ['boolean'],
             'start_date' => ['nullable', 'date'],
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
-            'retro_well' => ['nullable', 'string'],
-            'retro_bad' => ['nullable', 'string'],
-            'retro_improvement' => ['nullable', 'string'],
-            'teacher_feedback' => ['nullable', 'string'],
             'teams_may_assign_phase_roles' => ['boolean'],
         ];
     }

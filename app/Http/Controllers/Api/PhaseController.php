@@ -26,12 +26,14 @@ class PhaseController extends Controller
             $teamIds = $this->teamIdsForStudentInActivity($request->user(), $activity);
             $query->with([
                 'phaseStudentRoles' => fn ($q) => $q->whereIn('team_id', $teamIds)->with($this->phaseStudentRoleNestedRelations()),
+                'phaseTeams' => fn ($q) => $q->whereIn('team_id', $teamIds)->with('team'),
             ]);
         } else {
             $query->with([
                 'phaseStudentRoles.student.user',
                 'phaseStudentRoles.activityRole',
                 'phaseStudentRoles.team',
+                'phaseTeams.team',
             ]);
         }
 
@@ -54,10 +56,6 @@ class PhaseController extends Controller
         $phase->is_sprint = $request->boolean('is_sprint');
         $phase->start_date = $request->start_date;
         $phase->end_date = $request->end_date;
-        $phase->retro_well = $request->retro_well;
-        $phase->retro_bad = $request->retro_bad;
-        $phase->retro_improvement = $request->retro_improvement;
-        $phase->teacher_feedback = $request->teacher_feedback;
         $phase->teams_may_assign_phase_roles = $request->boolean('teams_may_assign_phase_roles');
         if ($phase->save()) {
             $phase->load([
@@ -66,6 +64,7 @@ class PhaseController extends Controller
                 'phaseStudentRoles.student.user',
                 'phaseStudentRoles.activityRole',
                 'phaseStudentRoles.team',
+                'phaseTeams.team',
             ]);
 
             return new PhaseResource($phase);
@@ -85,6 +84,7 @@ class PhaseController extends Controller
                 'activity',
                 'phaseTasks',
                 'phaseStudentRoles' => fn ($q) => $q->whereIn('team_id', $teamIds)->with($this->phaseStudentRoleNestedRelations()),
+                'phaseTeams' => fn ($q) => $q->whereIn('team_id', $teamIds)->with('team'),
             ]);
         } else {
             $phase->load([
@@ -93,6 +93,7 @@ class PhaseController extends Controller
                 'phaseStudentRoles.student.user',
                 'phaseStudentRoles.activityRole',
                 'phaseStudentRoles.team',
+                'phaseTeams.team',
             ]);
         }
 
@@ -110,10 +111,6 @@ class PhaseController extends Controller
         $phase->is_sprint = $request->boolean('is_sprint');
         $phase->start_date = $request->start_date;
         $phase->end_date = $request->end_date;
-        $phase->retro_well = $request->retro_well;
-        $phase->retro_bad = $request->retro_bad;
-        $phase->retro_improvement = $request->retro_improvement;
-        $phase->teacher_feedback = $request->teacher_feedback;
         $phase->teams_may_assign_phase_roles = $request->boolean('teams_may_assign_phase_roles');
         if ($phase->save()) {
             $phase->load([
@@ -122,6 +119,7 @@ class PhaseController extends Controller
                 'phaseStudentRoles.student.user',
                 'phaseStudentRoles.activityRole',
                 'phaseStudentRoles.team',
+                'phaseTeams.team',
             ]);
 
             return new PhaseResource($phase);
@@ -143,6 +141,7 @@ class PhaseController extends Controller
             'phaseStudentRoles.student.user',
             'phaseStudentRoles.activityRole',
             'phaseStudentRoles.team',
+            'phaseTeams.team',
         ]);
         $phase->delete();
 

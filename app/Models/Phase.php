@@ -14,10 +14,6 @@ class Phase extends Model
         'is_sprint',
         'start_date',
         'end_date',
-        'retro_well',
-        'retro_bad',
-        'retro_improvement',
-        'teacher_feedback',
         'teams_may_assign_phase_roles',
     ];
 
@@ -49,5 +45,10 @@ class Phase extends Model
     public function phaseStudentRoles(): HasMany
     {
         return $this->hasMany(PhaseStudentRole::class);
+    }
+
+    public function phaseTeams(): HasMany
+    {
+        return $this->hasMany(PhaseTeam::class);
     }
 }

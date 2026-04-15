@@ -5,6 +5,15 @@
         <span>Fases</span>
         <div v-if="canList" class="flex flex-wrap gap-2">
           <Button
+            v-if="showGlobalStartSprintButton"
+            label="Iniciar sprint"
+            icon="pi pi-play"
+            size="small"
+            :loading="sprintBusyId === firstStartableSprintPhase?.id"
+            :disabled="isLoading"
+            @click="onGlobalStartSprint"
+          />
+          <Button
             v-if="canCreate"
             label="Importar CSV / Excel"
             icon="pi pi-file-import"
@@ -27,9 +36,11 @@
     </template>
     <template #content>
       <p v-if="canList" class="text-sm text-slate-600 mb-4">
-        Fases y sprints de la actividad (calendario compartido). La importación masiva usa el mismo
-        enfoque que el backlog: CSV o pegado desde Excel; el servidor interpreta cabeceras o columnas
-        fijas (título, sprint, inicio, fin).
+        Fases y sprints de la actividad (calendario compartido).
+        <template v-if="canCreate">
+          La importación masiva usa el mismo enfoque que el backlog: CSV o pegado desde Excel; el
+          servidor interpreta cabeceras o columnas fijas (título, sprint, inicio, fin).
+        </template>
       </p>
       <p v-else class="text-sm text-amber-800 mb-4">
         No tienes permiso para listar fases de esta actividad.
@@ -62,6 +73,30 @@
           <template #body="{ data }">
             <Tag v-if="data.is_sprint" value="Sí" severity="info" />
             <span v-else class="text-slate-500">No</span>
+          </template>
+        </Column>
+        <Column
+          v-if="showTeamSprintColumn"
+          header="Sprint del equipo"
+          class="min-w-[11rem]"
+        >
+          <template #body="{ data }">
+            <template v-if="data.is_sprint">
+              <div class="flex flex-col gap-1">
+                <span class="text-xs text-slate-600">{{
+                  sprintStatusLabel(sprintStatusValueForTeam(data))
+                }}</span>
+                <Button
+                  v-if="showPerRowSprintAdvance(data)"
+                  size="small"
+                  :label="sprintAdvanceButtonLabel(sprintStatusValueForTeam(data))"
+                  :loading="sprintBusyId === data.id"
+                  :disabled="!canClickAdvanceSprint(data)"
+                  @click="onAdvanceTeamSprint(data)"
+                />
+              </div>
+            </template>
+            <span v-else class="text-slate-400">—</span>
           </template>
         </Column>
         <Column header="Inicio" class="whitespace-nowrap w-32">
@@ -224,6 +259,14 @@ import useActivityTeams from '@/composables/activityTeams'
 import { useToast } from '@/composables/useToast'
 import { authStore } from '@/store/auth'
 import { activityRoleAssignmentWarnings } from '@/utils/activityRoleWarnings'
+import {
+  nextSprintStatusValue,
+  retroCompleteForFinish,
+  sprintAdvanceButtonLabel,
+  sprintNeverStartedForTeam,
+  sprintStatusLabel,
+  sprintTeamFinishedOnce,
+} from '@/utils/phaseTeamSprint'
 
 const { can } = useAbility()
 const canList = computed(() => can('phase-list'))
@@ -247,6 +290,7 @@ const {
   getPhases,
   deletePhase,
   importPhasesCsv,
+  patchPhaseTeam,
 } = useActivityPhases()
 
 const { getTeamMemberRoles, patchMyPhaseStudentRole } = useActivityTeams()
@@ -261,6 +305,118 @@ const showStudentPhaseSelfRoleColumn = computed(() => {
   if (can('phase-edit')) return false
   return true
 })
+
+const showTeamSprintColumn = computed(() => {
+  if (!teamId?.value || !activityRef?.value?.has_sprints || !canList.value) return false
+  return can('phase-view') || can('phase-edit')
+})
+
+const sprintBusyId = ref(null)
+
+function teamPhaseTeamRow(phase) {
+  const tid = Number(teamId?.value)
+  if (!tid || !phase?.phase_teams?.length) return null
+  return phase.phase_teams.find((p) => Number(p.team_id) === tid) ?? null
+}
+
+function sprintStatusValueForTeam(phase) {
+  const pt = teamPhaseTeamRow(phase)
+  const v = pt?.sprint_status?.value
+  return v !== undefined && v !== null ? Number(v) : 4
+}
+
+/** Todos los sprints anteriores a `phaseIndex` están cerrados al menos una vez. */
+function precedingSprintPhasesCompletedForTeam(phases, phaseIndex) {
+  const tid = Number(teamId?.value)
+  if (!tid || !Array.isArray(phases)) return false
+  for (let i = 0; i < phaseIndex; i++) {
+    const p = phases[i]
+    if (!p?.is_sprint) {
+      continue
+    }
+    const pt = teamPhaseTeamRow(p)
+    if (!sprintTeamFinishedOnce(pt)) {
+      return false
+    }
+  }
+  return true
+}
+
+const firstStartableSprintPhase = computed(() => {
+  if (!showTeamSprintColumn.value) return null
+  const list = phases.value || []
+  const tid = Number(teamId?.value)
+  if (!tid) return null
+  for (let i = 0; i < list.length; i++) {
+    const p = list[i]
+    if (!p?.is_sprint) {
+      continue
+    }
+    if (!precedingSprintPhasesCompletedForTeam(list, i)) {
+      continue
+    }
+    const pt = teamPhaseTeamRow(p)
+    if (sprintNeverStartedForTeam(pt)) {
+      return p
+    }
+  }
+  return null
+})
+
+const showGlobalStartSprintButton = computed(() => firstStartableSprintPhase.value != null)
+
+/** «Iniciar sprint» solo arriba; el resto de pasos sigue en la fila. */
+function showPerRowSprintAdvance(phase) {
+  return sprintStatusValueForTeam(phase) !== 4
+}
+
+function onGlobalStartSprint() {
+  const p = firstStartableSprintPhase.value
+  if (p) onAdvanceTeamSprint(p)
+}
+
+function canClickAdvanceSprint(phase) {
+  const cur = sprintStatusValueForTeam(phase)
+  if (nextSprintStatusValue(cur) === null) return false
+  if (cur === 3 && !retroCompleteForFinish(teamPhaseTeamRow(phase) ?? {})) return false
+  return true
+}
+
+function api422FirstMessage(error, fallback) {
+  const d = error?.response?.data
+  if (d?.errors && typeof d.errors === 'object') {
+    const first = Object.values(d.errors)[0]
+    if (Array.isArray(first) && first[0]) return String(first[0])
+  }
+  if (typeof d?.message === 'string') return d.message
+  return fallback
+}
+
+async function onAdvanceTeamSprint(phase) {
+  const aid = activityId?.value
+  const tid = teamId?.value
+  if (!aid || !tid || !phase?.id) return
+  const cur = sprintStatusValueForTeam(phase)
+  if (cur === 3 && !retroCompleteForFinish(teamPhaseTeamRow(phase) ?? {})) {
+    toast.error(
+      'Retrospectiva',
+      'Completa qué fue bien, qué mejorar y acciones en el detalle de la fase antes de finalizar.'
+    )
+    return
+  }
+  const next = nextSprintStatusValue(cur)
+  if (next === null) return
+  sprintBusyId.value = phase.id
+  try {
+    await patchPhaseTeam(aid, phase.id, tid, { sprint_status: next })
+    toast.success('Sprint', `Estado: ${sprintStatusLabel(next)}`)
+    await getPhases(aid)
+  } catch (e) {
+    toast.error('Sprint', api422FirstMessage(e, 'No se pudo actualizar el sprint del equipo.'))
+  } finally {
+    sprintBusyId.value = null
+  }
+}
 
 const phaseRoleWarningMessages = computed(() => {
   if (!showStudentPhaseSelfRoleColumn.value || !activityRoleOptions.value.length) return []

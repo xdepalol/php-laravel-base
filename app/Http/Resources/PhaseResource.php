@@ -21,14 +21,11 @@ class PhaseResource extends JsonResource
             'is_sprint' => (bool) $this->is_sprint,
             'start_date' => $this->start_date?->format('Y-m-d'),
             'end_date' => $this->end_date?->format('Y-m-d'),
-            'retro_well' => $this->retro_well,
-            'retro_bad' => $this->retro_bad,
-            'retro_improvement' => $this->retro_improvement,
-            'teacher_feedback' => $this->teacher_feedback,
             'teams_may_assign_phase_roles' => (bool) $this->teams_may_assign_phase_roles,
             'activity' => new ActivityResource($this->whenLoaded('activity')),
             'phase_tasks' => PhaseTaskResource::collection($this->whenLoaded('phaseTasks')),
             'phase_student_roles' => PhaseStudentRoleResource::collection($this->whenLoaded('phaseStudentRoles')),
+            'phase_teams' => PhaseTeamResource::collection($this->whenLoaded('phaseTeams')),
             'created_at' => $this->created_at?->toDateString(),
         ];
     }

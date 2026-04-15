@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\EnrollmentController;
 use App\Http\Controllers\Api\GroupController;
 use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\PhaseController;
+use App\Http\Controllers\Api\PhaseTeamController;
 use App\Http\Controllers\Api\PhaseStudentMyRoleController;
 use App\Http\Controllers\Api\PhaseStudentRoleController;
 use App\Http\Controllers\Api\PhaseTaskController;
@@ -94,6 +95,8 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::put('activities/{activity}/teams/{team}/students', [TeamStudentController::class, 'sync'])->scopeBindings();
     Route::patch('activities/{activity}/teams/{team}/me/activity-role', [TeamStudentMyActivityRoleController::class, 'update'])->scopeBindings();
     Route::patch('activities/{activity}/phases/{phase}/teams/{team}/me/phase-role', [PhaseStudentMyRoleController::class, 'update'])->scopeBindings();
+    Route::get('activities/{activity}/phases/{phase}/teams/{team}/phase-team', [PhaseTeamController::class, 'show'])->scopeBindings();
+    Route::patch('activities/{activity}/phases/{phase}/teams/{team}/phase-team', [PhaseTeamController::class, 'update'])->scopeBindings();
     Route::apiResource('activities.deliverables', DeliverableController::class)->scoped();
     Route::patch('deliverables/{deliverable}/submissions/{submission}/grade', [SubmissionController::class, 'grade'])
         ->scopeBindings()

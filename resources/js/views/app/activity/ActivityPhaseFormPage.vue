@@ -2,8 +2,8 @@
   <Card>
     <template #title>{{ isEdit ? 'Editar fase' : 'Nueva fase' }}</template>
     <template #subtitle>
-      Define el título, si es sprint, y el rango de fechas. La retrospectiva y el feedback se pueden
-      completar desde la vista de la fase.
+      Define el título, si es sprint, y el rango de fechas. La retrospectiva y el feedback del
+      profesorado van por equipo y se completan en la vista de la fase (desde el espacio del equipo).
     </template>
     <template #content>
       <p v-if="!canSubmit" class="text-sm text-amber-800 mb-4">
@@ -110,13 +110,6 @@ const form = reactive({
 
 const saving = ref(false)
 const loadError = ref(false)
-/** Valores cargados del API para no borrar retrospectiva / feedback al guardar. */
-const loadedExtras = ref({
-  retro_well: null,
-  retro_bad: null,
-  retro_improvement: null,
-  teacher_feedback: null,
-})
 
 const tabQuery = computed(() => {
   const raw = route.query.fromSubjectGroup
@@ -147,12 +140,6 @@ async function loadPhase() {
     form.start_date = toDateInputValue(p.start_date)
     form.end_date = toDateInputValue(p.end_date)
     form.teams_may_assign_phase_roles = !!p.teams_may_assign_phase_roles
-    loadedExtras.value = {
-      retro_well: p.retro_well ?? null,
-      retro_bad: p.retro_bad ?? null,
-      retro_improvement: p.retro_improvement ?? null,
-      teacher_feedback: p.teacher_feedback ?? null,
-    }
   } catch {
     loadError.value = true
   }
@@ -175,18 +162,9 @@ async function onSubmit() {
       teams_may_assign_phase_roles: form.teams_may_assign_phase_roles,
     }
     if (isEdit.value && phaseId.value) {
-      await updatePhase(aid.value, phaseId.value, {
-        ...loadedExtras.value,
-        ...base,
-      })
+      await updatePhase(aid.value, phaseId.value, base)
     } else {
-      await createPhase(aid.value, {
-        ...base,
-        retro_well: null,
-        retro_bad: null,
-        retro_improvement: null,
-        teacher_feedback: null,
-      })
+      await createPhase(aid.value, base)
     }
     goBack()
   } catch {

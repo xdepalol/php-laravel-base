@@ -6,6 +6,9 @@ import { useValidation } from './useValidation'
 
 const baseUrl = (activityId) => `/api/activities/${activityId}/phases`
 
+const phaseTeamUrl = (activityId, phaseId, teamId) =>
+  `/api/activities/${activityId}/phases/${phaseId}/teams/${teamId}/phase-team`
+
 export default function useActivityPhases() {
   const phases = ref([])
   const isLoading = ref(false)
@@ -17,10 +20,6 @@ export default function useActivityPhases() {
     is_sprint: false,
     start_date: null,
     end_date: null,
-    retro_well: null,
-    retro_bad: null,
-    retro_improvement: null,
-    teacher_feedback: null,
     teams_may_assign_phase_roles: false,
   }
 
@@ -44,10 +43,6 @@ export default function useActivityPhases() {
           return new Date(v) >= new Date(start)
         }
       ),
-    retro_well: yup.string().nullable(),
-    retro_bad: yup.string().nullable(),
-    retro_improvement: yup.string().nullable(),
-    teacher_feedback: yup.string().nullable(),
     teams_may_assign_phase_roles: yup.boolean(),
   })
 
@@ -73,10 +68,6 @@ export default function useActivityPhases() {
       is_sprint: !!data.is_sprint,
       start_date: data.start_date ?? null,
       end_date: data.end_date ?? null,
-      retro_well: data.retro_well ?? null,
-      retro_bad: data.retro_bad ?? null,
-      retro_improvement: data.retro_improvement ?? null,
-      teacher_feedback: data.teacher_feedback ?? null,
       teams_may_assign_phase_roles: !!data.teams_may_assign_phase_roles,
     }
     clearErrors()
@@ -94,10 +85,6 @@ export default function useActivityPhases() {
     is_sprint: !!data.is_sprint,
     start_date: data.start_date || null,
     end_date: data.end_date || null,
-    retro_well: data.retro_well || null,
-    retro_bad: data.retro_bad || null,
-    retro_improvement: data.retro_improvement || null,
-    teacher_feedback: data.teacher_feedback || null,
     teams_may_assign_phase_roles: !!data.teams_may_assign_phase_roles,
   })
 
@@ -202,6 +189,22 @@ export default function useActivityPhases() {
     }
   }
 
+  /**
+   * Actualiza sprint / retrospectiva / feedback del equipo en una fase (API phase-team).
+   * @param {number|string} activityId
+   * @param {number|string} phaseId
+   * @param {number|string} teamId
+   * @param {Record<string, unknown>} payload
+   */
+  const patchPhaseTeam = async (activityId, phaseId, teamId, payload) => {
+    if (!activityId || !phaseId || !teamId) throw new Error('IDs requeridos')
+    const response = await axios.patch(
+      phaseTeamUrl(activityId, phaseId, teamId),
+      payload
+    )
+    return unwrap(response)
+  }
+
   return {
     phases,
     phase,
@@ -218,6 +221,7 @@ export default function useActivityPhases() {
     createPhase,
     updatePhase,
     deletePhase,
-    importPhasesCsv
+    importPhasesCsv,
+    patchPhaseTeam,
   }
 }

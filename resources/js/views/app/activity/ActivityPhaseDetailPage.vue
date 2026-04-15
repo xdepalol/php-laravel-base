@@ -70,26 +70,119 @@
           </div>
         </dl>
 
-        <div v-if="row.retro_well || row.retro_bad || row.retro_improvement" class="space-y-3">
-          <h3 class="text-sm font-semibold text-slate-800">Retrospectiva</h3>
-          <div v-if="row.retro_well" class="rounded-lg border border-slate-200 p-3">
-            <p class="text-xs font-medium text-slate-500 mb-1">Qué fue bien</p>
-            <p class="text-slate-700 whitespace-pre-wrap">{{ row.retro_well }}</p>
-          </div>
-          <div v-if="row.retro_bad" class="rounded-lg border border-slate-200 p-3">
-            <p class="text-xs font-medium text-slate-500 mb-1">Qué mejorar</p>
-            <p class="text-slate-700 whitespace-pre-wrap">{{ row.retro_bad }}</p>
-          </div>
-          <div v-if="row.retro_improvement" class="rounded-lg border border-slate-200 p-3">
-            <p class="text-xs font-medium text-slate-500 mb-1">Acciones</p>
-            <p class="text-slate-700 whitespace-pre-wrap">{{ row.retro_improvement }}</p>
+        <div
+          v-if="sprintWorkflowVisible"
+          class="rounded-lg border border-indigo-200 bg-indigo-50/40 p-4 space-y-3"
+        >
+          <h3 class="text-sm font-semibold text-slate-800">Sprint del equipo</h3>
+          <p class="text-xs text-slate-600">
+            Estado:
+            <strong>{{ sprintStatusLabel(sprintStatusValue) }}</strong>
+          </p>
+
+          <template v-if="sprintStatusValue === 3">
+            <p class="text-xs text-slate-600">
+              En retrospectiva: rellena los tres campos; son obligatorios para finalizar el sprint.
+            </p>
+            <div class="space-y-2">
+              <div>
+                <label class="text-xs font-medium text-slate-600 block mb-1">Qué fue bien</label>
+                <Textarea v-model="retroDraft.well" rows="2" class="w-full" auto-resize />
+              </div>
+              <div>
+                <label class="text-xs font-medium text-slate-600 block mb-1">Qué mejorar</label>
+                <Textarea v-model="retroDraft.bad" rows="2" class="w-full" auto-resize />
+              </div>
+              <div>
+                <label class="text-xs font-medium text-slate-600 block mb-1">Acciones / mejoras</label>
+                <Textarea v-model="retroDraft.improve" rows="2" class="w-full" auto-resize />
+              </div>
+            </div>
+            <Button
+              label="Guardar retrospectiva"
+              icon="pi pi-save"
+              size="small"
+              outlined
+              :loading="sprintSaving && sprintSaveMode === 'retro'"
+              :disabled="sprintSaving"
+              @click="saveRetroDraft"
+            />
+          </template>
+
+          <template v-if="canEdit">
+            <div class="pt-1 border-t border-indigo-100">
+              <label class="text-xs font-medium text-slate-600 block mb-1">Feedback del profesorado</label>
+              <Textarea v-model="feedbackDraft" rows="3" class="w-full" auto-resize />
+              <Button
+                label="Guardar feedback"
+                icon="pi pi-save"
+                size="small"
+                class="mt-2"
+                outlined
+                :loading="sprintSaving && sprintSaveMode === 'feedback'"
+                :disabled="sprintSaving"
+                @click="saveFeedbackDraft"
+              />
+            </div>
+          </template>
+
+          <div class="pt-1">
+            <Button
+              v-if="canAdvanceSprintDetail"
+              :label="sprintAdvanceButtonLabel(sprintStatusValue)"
+              icon="pi pi-forward"
+              size="small"
+              :loading="sprintSaving && sprintSaveMode === 'advance'"
+              :disabled="sprintSaving || !canClickAdvanceSprintDetail"
+              @click="advanceSprintFromDetail"
+            />
           </div>
         </div>
 
-        <div v-if="row.teacher_feedback" class="rounded-lg border border-amber-200 bg-amber-50/80 p-3">
-          <p class="text-xs font-medium text-amber-900 mb-1">Feedback del profesorado</p>
-          <p class="text-slate-800 whitespace-pre-wrap">{{ row.teacher_feedback }}</p>
-        </div>
+        <template v-if="phaseTeamsForDisplay.length">
+          <div
+            v-for="pt in phaseTeamsForDisplay"
+            :key="pt.id ?? `${pt.phase_id}-${pt.team_id}`"
+            class="space-y-3"
+          >
+            <p
+              v-if="!contextTeamId && phaseTeamsForDisplay.length > 1"
+              class="text-sm font-semibold text-slate-800"
+            >
+              {{ pt.team?.name || `Equipo #${pt.team_id}` }}
+            </p>
+
+            <div
+              v-if="
+                (pt.retro_well || pt.retro_bad || pt.retro_improvement) &&
+                !(sprintWorkflowVisible && sprintStatusValue === 3)
+              "
+              class="space-y-3"
+            >
+              <h3 class="text-sm font-semibold text-slate-800">Retrospectiva</h3>
+              <div v-if="pt.retro_well" class="rounded-lg border border-slate-200 p-3">
+                <p class="text-xs font-medium text-slate-500 mb-1">Qué fue bien</p>
+                <p class="text-slate-700 whitespace-pre-wrap">{{ pt.retro_well }}</p>
+              </div>
+              <div v-if="pt.retro_bad" class="rounded-lg border border-slate-200 p-3">
+                <p class="text-xs font-medium text-slate-500 mb-1">Qué mejorar</p>
+                <p class="text-slate-700 whitespace-pre-wrap">{{ pt.retro_bad }}</p>
+              </div>
+              <div v-if="pt.retro_improvement" class="rounded-lg border border-slate-200 p-3">
+                <p class="text-xs font-medium text-slate-500 mb-1">Acciones</p>
+                <p class="text-slate-700 whitespace-pre-wrap">{{ pt.retro_improvement }}</p>
+              </div>
+            </div>
+
+            <div
+              v-if="pt.teacher_feedback"
+              class="rounded-lg border border-amber-200 bg-amber-50/80 p-3"
+            >
+              <p class="text-xs font-medium text-amber-900 mb-1">Feedback del profesorado</p>
+              <p class="text-slate-800 whitespace-pre-wrap">{{ pt.teacher_feedback }}</p>
+            </div>
+          </div>
+        </template>
 
         <div class="pt-2 border-t border-slate-100">
           <h3 class="text-sm font-semibold text-slate-800 mb-2">
@@ -213,7 +306,7 @@
 </template>
 
 <script setup>
-import { computed, inject, ref, watch } from 'vue'
+import { computed, inject, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAbility } from '@casl/vue'
 import useActivityPhases from '@/composables/activityPhases'
@@ -221,6 +314,12 @@ import useActivityTeams from '@/composables/activityTeams'
 import usePhaseStudentRoles from '@/composables/phaseStudentRoles'
 import { useToast } from '@/composables/useToast'
 import { formatStudentDisplayName } from '@/utils/studentDisplayName'
+import {
+  nextSprintStatusValue,
+  retroCompleteForFinish,
+  sprintAdvanceButtonLabel,
+  sprintStatusLabel,
+} from '@/utils/phaseTeamSprint'
 
 const route = useRoute()
 const router = useRouter()
@@ -242,7 +341,7 @@ const canManagePhaseStudentRoles = computed(
 
 const activityHasRoleTypes = computed(() => !!activityRef?.value?.activity_role_type_id)
 
-const { getPhase, deletePhase } = useActivityPhases()
+const { getPhase, deletePhase, patchPhaseTeam } = useActivityPhases()
 const { getTeamStudentsList, getTeamMemberRoles } = useActivityTeams()
 const { saveTeacherPhaseStudentAssignment } = usePhaseStudentRoles()
 
@@ -273,6 +372,156 @@ const phaseStudentRolesForTeam = computed(() => {
   const tid = contextTeamId.value
   if (!tid) return []
   return (row.value.phase_student_roles || []).filter((p) => Number(p.team_id) === tid)
+})
+
+const sprintWorkflowVisible = computed(() => {
+  if (!contextTeamId.value || !row.value?.is_sprint || !activityRef?.value?.has_sprints) return false
+  return can('phase-view') || can('phase-edit')
+})
+
+const phaseTeamSlice = computed(() => {
+  const tid = contextTeamId.value
+  const list = row.value.phase_teams || []
+  return list.find((p) => Number(p.team_id) === tid) ?? null
+})
+
+const sprintStatusValue = computed(() => {
+  const v = phaseTeamSlice.value?.sprint_status?.value
+  return v !== undefined && v !== null ? Number(v) : 4
+})
+
+const canAdvanceSprintDetail = computed(
+  () => sprintWorkflowVisible.value && (can('phase-view') || can('phase-edit'))
+)
+
+const sprintSaving = ref(false)
+const sprintSaveMode = ref('')
+const retroDraft = reactive({ well: '', bad: '', improve: '' })
+const feedbackDraft = ref('')
+
+function syncSprintDraftsFromRow() {
+  const pt = phaseTeamSlice.value
+  retroDraft.well = pt?.retro_well ?? ''
+  retroDraft.bad = pt?.retro_bad ?? ''
+  retroDraft.improve = pt?.retro_improvement ?? ''
+  feedbackDraft.value = pt?.teacher_feedback ?? ''
+}
+
+watch(
+  () => [
+    row.value?.id,
+    contextTeamId.value,
+    phaseTeamSlice.value?.sprint_status?.value,
+    phaseTeamSlice.value?.retro_well,
+    phaseTeamSlice.value?.retro_bad,
+    phaseTeamSlice.value?.retro_improvement,
+    phaseTeamSlice.value?.teacher_feedback,
+  ],
+  () => syncSprintDraftsFromRow(),
+  { immediate: true }
+)
+
+function canClickAdvanceSprintDetail() {
+  const cur = sprintStatusValue.value
+  if (nextSprintStatusValue(cur) === null) return false
+  if (cur === 3) {
+    return retroCompleteForFinish({
+      retro_well: retroDraft.well,
+      retro_bad: retroDraft.bad,
+      retro_improvement: retroDraft.improve,
+    })
+  }
+  return true
+}
+
+function api422FirstMessage(error, fallback) {
+  const d = error?.response?.data
+  if (d?.errors && typeof d.errors === 'object') {
+    const first = Object.values(d.errors)[0]
+    if (Array.isArray(first) && first[0]) return String(first[0])
+  }
+  if (typeof d?.message === 'string') return d.message
+  return fallback
+}
+
+async function saveRetroDraft() {
+  const aidVal = aid.value
+  const tid = contextTeamId.value
+  const pid = phaseId.value
+  if (!aidVal || !tid || !pid || sprintStatusValue.value !== 3) return
+  sprintSaveMode.value = 'retro'
+  sprintSaving.value = true
+  try {
+    await patchPhaseTeam(aidVal, pid, tid, {
+      retro_well: retroDraft.well || null,
+      retro_bad: retroDraft.bad || null,
+      retro_improvement: retroDraft.improve || null,
+    })
+    toast.success('Retrospectiva', 'Cambios guardados.')
+    await load()
+  } catch (e) {
+    toast.error('Retrospectiva', api422FirstMessage(e, 'No se pudo guardar.'))
+  } finally {
+    sprintSaving.value = false
+    sprintSaveMode.value = ''
+  }
+}
+
+async function saveFeedbackDraft() {
+  const aidVal = aid.value
+  const tid = contextTeamId.value
+  const pid = phaseId.value
+  if (!aidVal || !tid || !pid || !canEdit.value) return
+  sprintSaveMode.value = 'feedback'
+  sprintSaving.value = true
+  try {
+    await patchPhaseTeam(aidVal, pid, tid, {
+      teacher_feedback: feedbackDraft.value || null,
+    })
+    toast.success('Feedback', 'Guardado.')
+    await load()
+  } catch (e) {
+    toast.error('Feedback', api422FirstMessage(e, 'No se pudo guardar el feedback.'))
+  } finally {
+    sprintSaving.value = false
+    sprintSaveMode.value = ''
+  }
+}
+
+async function advanceSprintFromDetail() {
+  const aidVal = aid.value
+  const tid = contextTeamId.value
+  const pid = phaseId.value
+  if (!aidVal || !tid || !pid) return
+  const cur = sprintStatusValue.value
+  const next = nextSprintStatusValue(cur)
+  if (next === null) return
+  sprintSaveMode.value = 'advance'
+  sprintSaving.value = true
+  try {
+    const payload = { sprint_status: next }
+    if (cur === 3) {
+      payload.retro_well = retroDraft.well || null
+      payload.retro_bad = retroDraft.bad || null
+      payload.retro_improvement = retroDraft.improve || null
+    }
+    await patchPhaseTeam(aidVal, pid, tid, payload)
+    toast.success('Sprint', `Estado: ${sprintStatusLabel(next)}`)
+    await load()
+  } catch (e) {
+    toast.error('Sprint', api422FirstMessage(e, 'No se pudo avanzar el sprint.'))
+  } finally {
+    sprintSaving.value = false
+    sprintSaveMode.value = ''
+  }
+}
+
+/** Filas `phase_teams` visibles: una sola si la ruta lleva `teamId`, todas si es vista global. */
+const phaseTeamsForDisplay = computed(() => {
+  const list = row.value.phase_teams || []
+  const tid = contextTeamId.value
+  if (!tid) return list
+  return list.filter((p) => Number(p.team_id) === tid)
 })
 
 const tabQuery = computed(() => {

@@ -42,6 +42,11 @@ class Team extends Model
         return $this->hasMany(PhaseStudentRole::class);
     }
 
+    public function phaseTeams(): HasMany
+    {
+        return $this->hasMany(PhaseTeam::class);
+    }
+
     /**
      * Eager-load students, users, and each pivot's activity role (avoids N+1 in team member APIs).
      */
