@@ -11,6 +11,10 @@ const teamMemberRolesUrl = (activityId) =>
   `/api/activities/${activityId}/team-member-roles`
 const studentsAvailableForTeamsUrl = (activityId) =>
   `/api/activities/${activityId}/students-available-for-teams`
+const myTeamActivityRoleUrl = (activityId, teamId) =>
+  `/api/activities/${activityId}/teams/${teamId}/me/activity-role`
+const myPhaseStudentRoleUrl = (activityId, phaseId, teamId) =>
+  `/api/activities/${activityId}/phases/${phaseId}/teams/${teamId}/me/phase-role`
 
 const teamSchema = yup.object({
   name: yup.string().trim().required('El nombre es obligatorio').max(255)
@@ -260,6 +264,33 @@ export default function useActivityTeams() {
     }
   }
 
+  const patchMyTeamActivityRole = async (activityId, teamId, activity_role_id) => {
+    if (!activityId || !teamId) throw new Error('IDs requeridos')
+    try {
+      const response = await axios.patch(myTeamActivityRoleUrl(activityId, teamId), {
+        activity_role_id,
+      })
+      return unwrap(response)
+    } catch (error) {
+      toast.error('Error', 'No se pudo guardar tu rol en el equipo')
+      throw error
+    }
+  }
+
+  const patchMyPhaseStudentRole = async (activityId, phaseId, teamId, activity_role_id) => {
+    if (!activityId || !phaseId || !teamId) throw new Error('IDs requeridos')
+    try {
+      const response = await axios.patch(myPhaseStudentRoleUrl(activityId, phaseId, teamId), {
+        activity_role_id,
+      })
+      if (response.status === 204) return null
+      return unwrap(response)
+    } catch (error) {
+      toast.error('Error', 'No se pudo guardar tu rol en la fase')
+      throw error
+    }
+  }
+
   return {
     teams,
     team,
@@ -282,6 +313,8 @@ export default function useActivityTeams() {
     getTeamMemberRoles,
     getStudentsAvailableForTeams,
     getTeamStudentsList,
-    syncTeamStudents
+    syncTeamStudents,
+    patchMyTeamActivityRole,
+    patchMyPhaseStudentRole,
   }
 }

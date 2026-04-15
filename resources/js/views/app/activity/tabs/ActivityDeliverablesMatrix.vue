@@ -116,7 +116,9 @@ import { computed, inject, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import useActivityTeams from '@/composables/activityTeams'
 import useDeliverableSubmissions from '@/composables/deliverableSubmissions'
+import { authStore } from '@/store/auth'
 import { deliverableMatrixHeaderLabel } from '@/utils/deliverableUi'
+import { formatStudentDisplayName } from '@/utils/studentDisplayName'
 import { sortDeliverablesByDueDateThenId } from '@/utils/deliverablesSort'
 import ActivityDeliverablesMatrixCell from './ActivityDeliverablesMatrixCell.vue'
 
@@ -198,10 +200,8 @@ function tooltipFor(d) {
 }
 
 function formatMemberName(member) {
-  const u = member?.student?.user ?? member?.user
-  if (!u) return `Estudiante #${member?.student_id ?? '—'}`
-  const parts = [u.name, u.surname1, u.surname2].filter(Boolean)
-  return parts.length ? parts.join(' ') : `Usuario #${u.id ?? member.student_id}`
+  const st = member?.student ?? (member?.user ? { user: member.user } : null)
+  return formatStudentDisplayName(st, member?.student_id)
 }
 
 async function loadMatrix() {
@@ -298,9 +298,13 @@ async function loadMatrix() {
             submissionId: last?.id ?? null,
           }
         }
+        const auth = authStore()
+        const selfUid = auth.user?.id
         const label =
           props.studentMatrixRowLabel?.trim() ||
-          `Estudiante #${scopedId}`
+          (selfUid && Number(scopedId) === Number(selfUid)
+            ? formatStudentDisplayName({ user: auth.user })
+            : formatStudentDisplayName(null, scopedId))
         sRows = [
           {
             rowKey: `student-${scopedId}`,

@@ -98,6 +98,7 @@ import { useAbility } from '@casl/vue'
 import useActivityDeliverables from '@/composables/activityDeliverables'
 import useActivityTeams from '@/composables/activityTeams'
 import useDeliverableSubmissions from '@/composables/deliverableSubmissions'
+import { formatStudentDisplayName } from '@/utils/studentDisplayName'
 
 const { can } = useAbility()
 const route = useRoute()
@@ -189,10 +190,8 @@ function pickLastSubmission(subs) {
 }
 
 function formatMemberName(member) {
-  const u = member?.student?.user ?? member?.user
-  if (!u) return `Estudiante #${member?.student_id ?? '—'}`
-  const parts = [u.name, u.surname1, u.surname2].filter(Boolean)
-  return parts.length ? parts.join(' ') : `Usuario #${u.id ?? member.student_id}`
+  const st = member?.student ?? (member?.user ? { user: member.user } : null)
+  return formatStudentDisplayName(st, member?.student_id)
 }
 
 function formatGrade(g) {

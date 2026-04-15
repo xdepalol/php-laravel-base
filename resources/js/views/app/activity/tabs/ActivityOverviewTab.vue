@@ -54,9 +54,19 @@
                 value="Backlog de producto"
                 severity="secondary"
               />
+              <Tag
+                v-if="activity.students_may_assign_own_team_role"
+                value="Alumnado elige su rol en el equipo"
+                severity="success"
+              />
               <Tag v-if="activity.is_intermodular" value="Intermodular" severity="warn" />
               <span
-                v-if="!activity.has_sprints && !activity.has_backlog && !activity.is_intermodular"
+                v-if="
+                  !activity.has_sprints &&
+                  !activity.has_backlog &&
+                  !activity.students_may_assign_own_team_role &&
+                  !activity.is_intermodular
+                "
                 class="text-slate-600"
                 >—</span
               >
@@ -194,6 +204,20 @@
               <label for="act-backlog" class="text-sm cursor-pointer">Backlog de producto</label>
             </div>
             <div class="flex items-center gap-2">
+              <Checkbox
+                v-model="form.students_may_assign_own_team_role"
+                input-id="act-own-team-role"
+                binary
+                :disabled="!form.activity_role_type_id"
+              />
+              <label for="act-own-team-role" class="text-sm cursor-pointer">
+                Cada miembro puede elegir su rol en el equipo (actividad)
+              </label>
+            </div>
+            <p v-if="!form.activity_role_type_id" class="text-xs text-slate-500 -mt-2 pl-7">
+              Activa antes un tipo de roles para habilitar esta opción.
+            </p>
+            <div class="flex items-center gap-2">
               <Checkbox v-model="form.is_intermodular" input-id="act-inter" binary />
               <label for="act-inter" class="text-sm cursor-pointer">Actividad intermodular</label>
             </div>
@@ -266,6 +290,7 @@ const form = reactive({
   activity_role_type_id: null,
   has_sprints: false,
   has_backlog: false,
+  students_may_assign_own_team_role: false,
   is_intermodular: false,
   start_date: null,
   end_date: null,
@@ -281,6 +306,7 @@ function syncFormFromActivity() {
   form.activity_role_type_id = a.activity_role_type_id ?? null
   form.has_sprints = !!a.has_sprints
   form.has_backlog = !!a.has_backlog
+  form.students_may_assign_own_team_role = !!a.students_may_assign_own_team_role
   form.is_intermodular = !!a.is_intermodular
   form.start_date = toDateInputValue(a.start_date)
   form.end_date = toDateInputValue(a.end_date)
@@ -329,6 +355,7 @@ async function onSave() {
       activity_role_type_id: form.activity_role_type_id,
       has_sprints: form.has_sprints,
       has_backlog: form.has_backlog,
+      students_may_assign_own_team_role: form.students_may_assign_own_team_role,
       is_intermodular: form.is_intermodular,
       start_date: form.start_date || null,
       end_date: form.end_date || null,

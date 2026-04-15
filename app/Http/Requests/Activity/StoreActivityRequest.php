@@ -34,6 +34,10 @@ class StoreActivityRequest extends FormRequest
             'subject_groups.*' => 'exists:subject_groups,id',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
+            'has_sprints' => ['sometimes', 'boolean'],
+            'has_backlog' => ['sometimes', 'boolean'],
+            'students_may_assign_own_team_role' => ['sometimes', 'boolean'],
+            'is_intermodular' => ['sometimes', 'boolean'],
         ];
     }
 }

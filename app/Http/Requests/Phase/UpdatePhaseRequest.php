@@ -25,6 +25,7 @@ class UpdatePhaseRequest extends FormRequest
             'retro_bad' => ['nullable', 'string'],
             'retro_improvement' => ['nullable', 'string'],
             'teacher_feedback' => ['nullable', 'string'],
+            'teams_may_assign_phase_roles' => ['boolean'],
         ];
     }
 }

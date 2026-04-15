@@ -25,6 +25,16 @@
           <Checkbox v-model="form.is_sprint" input-id="ph-sprint" binary />
           <label for="ph-sprint" class="text-sm cursor-pointer">Es un sprint (iteración)</label>
         </div>
+        <div class="flex items-center gap-2">
+          <Checkbox v-model="form.teams_may_assign_phase_roles" input-id="ph-team-roles" binary />
+          <label for="ph-team-roles" class="text-sm cursor-pointer">
+            Los estudiantes del equipo pueden elegir su rol en esta fase
+          </label>
+        </div>
+        <p class="text-xs text-slate-500 -mt-2">
+          Solo aplica si la actividad tiene un tipo de roles definido. El reparto sigue siendo
+          editable por el profesorado.
+        </p>
         <div class="grid gap-4 sm:grid-cols-2">
           <div>
             <label for="ph-start" class="text-sm font-medium text-slate-700 block mb-1"
@@ -93,6 +103,7 @@ const { createPhase, updatePhase, getPhase, getError, clearErrors } = useActivit
 const form = reactive({
   title: '',
   is_sprint: false,
+  teams_may_assign_phase_roles: false,
   start_date: null,
   end_date: null,
 })
@@ -135,6 +146,7 @@ async function loadPhase() {
     form.is_sprint = !!p.is_sprint
     form.start_date = toDateInputValue(p.start_date)
     form.end_date = toDateInputValue(p.end_date)
+    form.teams_may_assign_phase_roles = !!p.teams_may_assign_phase_roles
     loadedExtras.value = {
       retro_well: p.retro_well ?? null,
       retro_bad: p.retro_bad ?? null,
@@ -160,14 +172,21 @@ async function onSubmit() {
       is_sprint: form.is_sprint,
       start_date: form.start_date || null,
       end_date: form.end_date || null,
+      teams_may_assign_phase_roles: form.teams_may_assign_phase_roles,
     }
     if (isEdit.value && phaseId.value) {
       await updatePhase(aid.value, phaseId.value, {
-        ...base,
         ...loadedExtras.value,
+        ...base,
       })
     } else {
-      await createPhase(aid.value, payload)
+      await createPhase(aid.value, {
+        ...base,
+        retro_well: null,
+        retro_bad: null,
+        retro_improvement: null,
+        teacher_feedback: null,
+      })
     }
     goBack()
   } catch {

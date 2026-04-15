@@ -25,6 +25,7 @@ class PhaseResource extends JsonResource
             'retro_bad' => $this->retro_bad,
             'retro_improvement' => $this->retro_improvement,
             'teacher_feedback' => $this->teacher_feedback,
+            'teams_may_assign_phase_roles' => (bool) $this->teams_may_assign_phase_roles,
             'activity' => new ActivityResource($this->whenLoaded('activity')),
             'phase_tasks' => PhaseTaskResource::collection($this->whenLoaded('phaseTasks')),
             'phase_student_roles' => PhaseStudentRoleResource::collection($this->whenLoaded('phaseStudentRoles')),

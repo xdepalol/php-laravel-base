@@ -40,9 +40,24 @@
               <span class="font-medium text-slate-800">{{ data.name }}</span>
             </template>
           </Column>
-          <Column v-if="showRoleColumn" header="Rol" class="w-48">
+          <Column v-if="showRoleColumn" header="Rol" class="w-56">
             <template #body="{ data }">
-              {{ data.activity_role?.name || '—' }}
+              <template v-if="showSelfRolePickerForRow(data)">
+                <Select
+                  :model-value="data.activity_role_id ?? null"
+                  :options="activityRoles"
+                  option-label="name"
+                  option-value="id"
+                  placeholder="Sin rol"
+                  show-clear
+                  class="w-full text-sm"
+                  :disabled="selfRoleSaving"
+                  @update:model-value="(v) => saveMyTeamRole(v)"
+                />
+              </template>
+              <template v-else>
+                {{ data.activity_role?.name || '—' }}
+              </template>
             </template>
           </Column>
           <Column v-if="can('team-edit') && showRoleColumn" class="w-16">
@@ -63,6 +78,16 @@
             </template>
           </Column>
         </DataTable>
+
+        <div
+          v-if="showRoleColumn && teamRoleWarningMessages.length"
+          class="mt-4 rounded-lg border border-amber-200 bg-amber-50/80 px-3 py-2 text-sm text-amber-950"
+        >
+          <p class="font-medium mb-1">Avisos sobre roles (no bloquean el guardado)</p>
+          <ul class="list-disc pl-5 space-y-0.5">
+            <li v-for="(w, i) in teamRoleWarningMessages" :key="i">{{ w }}</li>
+          </ul>
+        </div>
       </template>
     </Card>
 
@@ -116,6 +141,9 @@ import { computed, inject, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAbility } from '@casl/vue'
 import useActivityTeams from '@/composables/activityTeams'
+import { authStore } from '@/store/auth'
+import { activityRoleAssignmentWarnings } from '@/utils/activityRoleWarnings'
+import { formatStudentDisplayName } from '@/utils/studentDisplayName'
 import TeamMembersPickDialog from './TeamMembersPickDialog.vue'
 
 const { can } = useAbility()
@@ -124,15 +152,18 @@ const router = useRouter()
 const swal = inject('$swal')
 
 const teamRef = inject('team')
+const activityRef = inject('activity', null)
 const activityId = inject('activityId')
 const teamId = inject('teamId')
 const reloadTeam = inject('reloadTeam', null)
+const auth = authStore()
 
 const {
   getTeamMemberRoles,
   getTeamStudentsList,
   syncTeamStudents,
   deleteTeam,
+  patchMyTeamActivityRole,
 } = useActivityTeams()
 
 const tabQuery = computed(() => {
@@ -147,6 +178,7 @@ const roleDialogVisible = ref(false)
 const roleEditRow = ref(null)
 const roleEditSelectedId = ref(null)
 const roleSaveLoading = ref(false)
+const selfRoleSaving = ref(false)
 
 const numericActivityId = computed(() => Number(activityId?.value) || 0)
 
@@ -162,9 +194,11 @@ const memberRows = computed(() => {
   return students.map((row) => {
     const inner = row.student ?? row
     const u = inner.user ?? row.user
-    const parts = u ? [u.name, u.surname1, u.surname2].filter(Boolean) : []
     const sid = row.student_id ?? inner.user_id
-    const name = parts.length ? parts.join(' ') : u?.email || `Estudiante #${sid}`
+    const name = formatStudentDisplayName(
+      { user: u, student_number: inner.student_number ?? row.student_number },
+      sid
+    )
     return {
       student_id: sid,
       name,
@@ -176,6 +210,41 @@ const memberRows = computed(() => {
 })
 
 const showRoleColumn = computed(() => activityRoles.value.length > 0)
+
+const activityAllowsSelfTeamRole = computed(() => {
+  const a = activityRef?.value
+  return !!(a?.activity_role_type_id && a?.students_may_assign_own_team_role)
+})
+
+const teamRoleWarningMessages = computed(() => {
+  if (!activityRoles.value.length) return []
+  const assigns = memberRows.value.map((r) => ({ activity_role_id: r.activity_role_id }))
+  return activityRoleAssignmentWarnings(assigns, activityRoles.value)
+})
+
+function showSelfRolePickerForRow(data) {
+  if (!can('team-edit') && activityAllowsSelfTeamRole.value) {
+    return Number(data.student_id) === Number(auth.user?.id)
+  }
+  return false
+}
+
+async function saveMyTeamRole(activity_role_id) {
+  const aid = numericActivityId.value
+  const tid = teamId?.value
+  if (!aid || !tid) return
+  selfRoleSaving.value = true
+  try {
+    await patchMyTeamActivityRole(aid, tid, activity_role_id ?? null)
+    if (typeof reloadTeam === 'function') {
+      await reloadTeam()
+    }
+  } catch {
+    /* toast en composable */
+  } finally {
+    selfRoleSaving.value = false
+  }
+}
 
 async function loadActivityRoles() {
   const aid = numericActivityId.value

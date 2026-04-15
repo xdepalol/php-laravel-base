@@ -36,9 +36,10 @@ class ActivityResource extends JsonResource
                 'name' => $this->status->name,
             ],
             'config' => [
-                'has_sprints' => (bool)$this->has_sprints,
-                'has_backlog' => (bool)$this->has_backlog,
-                'is_intermodular' => (bool)$this->is_intermodular,
+                'has_sprints' => (bool) $this->has_sprints,
+                'has_backlog' => (bool) $this->has_backlog,
+                'students_may_assign_own_team_role' => (bool) $this->students_may_assign_own_team_role,
+                'is_intermodular' => (bool) $this->is_intermodular,
             ],
             'dates' => [
                 'start' => $this->start_date?->format('Y-m-d'),

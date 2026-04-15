@@ -53,7 +53,7 @@ class ActivityController extends Controller
     {
         $this->authorize('activity-create');
 
-        $activity = new Activity();
+        $activity = new Activity;
         $activity->academic_year_id = $request->academic_year_id;
         $activity->title = $request->title;
         $activity->description = $request->description;
@@ -61,6 +61,7 @@ class ActivityController extends Controller
         $activity->type = $request->type;
         $activity->has_sprints = $request->has_sprints;
         $activity->has_backlog = $request->has_backlog;
+        $activity->students_may_assign_own_team_role = $request->boolean('students_may_assign_own_team_role');
         $activity->is_intermodular = $request->is_intermodular;
         $activity->status = $request->status;
         $activity->start_date = $request->start_date;
@@ -99,6 +100,7 @@ class ActivityController extends Controller
         $activity->type = $request->type;
         $activity->has_sprints = $request->has_sprints;
         $activity->has_backlog = $request->has_backlog;
+        $activity->students_may_assign_own_team_role = $request->boolean('students_may_assign_own_team_role');
         $activity->is_intermodular = $request->is_intermodular;
         $activity->status = $request->status;
         $activity->start_date = $request->start_date;
@@ -121,6 +123,7 @@ class ActivityController extends Controller
         $this->authorize('activity-delete');
 
         $activity->delete();
+
         return $activity;
     }
 }

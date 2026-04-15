@@ -15,7 +15,7 @@ class Activity extends Model
     protected $fillable = [
         'academic_year_id', 'title', 'description', 'type',
         'activity_role_type_id',
-        'has_sprints', 'has_backlog', 'is_intermodular',
+        'has_sprints', 'has_backlog', 'students_may_assign_own_team_role', 'is_intermodular',
         'status', 'start_date', 'end_date',
     ];
 
@@ -24,6 +24,7 @@ class Activity extends Model
         'status' => ActivityStatus::class,
         'has_sprints' => 'boolean',
         'has_backlog' => 'boolean',
+        'students_may_assign_own_team_role' => 'boolean',
         'is_intermodular' => 'boolean',
         'start_date' => 'date',
         'end_date' => 'date',

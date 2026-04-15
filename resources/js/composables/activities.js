@@ -28,6 +28,8 @@ function normalizeActivityFromApi(data) {
     status: statusVal ?? 0,
     has_sprints: data.config?.has_sprints ?? data.has_sprints ?? false,
     has_backlog: data.config?.has_backlog ?? data.has_backlog ?? false,
+    students_may_assign_own_team_role:
+      data.config?.students_may_assign_own_team_role ?? data.students_may_assign_own_team_role ?? false,
     is_intermodular: data.config?.is_intermodular ?? data.is_intermodular ?? false,
     subject_groups: subjectGroupIds,
     start_date: data.dates?.start ?? data.start_date ?? null,
@@ -50,6 +52,7 @@ export default function useActivities() {
     status: 0,
     has_sprints: false,
     has_backlog: false,
+    students_may_assign_own_team_role: false,
     is_intermodular: false,
     subject_groups: [],
     start_date: null,
@@ -83,6 +86,7 @@ export default function useActivities() {
       .oneOf(ACTIVITY_STATUSES, 'Estado no válido'),
     has_sprints: yup.boolean(),
     has_backlog: yup.boolean(),
+    students_may_assign_own_team_role: yup.boolean(),
     is_intermodular: yup.boolean(),
     subject_groups: yup
       .array()
@@ -140,6 +144,7 @@ export default function useActivities() {
     status: data.status,
     has_sprints: !!data.has_sprints,
     has_backlog: !!data.has_backlog,
+    students_may_assign_own_team_role: !!data.students_may_assign_own_team_role,
     is_intermodular: !!data.is_intermodular,
     subject_groups: Array.isArray(data.subject_groups)
       ? data.subject_groups.map((x) => (typeof x === 'object' && x !== null ? x.id : x))

@@ -20,7 +20,8 @@ export default function useActivityPhases() {
     retro_well: null,
     retro_bad: null,
     retro_improvement: null,
-    teacher_feedback: null
+    teacher_feedback: null,
+    teams_may_assign_phase_roles: false,
   }
 
   const phase = ref({ ...initialPhase })
@@ -46,7 +47,8 @@ export default function useActivityPhases() {
     retro_well: yup.string().nullable(),
     retro_bad: yup.string().nullable(),
     retro_improvement: yup.string().nullable(),
-    teacher_feedback: yup.string().nullable()
+    teacher_feedback: yup.string().nullable(),
+    teams_may_assign_phase_roles: yup.boolean(),
   })
 
   const withLoading = async (fn) => {
@@ -74,7 +76,8 @@ export default function useActivityPhases() {
       retro_well: data.retro_well ?? null,
       retro_bad: data.retro_bad ?? null,
       retro_improvement: data.retro_improvement ?? null,
-      teacher_feedback: data.teacher_feedback ?? null
+      teacher_feedback: data.teacher_feedback ?? null,
+      teams_may_assign_phase_roles: !!data.teams_may_assign_phase_roles,
     }
     clearErrors()
   }
@@ -94,7 +97,8 @@ export default function useActivityPhases() {
     retro_well: data.retro_well || null,
     retro_bad: data.retro_bad || null,
     retro_improvement: data.retro_improvement || null,
-    teacher_feedback: data.teacher_feedback || null
+    teacher_feedback: data.teacher_feedback || null,
+    teams_may_assign_phase_roles: !!data.teams_may_assign_phase_roles,
   })
 
   const getPhases = async (activityId) => {

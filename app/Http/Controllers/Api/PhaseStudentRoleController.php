@@ -7,23 +7,28 @@ use App\Http\Requests\PhaseStudentRole\StorePhaseStudentRoleRequest;
 use App\Http\Requests\PhaseStudentRole\UpdatePhaseStudentRoleRequest;
 use App\Http\Resources\PhaseStudentRoleResource;
 use App\Models\PhaseStudentRole;
+use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Http\Request;
 
 class PhaseStudentRoleController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $this->authorize('phasestudentrole-list');
 
-        $rows = PhaseStudentRole::with(['phase', 'student.user', 'team', 'activityRole'])->get();
+        $query = PhaseStudentRole::with(['phase', 'student.user', 'team', 'activityRole']);
+        if ($this->shouldLimitPhaseStudentRoleIndexForUser($request->user())) {
+            $query->where('student_id', $request->user()->id);
+        }
 
-        return PhaseStudentRoleResource::collection($rows);
+        return PhaseStudentRoleResource::collection($query->get());
     }
 
     public function store(StorePhaseStudentRoleRequest $request)
     {
         $this->authorize('phasestudentrole-create');
 
-        $row = new PhaseStudentRole();
+        $row = new PhaseStudentRole;
         $row->phase_id = $request->phase_id;
         $row->student_id = $request->student_id;
         $row->team_id = $request->team_id;
@@ -69,5 +74,14 @@ class PhaseStudentRoleController extends Controller
         $phaseStudentRole->delete();
 
         return new PhaseStudentRoleResource($phaseStudentRole);
+    }
+
+    private function shouldLimitPhaseStudentRoleIndexForUser(?Authenticatable $user): bool
+    {
+        if (! $user || ! method_exists($user, 'hasRole')) {
+            return false;
+        }
+
+        return $user->hasRole('student') && ! $user->hasRole('teacher');
     }
 }

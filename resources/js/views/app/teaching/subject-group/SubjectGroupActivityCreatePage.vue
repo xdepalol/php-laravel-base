@@ -138,6 +138,17 @@
               <label for="create-act-backlog" class="text-sm cursor-pointer">Backlog de producto</label>
             </div>
             <div class="flex items-center gap-2">
+              <Checkbox
+                v-model="form.students_may_assign_own_team_role"
+                input-id="create-act-own-team-role"
+                binary
+                :disabled="!form.activity_role_type_id"
+              />
+              <label for="create-act-own-team-role" class="text-sm cursor-pointer">
+                Cada miembro puede elegir su rol en el equipo
+              </label>
+            </div>
+            <div class="flex items-center gap-2">
               <Checkbox v-model="form.is_intermodular" input-id="create-act-inter" binary />
               <label for="create-act-inter" class="text-sm cursor-pointer">Actividad intermodular</label>
             </div>
@@ -229,6 +240,7 @@ const form = reactive({
   activity_role_type_id: null,
   has_sprints: false,
   has_backlog: false,
+  students_may_assign_own_team_role: false,
   is_intermodular: false,
   start_date: null,
   end_date: null,
@@ -270,6 +282,7 @@ async function onSubmit() {
       activity_role_type_id: form.activity_role_type_id,
       has_sprints: form.has_sprints,
       has_backlog: form.has_backlog,
+      students_may_assign_own_team_role: form.students_may_assign_own_team_role,
       is_intermodular: form.is_intermodular,
       start_date: form.start_date || null,
       end_date: form.end_date || null,

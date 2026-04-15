@@ -57,6 +57,7 @@ import Dialog from 'primevue/dialog'
 import Button from 'primevue/button'
 import PickList from 'primevue/picklist'
 import useActivityTeams from '@/composables/activityTeams'
+import { formatStudentDisplayName } from '@/utils/studentDisplayName'
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
@@ -80,12 +81,8 @@ const loadError = ref(false)
 const membersPick = ref([[], []])
 
 function displayName(option) {
-  const u = option?.student?.user ?? option?.user
-  if (u) {
-    const parts = [u.name, u.surname1, u.surname2].filter(Boolean)
-    return parts.length ? parts.join(' ') : `Usuario #${u.id ?? option.student_id}`
-  }
-  return option?.student_number ? `N.º ${option.student_number}` : `Estudiante #${option?.student_id ?? '—'}`
+  const st = option?.student ?? (option?.user ? { user: option.user, student_number: option.student_number } : null)
+  return formatStudentDisplayName(st, option?.student_id)
 }
 
 function normalizeAvailableStudent(s) {

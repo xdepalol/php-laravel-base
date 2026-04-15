@@ -134,6 +134,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAbility } from '@casl/vue'
 import useActivityDeliverables from '@/composables/activityDeliverables'
 import useDeliverableSubmissions from '@/composables/deliverableSubmissions'
+import { formatStudentDisplayName } from '@/utils/studentDisplayName'
 
 const route = useRoute()
 const router = useRouter()
@@ -190,10 +191,7 @@ const statusLabel = computed(() => {
 
 const studentLabel = computed(() => {
   const sub = submission.value
-  const u = sub?.student?.user
-  if (!u) return sub?.student_id ? `ID ${sub.student_id}` : '—'
-  const parts = [u.name, u.surname1, u.surname2].filter(Boolean)
-  return parts.length ? parts.join(' ') : `Usuario #${u.id}`
+  return formatStudentDisplayName(sub?.student, sub?.student_id)
 })
 
 const teamLabel = computed(() => {

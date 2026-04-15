@@ -54,6 +54,15 @@
               <UtcFormatted :value="row.end_date" variant="date" />
             </dd>
           </div>
+          <div class="sm:col-span-2">
+            <dt class="text-slate-500 font-medium">
+              Los estudiantes del equipo pueden elegir su rol en esta fase
+            </dt>
+            <dd class="mt-1">
+              <Tag v-if="row.teams_may_assign_phase_roles" value="Sí" severity="success" />
+              <span v-else class="text-slate-600">No</span>
+            </dd>
+          </div>
         </dl>
 
         <div v-if="row.retro_well || row.retro_bad || row.retro_improvement" class="space-y-3">
@@ -114,6 +123,7 @@ import { computed, inject, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAbility } from '@casl/vue'
 import useActivityPhases from '@/composables/activityPhases'
+import { formatStudentDisplayName } from '@/utils/studentDisplayName'
 
 const route = useRoute()
 const router = useRouter()
@@ -145,12 +155,7 @@ const activityTitle = computed(() => {
 })
 
 function studentLabel(psr) {
-  const u = psr.student?.user
-  if (u) {
-    const parts = [u.name, u.surname1, u.surname2].filter(Boolean)
-    if (parts.length) return parts.join(' ')
-  }
-  return `Estudiante #${psr.student_id}`
+  return formatStudentDisplayName(psr.student, psr.student_id)
 }
 
 function goList() {

@@ -85,6 +85,29 @@
             </span>
           </template>
         </Column>
+        <Column
+          v-if="showStudentPhaseSelfRoleColumn"
+          header="Mi rol (fase)"
+          class="min-w-[12rem] hidden lg:table-cell"
+          header-class="hidden lg:table-cell"
+        >
+          <template #body="{ data }">
+            <template v-if="data.teams_may_assign_phase_roles && activityRoleOptions.length">
+              <Select
+                :model-value="myPhaseRoleId(data)"
+                :options="activityRoleOptions"
+                option-label="name"
+                option-value="id"
+                placeholder="Sin rol"
+                show-clear
+                class="w-full text-sm"
+                :disabled="savingPhaseId === data.id"
+                @update:model-value="(v) => onMyPhaseRoleChange(data, v)"
+              />
+            </template>
+            <span v-else class="text-slate-400 text-xs">—</span>
+          </template>
+        </Column>
         <Column v-if="canDelete" class="w-14 text-right">
           <template #header>
             <span class="sr-only">Eliminar</span>
@@ -178,6 +201,16 @@
           />
         </template>
       </Dialog>
+
+      <div
+        v-if="showStudentPhaseSelfRoleColumn && phaseRoleWarningMessages.length"
+        class="mt-4 rounded-lg border border-amber-200 bg-amber-50/80 px-3 py-2 text-sm text-amber-950"
+      >
+        <p class="font-medium mb-1">Avisos sobre roles (no bloquean el guardado)</p>
+        <ul class="list-disc pl-5 space-y-0.5">
+          <li v-for="(w, i) in phaseRoleWarningMessages" :key="i">{{ w }}</li>
+        </ul>
+      </div>
     </template>
   </Card>
 </template>
@@ -187,7 +220,10 @@ import { computed, inject, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAbility } from '@casl/vue'
 import useActivityPhases from '@/composables/activityPhases'
+import useActivityTeams from '@/composables/activityTeams'
 import { useToast } from '@/composables/useToast'
+import { authStore } from '@/store/auth'
+import { activityRoleAssignmentWarnings } from '@/utils/activityRoleWarnings'
 
 const { can } = useAbility()
 const canList = computed(() => can('phase-list'))
@@ -198,8 +234,11 @@ const canView = computed(() => can('phase-view'))
 const route = useRoute()
 const router = useRouter()
 const activityId = inject('activityId')
+const teamId = inject('teamId', null)
+const activityRef = inject('activity', null)
 const toast = useToast()
 const swal = inject('$swal', null)
+const auth = authStore()
 
 const {
   phases,
@@ -208,6 +247,31 @@ const {
   deletePhase,
   importPhasesCsv,
 } = useActivityPhases()
+
+const { getTeamMemberRoles, patchMyPhaseStudentRole } = useActivityTeams()
+
+const activityRoleOptions = ref([])
+const savingPhaseId = ref(null)
+
+const showStudentPhaseSelfRoleColumn = computed(() => {
+  const tid = teamId?.value
+  const act = activityRef?.value
+  if (!tid || !act?.activity_role_type_id) return false
+  if (can('phase-edit')) return false
+  return true
+})
+
+const phaseRoleWarningMessages = computed(() => {
+  if (!showStudentPhaseSelfRoleColumn.value || !activityRoleOptions.value.length) return []
+  const tid = Number(teamId?.value)
+  const msgs = []
+  for (const phase of phases.value || []) {
+    const rows = (phase.phase_student_roles || []).filter((r) => Number(r.team_id) === tid)
+    const assigns = rows.map((r) => ({ activity_role_id: r.activity_role_id }))
+    msgs.push(...activityRoleAssignmentWarnings(assigns, activityRoleOptions.value))
+  }
+  return [...new Set(msgs)]
+})
 
 const tabQuery = computed(() => {
   const raw = route.query.fromSubjectGroup
@@ -314,12 +378,57 @@ async function confirmDelete(row) {
   })
 }
 
+async function loadPhaseRoleOptions() {
+  const aid = activityId?.value
+  if (!aid || !showStudentPhaseSelfRoleColumn.value) {
+    activityRoleOptions.value = []
+    return
+  }
+  try {
+    activityRoleOptions.value = await getTeamMemberRoles(aid)
+  } catch {
+    activityRoleOptions.value = []
+  }
+}
+
+function myPhaseRoleId(phase) {
+  const uid = auth.user?.id
+  const tid = Number(teamId?.value)
+  if (!uid || !tid) return null
+  const row = (phase.phase_student_roles || []).find(
+    (r) => Number(r.student_id) === Number(uid) && Number(r.team_id) === tid
+  )
+  return row?.activity_role_id ?? null
+}
+
+async function onMyPhaseRoleChange(phase, activity_role_id) {
+  const aid = activityId?.value
+  const tid = teamId?.value
+  if (!aid || !tid || !phase?.id) return
+  savingPhaseId.value = phase.id
+  try {
+    await patchMyPhaseStudentRole(aid, phase.id, tid, activity_role_id ?? null)
+    await getPhases(aid)
+  } catch {
+    /* toast en composable */
+  } finally {
+    savingPhaseId.value = null
+  }
+}
+
 watch(
-  () => activityId?.value,
-  async (id) => {
+  () => [
+    activityId?.value,
+    teamId?.value,
+    activityRef?.value?.id,
+    activityRef?.value?.activity_role_type_id,
+    canList.value,
+  ],
+  async ([id]) => {
     if (!id || !canList.value) return
     try {
       await getPhases(id)
+      await loadPhaseRoleOptions()
     } catch {
       /* toast en composable */
     }
