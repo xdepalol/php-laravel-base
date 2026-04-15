@@ -190,6 +190,16 @@ export default function useActivityBacklogItems() {
     }
   }
 
+  /** Sin withLoading: evita colisión con getBacklogItems al importar. */
+  const importBacklogCsv = async (activityId, { csv, team_id }) => {
+    if (!activityId) throw new Error('activityId requerido')
+    const response = await axios.post(`${baseUrl(activityId)}/csv-import`, {
+      csv,
+      team_id,
+    })
+    return unwrap(response) ?? {}
+  }
+
   return {
     backlogItems,
     backlogItem,
@@ -197,6 +207,7 @@ export default function useActivityBacklogItems() {
     errors,
     hasError,
     getError,
+    clearErrors,
     resetBacklogItem,
     setBacklogItem,
     upsertBacklogItemRecord,
@@ -205,6 +216,7 @@ export default function useActivityBacklogItems() {
     createBacklogItem,
     updateBacklogItem,
     deleteBacklogItem,
+    importBacklogCsv,
     BACKLOG_PRIORITIES,
     BACKLOG_STATUSES
   }
