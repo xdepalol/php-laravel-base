@@ -76,7 +76,7 @@ class RoleHasPermissionsTableSeeder extends Seeder
         // ReadWrite Access
         $studentPermissions = [];
         $entities = [
-            'backlogitem', 'phasetask',
+            'backlogitem', 'phasetask', 'task',
         ];
         $actions = ['list', 'edit', 'create', 'delete', 'view'];
         foreach ($entities as $entity) {
@@ -89,7 +89,7 @@ class RoleHasPermissionsTableSeeder extends Seeder
         $studentPermissions[] = 'phasestudentrole-view';
         // Read access
         $entities = [
-            'activity', 'task', 'deliverable', 'team', 'phase', 'submission', 'exercise', 'category', 'course', 'student', 'teacher', 'academicyear', 'subject', 'group', 'subjectgroup', 'enrollment',
+            'activity', 'deliverable', 'team', 'phase', 'submission', 'exercise', 'category', 'course', 'student', 'teacher', 'academicyear', 'subject', 'group', 'subjectgroup', 'enrollment',
             'activityroletype', 'activityrole',
         ];
         $actions = ['list', 'view'];

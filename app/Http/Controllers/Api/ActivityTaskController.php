@@ -11,7 +11,10 @@ use App\Http\Resources\TaskResource;
 use App\Models\Activity;
 use App\Models\BacklogItem;
 use App\Models\Task;
+use App\Models\Team;
 use App\Support\ContentSanitizer;
+use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class ActivityTaskController extends Controller
@@ -34,6 +37,15 @@ class ActivityTaskController extends Controller
     public function store(StoreActivityTaskRequest $request, Activity $activity)
     {
         $this->authorize('task-create');
+
+        $backlogItem = BacklogItem::query()
+            ->where('activity_id', $activity->id)
+            ->whereKey($request->backlog_item_id)
+            ->firstOrFail();
+
+        if ($this->actingAsStudentOnly($request->user())) {
+            $this->assertStudentMayMutateTasksOnBacklogItem($request->user(), $activity, $backlogItem);
+        }
 
         $task = new Task;
         $task->activity_id = $activity->id;
@@ -64,6 +76,16 @@ class ActivityTaskController extends Controller
     {
         $this->authorize('task-edit');
 
+        $task->loadMissing('backlogItem');
+        $backlogItem = $task->backlogItem;
+        if ($this->actingAsStudentOnly($request->user())) {
+            if (! $backlogItem || (int) $backlogItem->activity_id !== (int) $activity->id) {
+                abort(403);
+            }
+            $this->assertStudentMayMutateTasksOnBacklogItem($request->user(), $activity, $backlogItem);
+            $request->merge(['backlog_item_id' => $task->backlog_item_id]);
+        }
+
         $task->activity_id = $activity->id;
         $task->backlog_item_id = $request->backlog_item_id;
         $task->title = $request->title;
@@ -82,9 +104,18 @@ class ActivityTaskController extends Controller
         return null;
     }
 
-    public function destroy(Activity $activity, Task $task)
+    public function destroy(Request $request, Activity $activity, Task $task)
     {
         $this->authorize('task-delete');
+
+        $task->loadMissing('backlogItem');
+        $backlogItem = $task->backlogItem;
+        if ($this->actingAsStudentOnly($request->user())) {
+            if (! $backlogItem || (int) $backlogItem->activity_id !== (int) $activity->id) {
+                abort(403);
+            }
+            $this->assertStudentMayMutateTasksOnBacklogItem($request->user(), $activity, $backlogItem);
+        }
 
         $task->load(['backlogItem', 'activity', 'phaseTasks.phase', 'phaseTasks.student.user']);
         $task->setRelation('activity', $activity);
@@ -108,6 +139,11 @@ class ActivityTaskController extends Controller
             ->where('activity_id', $activity->id)
             ->whereKey($backlogItemId)
             ->firstOrFail();
+
+        if ($this->actingAsStudentOnly($request->user())) {
+            $this->assertStudentBelongsToTeam($request->user(), $activity, $teamId);
+            $this->assertStudentMayMutateTasksOnBacklogItem($request->user(), $activity, $backlogItem);
+        }
 
         if ($backlogItem->team_id !== null && (int) $backlogItem->team_id !== $teamId) {
             abort(403, 'Este ítem de backlog no pertenece al equipo indicado.');
@@ -153,5 +189,57 @@ class ActivityTaskController extends Controller
         $max = (int) Task::query()->where('backlog_item_id', $backlogItemId)->max('position');
 
         return $max + 1;
+    }
+
+    private function actingAsStudentOnly(?Authenticatable $user): bool
+    {
+        if (! is_object($user) || ! method_exists($user, 'hasRole')) {
+            return false;
+        }
+
+        return $user->hasRole('student') && ! $user->hasRole('teacher');
+    }
+
+    /**
+     * Alumnos solo pueden crear/editar/reordenar tareas en ítems compartidos o de un equipo en el que estén.
+     */
+    private function assertStudentMayMutateTasksOnBacklogItem(Authenticatable $user, Activity $activity, BacklogItem $backlogItem): void
+    {
+        if ($backlogItem->team_id === null) {
+            $this->assertStudentBelongsToAnyTeamOfActivity($user, $activity);
+
+            return;
+        }
+
+        $this->assertStudentBelongsToTeam($user, $activity, (int) $backlogItem->team_id);
+    }
+
+    private function assertStudentBelongsToAnyTeamOfActivity(Authenticatable $user, Activity $activity): void
+    {
+        $ok = Team::query()
+            ->where('activity_id', $activity->id)
+            ->whereHas('students', function ($q) use ($user) {
+                $q->where('students.user_id', $user->id);
+            })
+            ->exists();
+
+        if (! $ok) {
+            abort(403, 'No pertenecés a ningún equipo de esta actividad.');
+        }
+    }
+
+    private function assertStudentBelongsToTeam(Authenticatable $user, Activity $activity, int $teamId): void
+    {
+        $ok = Team::query()
+            ->where('activity_id', $activity->id)
+            ->whereKey($teamId)
+            ->whereHas('students', function ($q) use ($user) {
+                $q->where('students.user_id', $user->id);
+            })
+            ->exists();
+
+        if (! $ok) {
+            abort(403, 'No pertenecés a este equipo en esta actividad.');
+        }
     }
 }

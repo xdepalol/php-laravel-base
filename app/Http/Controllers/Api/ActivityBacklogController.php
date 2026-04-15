@@ -9,6 +9,7 @@ use App\Http\Requests\BacklogItem\UpdateActivityBacklogItemRequest;
 use App\Http\Resources\BacklogItemResource;
 use App\Models\Activity;
 use App\Models\BacklogItem;
+use App\Support\ContentSanitizer;
 use Illuminate\Support\Facades\DB;
 
 class ActivityBacklogController extends Controller
@@ -64,7 +65,7 @@ class ActivityBacklogController extends Controller
         $backlogItem->activity_id = $activity->id;
         $backlogItem->team_id = $request->team_id;
         $backlogItem->title = $request->title;
-        $backlogItem->description = $request->description;
+        $backlogItem->description = ContentSanitizer::sanitize($request->input('description'));
         $backlogItem->priority = $request->priority;
         $backlogItem->points = $request->points;
         $backlogItem->status = $request->status;
@@ -94,7 +95,7 @@ class ActivityBacklogController extends Controller
         $backlogItem->activity_id = $activity->id;
         $backlogItem->team_id = $request->team_id;
         $backlogItem->title = $request->title;
-        $backlogItem->description = $request->description;
+        $backlogItem->description = ContentSanitizer::sanitize($request->input('description'));
         $backlogItem->priority = $request->priority;
         $backlogItem->points = $request->points;
         $backlogItem->status = $request->status;

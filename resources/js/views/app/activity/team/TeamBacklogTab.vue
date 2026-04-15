@@ -107,7 +107,6 @@
                 :row="bi"
                 :scope-label="scopeLabel(bi)"
                 :is-team-row="isTeamRow(bi)"
-                :snippet="snippet(bi.description)"
                 :can-edit-team-backlog="canEditTeamBacklog"
                 @edit="openEditDialog(bi)"
                 @delete="confirmDelete(bi)"
@@ -142,7 +141,6 @@
                   :row="bi"
                   scope-label="Compartido"
                   :is-team-row="false"
-                  :snippet="snippet(bi.description)"
                   :can-edit-team-backlog="false"
                 />
                 <TasksColumn
@@ -187,7 +185,6 @@
                     :row="bi"
                     scope-label="Este equipo"
                     :is-team-row="true"
-                    :snippet="snippet(bi.description)"
                     :can-edit-team-backlog="canEditTeamBacklog"
                     drag-handle-class="bi-drag-handle"
                     @edit="openEditDialog(bi)"
@@ -290,7 +287,7 @@
           </div>
           <div>
             <label class="text-sm font-medium text-slate-700 block mb-1">Descripción</label>
-            <Textarea v-model="itemForm.description" class="w-full" rows="4" />
+            <Editor v-model="itemForm.description" editor-style="min-height: 200px" class="w-full" />
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
@@ -373,16 +370,18 @@
 </template>
 
 <script setup>
-import { computed, inject, reactive, ref, useTemplateRef, watch } from 'vue'
+import { computed, inject, onMounted, reactive, ref, useTemplateRef, watch } from 'vue'
 import draggable from 'vuedraggable'
 import { useAbility } from '@casl/vue'
 import { useToast } from '@/composables/useToast'
+import useAuth from '@/composables/auth'
 import useActivityBacklogItems from '@/composables/activityBacklogItems'
 import useActivityTasks from '@/composables/activityTasks'
 import BacklogItemCard from './TeamBacklogTabBacklogCard.vue'
 import TasksColumn from './TeamBacklogTabTasksColumn.vue'
 
 const { can } = useAbility()
+const { getAbilities } = useAuth()
 const activityId = inject('activityId')
 const teamId = inject('teamId')
 const swal = inject('$swal', null)
@@ -616,15 +615,6 @@ function scopeLabel(row) {
 
 function isTeamRow(row) {
   return Number(row?.team_id ?? row?.team?.id) === Number(teamId?.value)
-}
-
-function snippet(html) {
-  if (!html || typeof html !== 'string') return ''
-  const d = typeof document !== 'undefined' ? document.createElement('div') : null
-  if (!d) return html.replace(/<[^>]+>/g, '').slice(0, 120)
-  d.innerHTML = html
-  const text = (d.textContent || '').replace(/\s+/g, ' ').trim()
-  return text.length > 140 ? `${text.slice(0, 140)}…` : text
 }
 
 const teamItemsOnly = computed(() => {
@@ -942,4 +932,9 @@ watch(
   },
   { immediate: true }
 )
+
+/** Permisos recientes (p. ej. tras migración) sin cerrar sesión. */
+onMounted(() => {
+  getAbilities().catch(() => {})
+})
 </script>

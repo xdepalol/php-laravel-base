@@ -13,7 +13,7 @@
         <div class="min-w-0 flex-1">
           <span class="text-sm font-semibold text-slate-900 leading-snug break-words">{{ row.title || '—' }}</span>
           <div class="flex flex-wrap gap-1.5 mt-2">
-            <Tag :value="scopeLabel" severity="secondary" class="text-xs" />
+            <Tag v-if="showScopeTag" :value="scopeLabel" severity="secondary" class="text-xs" />
             <Tag :value="priorityTag" severity="info" class="text-xs" />
             <Tag :value="statusLabel" severity="secondary" class="text-xs" />
             <Tag v-if="row.points != null" :value="`${row.points} pt`" severity="secondary" class="text-xs" />
@@ -22,7 +22,11 @@
       </div>
     </template>
     <template #content>
-      <p v-if="snippet" class="text-xs text-slate-600 line-clamp-4">{{ snippet }}</p>
+      <div
+        v-if="row.description"
+        class="text-xs text-slate-700 max-h-40 overflow-y-auto backlog-card-desc [&_p]:my-1 [&_ul]:my-1 [&_ol]:my-1"
+        v-html="row.description"
+      />
       <p v-else class="text-xs text-slate-400">Sin descripción.</p>
       <div v-if="isTeamRow && canEditTeamBacklog" class="flex justify-end gap-1 mt-3 pt-2 border-t border-slate-100">
         <Button
@@ -55,12 +59,14 @@ const props = defineProps({
   row: { type: Object, required: true },
   scopeLabel: { type: String, required: true },
   isTeamRow: { type: Boolean, default: false },
-  snippet: { type: String, default: '' },
   canEditTeamBacklog: { type: Boolean, default: false },
   dragHandleClass: { type: String, default: '' },
 })
 
 defineEmits(['edit', 'delete'])
+
+/** En el espacio de equipo no hace falta etiquetar los ítems propios del equipo. */
+const showScopeTag = computed(() => !props.isTeamRow)
 
 const BACKLOG_STATUS_LABELS = {
   0: 'Backlog',
