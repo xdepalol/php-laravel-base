@@ -200,6 +200,12 @@ export default function useActivityBacklogItems() {
     return unwrap(response) ?? {}
   }
 
+  /** Reordenar ítems propios del equipo (posiciones 0..n según `ids`). */
+  const reorderBacklogItems = async (activityId, { team_id, ids }) => {
+    if (!activityId) throw new Error('activityId requerido')
+    await axios.post(`${baseUrl(activityId)}/reorder`, { team_id, ids })
+  }
+
   return {
     backlogItems,
     backlogItem,
@@ -217,6 +223,7 @@ export default function useActivityBacklogItems() {
     updateBacklogItem,
     deleteBacklogItem,
     importBacklogCsv,
+    reorderBacklogItems,
     BACKLOG_PRIORITIES,
     BACKLOG_STATUSES
   }

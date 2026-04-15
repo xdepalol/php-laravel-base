@@ -10,7 +10,7 @@ class ContentSanitizer
     public static function make(): HtmlSanitizer
     {
         // Permet el que normalment genera Quill/PrimeVue Editor
-        $config = (new HtmlSanitizerConfig())
+        $config = (new HtmlSanitizerConfig)
             ->allowSafeElements() // permet elements “segurs” per defecte (bàsic)
             ->allowElement('p')
             ->allowElement('br')
@@ -26,18 +26,25 @@ class ContentSanitizer
             ->allowElement('h1')
             ->allowElement('h2')
             ->allowElement('h3')
+            ->allowElement('span', ['class'])
+            ->allowElement('div', ['class'])
+            ->allowElement('s')
+            ->allowElement('code')
+            ->allowElement('pre')
             // Links segurs (si vols permetre enllaços)
             ->allowElement('a', ['href', 'title', 'target', 'rel'])
             // Opcional: limita protocols per evitar javascript:
-            ->allowLinkSchemes(['http', 'https', 'mailto'])
-        ;
+            ->allowLinkSchemes(['http', 'https', 'mailto']);
 
         return new HtmlSanitizer($config);
     }
 
     public static function sanitize(?string $html): string
     {
-        if (!$html) return '';
+        if (! $html) {
+            return '';
+        }
+
         return self::make()->sanitize($html);
     }
 }

@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\BacklogItem\ReorderTeamBacklogItemsRequest;
 use App\Http\Requests\BacklogItem\StoreActivityBacklogItemRequest;
 use App\Http\Requests\BacklogItem\UpdateActivityBacklogItemRequest;
 use App\Http\Resources\BacklogItemResource;
 use App\Models\Activity;
 use App\Models\BacklogItem;
+use Illuminate\Support\Facades\DB;
 
 class ActivityBacklogController extends Controller
 {
@@ -21,11 +23,44 @@ class ActivityBacklogController extends Controller
         return BacklogItemResource::collection($backlogItems);
     }
 
+    /**
+     * Reassign positions for team-owned backlog items (order = ids array order).
+     */
+    public function reorder(ReorderTeamBacklogItemsRequest $request, Activity $activity)
+    {
+        $this->authorize('backlogitem-edit');
+
+        $teamId = (int) $request->validated('team_id');
+        $ids = $request->validated('ids');
+
+        $count = BacklogItem::query()
+            ->where('activity_id', $activity->id)
+            ->where('team_id', $teamId)
+            ->whereIn('id', $ids)
+            ->count();
+
+        if ($count !== count($ids)) {
+            abort(422, 'Los ítems no coinciden con el equipo o la actividad.');
+        }
+
+        DB::transaction(function () use ($activity, $teamId, $ids) {
+            foreach ($ids as $index => $id) {
+                BacklogItem::query()
+                    ->where('activity_id', $activity->id)
+                    ->where('team_id', $teamId)
+                    ->whereKey($id)
+                    ->update(['position' => $index]);
+            }
+        });
+
+        return response()->json(['message' => 'OK']);
+    }
+
     public function store(StoreActivityBacklogItemRequest $request, Activity $activity)
     {
         $this->authorize('backlogitem-create');
 
-        $backlogItem = new BacklogItem();
+        $backlogItem = new BacklogItem;
         $backlogItem->activity_id = $activity->id;
         $backlogItem->team_id = $request->team_id;
         $backlogItem->title = $request->title;

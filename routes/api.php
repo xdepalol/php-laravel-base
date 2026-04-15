@@ -82,7 +82,9 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::get('activities/{activity}/team-member-roles', ActivityTeamMemberRolesController::class)->scopeBindings();
     Route::get('activities/{activity}/students-available-for-teams', ActivityAvailableTeamStudentsController::class)->scopeBindings();
     Route::post('activities/{activity}/backlog-items/csv-import', [ActivityBacklogCsvImportController::class, 'store']);
+    Route::post('activities/{activity}/backlog-items/reorder', [ActivityBacklogController::class, 'reorder'])->scopeBindings();
     Route::apiResource('activities.backlog-items', ActivityBacklogController::class)->scoped();
+    Route::post('activities/{activity}/tasks/reorder', [ActivityTaskController::class, 'reorder'])->scopeBindings();
     Route::apiResource('activities.tasks', ActivityTaskController::class)->scoped();
     Route::get('activities/{activity}/subject-groups', [ActivitySubjectGroupController::class, 'index']);
     Route::put('activities/{activity}/subject-groups', [ActivitySubjectGroupController::class, 'sync']);

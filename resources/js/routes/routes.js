@@ -400,15 +400,12 @@ export default [
                         },
                     },
                     {
-                        name: 'app.activity.team.tasks',
                         path: 'tareas',
-                        component: () => import('../views/app/activity/team/TeamTasksTab.vue'),
-                        meta: {
-                            teamTab: 'tasks',
-                            requiresActivityBacklog: true,
-                            breadCrumb: 'Tareas',
-                            pageTitle: 'Tareas',
-                        },
+                        redirect: (to) => ({
+                            name: 'app.activity.team.backlog',
+                            params: to.params,
+                            query: to.query,
+                        }),
                     },
                     {
                         name: 'app.activity.team.deliverables',

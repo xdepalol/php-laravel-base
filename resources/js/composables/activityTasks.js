@@ -174,6 +174,16 @@ export default function useActivityTasks() {
     }
   }
 
+  /** Reordenar todas las tareas de un ítem de backlog (mismo conjunto de ids que en BD). */
+  const reorderTasks = async (activityId, { team_id, backlog_item_id, ids }) => {
+    if (!activityId) throw new Error('activityId requerido')
+    await axios.post(`${baseUrl(activityId)}/reorder`, {
+      team_id,
+      backlog_item_id,
+      ids,
+    })
+  }
+
   return {
     tasks,
     task,
@@ -189,6 +199,8 @@ export default function useActivityTasks() {
     createTask,
     updateTask,
     deleteTask,
+    reorderTasks,
+    clearErrors,
     TASK_STATUSES
   }
 }

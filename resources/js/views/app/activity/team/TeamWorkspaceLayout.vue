@@ -98,7 +98,6 @@ const allTabs = [
     needsSprints: true,
   },
   { tabKey: 'backlog', name: 'app.activity.team.backlog', label: 'Backlog', icon: 'pi pi-table', needsBacklog: true },
-  { tabKey: 'tasks', name: 'app.activity.team.tasks', label: 'Tareas', icon: 'pi pi-check-square', needsBacklog: true },
   {
     tabKey: 'deliverables',
     name: 'app.activity.team.deliverables',
@@ -147,7 +146,7 @@ watch(
     if (
       activity.value?.id &&
       !activity.value?.has_backlog &&
-      (route.name === 'app.activity.team.backlog' || route.name === 'app.activity.team.tasks')
+      route.name === 'app.activity.team.backlog'
     ) {
       router.replace({
         name: 'app.activity.team.overview',
