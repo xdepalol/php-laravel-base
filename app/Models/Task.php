@@ -42,7 +42,8 @@ class Task extends Model
     }
 
     /**
-     * La tarea está enlazada a una fase sprint cuyo equipo tiene el sprint aún activo (no terminado).
+     * La tarea está enlazada a una fase sprint cuyo equipo (del ítem de backlog) tiene el sprint aún activo.
+     * Importante: sin filtrar por `team_id` en `phase_teams`, otro equipo activo en la misma fase bloqueaba mal las tareas.
      */
     public function isLinkedToAnyActiveSprint(): bool
     {
@@ -53,9 +54,24 @@ class Task extends Model
             PhaseTeamSprintStatus::RETROSPECTIVE->value,
         ];
 
-        return $this->phaseTasks()
-            ->whereHas('phase', fn ($q) => $q->where('is_sprint', true))
-            ->whereHas('phase.phaseTeams', fn ($q) => $q->whereIn('sprint_status', $activeValues))
-            ->exists();
+        $this->loadMissing('backlogItem');
+        $teamId = $this->backlogItem?->team_id;
+
+        $query = $this->phaseTasks()
+            ->whereHas('phase', fn ($q) => $q->where('is_sprint', true));
+
+        if ($teamId !== null) {
+            $query->whereHas(
+                'phase.phaseTeams',
+                fn ($q) => $q->where('team_id', $teamId)->whereIn('sprint_status', $activeValues)
+            );
+        } else {
+            $query->whereHas(
+                'phase.phaseTeams',
+                fn ($q) => $q->whereIn('sprint_status', $activeValues)
+            );
+        }
+
+        return $query->exists();
     }
 }

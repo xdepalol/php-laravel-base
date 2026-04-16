@@ -82,7 +82,9 @@
               :outlined="!inSprint(task)"
               size="small"
               class="text-xs whitespace-nowrap max-w-full"
+              :title="sprintToggleTitle(task) || undefined"
               :loading="!!sprintTaskLoading[task.id]"
+              :disabled="sprintToggleDisabled(task)"
               @click="emitToggleSprint(task)"
             />
           </div>
@@ -140,7 +142,9 @@
             :outlined="!inSprint(task)"
             size="small"
             class="text-xs whitespace-nowrap max-w-full"
+            :title="sprintToggleTitle(task) || undefined"
             :loading="!!sprintTaskLoading[task.id]"
+            :disabled="sprintToggleDisabled(task)"
             @click="emitToggleSprint(task)"
           />
         </div>
@@ -197,6 +201,25 @@ function taskInActiveSprint(task) {
   return !!(m[task.id] || m[Number(task.id)])
 }
 
+/** Hecha o cancelada: no se enlazan al sprint en asignación. */
+function sprintAttachBlocked(task) {
+  const v = taskStatusValue(task)
+  return v === 2 || v === 3
+}
+
+function sprintToggleDisabled(task) {
+  if (props.sprintTaskLoading?.[task.id]) return true
+  if (inSprint(task)) return false
+  return sprintAttachBlocked(task)
+}
+
+function sprintToggleTitle(task) {
+  if (!inSprint(task) && sprintAttachBlocked(task)) {
+    return 'No se pueden añadir al sprint tareas hechas o canceladas.'
+  }
+  return ''
+}
+
 function taskStatusValue(task) {
   return typeof task.status === 'object' && task.status ? task.status.value : Number(task.status ?? 0)
 }
@@ -238,13 +261,11 @@ function taskStatusTagText(task) {
 
 function taskDeleteAllowed(task) {
   if (!props.canTaskDelete) return false
-  if (taskStatusValue(task) === 2) return false
   if (taskInActiveSprint(task)) return false
   return true
 }
 
 function taskDeleteBlockReason(task) {
-  if (taskStatusValue(task) === 2) return 'No se puede eliminar una tarea hecha'
   if (taskInActiveSprint(task)) return 'No se puede eliminar una tarea en sprint activo'
   return ''
 }

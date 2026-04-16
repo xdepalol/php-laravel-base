@@ -100,7 +100,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::get('activities/{activity}/phases/{phase}/teams/{team}/phase-team', [PhaseTeamController::class, 'show'])->scopeBindings();
     Route::patch('activities/{activity}/phases/{phase}/teams/{team}/phase-team', [PhaseTeamController::class, 'update'])->scopeBindings();
     Route::post('activities/{activity}/phases/{phase}/teams/{team}/phase-tasks', [PhaseTeamPhaseTaskController::class, 'store'])->scopeBindings();
-    Route::delete('activities/{activity}/phases/{phase}/teams/{team}/phase-tasks/{phaseTask}', [PhaseTeamPhaseTaskController::class, 'destroy'])->scopeBindings();
+    Route::delete('activities/{activity}/phases/{phase}/teams/{team}/phase-tasks/{phaseTask}', [PhaseTeamPhaseTaskController::class, 'destroy']);
     Route::post('activities/{activity}/phases/{phase}/teams/{team}/sprint-tasks/{task}/split', [ActivitySprintTaskSplitController::class, 'store'])->scopeBindings();
     Route::apiResource('activities.deliverables', DeliverableController::class)->scoped();
     Route::patch('deliverables/{deliverable}/submissions/{submission}/grade', [SubmissionController::class, 'grade'])

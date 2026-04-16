@@ -191,6 +191,17 @@
           </div>
         </div>
 
+        <div
+          v-if="teamFinishedSprintSnapshot"
+          class="rounded-xl border border-slate-200 bg-slate-50/70 px-4 py-4 shadow-sm space-y-2"
+        >
+          <h3 class="text-sm font-semibold text-slate-800">Tablero al cerrar el sprint</h3>
+          <p class="text-xs text-slate-600 leading-relaxed">
+            Solo lectura: estado del Kanban al finalizar el sprint (no se puede editar ni arrastrar).
+          </p>
+          <SprintKanbanSnapshotView :snapshot="teamFinishedSprintSnapshot" />
+        </div>
+
         <template v-if="phaseTeamsForDisplay.length">
           <div
             v-for="pt in phaseTeamsForDisplay"
@@ -371,6 +382,7 @@ import useActivityPhases from '@/composables/activityPhases'
 import useActivityTeams from '@/composables/activityTeams'
 import usePhaseStudentRoles from '@/composables/phaseStudentRoles'
 import { useToast } from '@/composables/useToast'
+import SprintKanbanSnapshotView from '@/components/sprint/SprintKanbanSnapshotView.vue'
 import { formatStudentDisplayName } from '@/utils/studentDisplayName'
 import {
   nextSprintStatusValue,
@@ -461,6 +473,16 @@ const canAdvanceSprintDetail = computed(
 const showSprintAdvanceButtonOnPhaseDetail = computed(
   () => canAdvanceSprintDetail.value && sprintStatusValue.value !== 4
 )
+
+/** Vista histórica del Kanban (JSON `kanban_snapshot`) para sprint terminado del equipo. */
+const teamFinishedSprintSnapshot = computed(() => {
+  if (!sprintWorkflowVisible.value) return null
+  if (sprintStatusValue.value !== 4) return null
+  const snap = phaseTeamSlice.value?.kanban_snapshot
+  if (!snap || typeof snap !== 'object') return null
+  if (!Array.isArray(snap.columns) || snap.columns.length === 0) return null
+  return snap
+})
 
 const sprintSaving = ref(false)
 const sprintSaveMode = ref('')

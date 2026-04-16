@@ -126,23 +126,34 @@ class PhaseTeamController extends Controller
                 if ($new === PhaseTeamSprintStatus::FINISHED && $previousStatus !== PhaseTeamSprintStatus::FINISHED) {
                     $phaseTeam->kanban_snapshot = PhaseTeamKanbanSnapshotBuilder::build($phase, $team);
 
-                    $taskIds = PhaseTask::query()
+                    $allTaskIds = PhaseTask::query()
                         ->where('phase_id', $phase->id)
-                        ->whereHas('task', function ($q) use ($team) {
-                            $q->whereHas('backlogItem', fn ($b) => $b->where('team_id', $team->id));
-                        })
+                        ->whereHas('task.backlogItem', fn ($b) => $b->where('team_id', $team->id))
                         ->pluck('task_id')
                         ->unique()
                         ->values();
 
-                    if ($taskIds->isNotEmpty()) {
-                        Task::query()
-                            ->whereIn('id', $taskIds)
-                            ->update(['status' => TaskStatus::TODO]);
+                    $incompleteTaskIds = PhaseTask::query()
+                        ->where('phase_id', $phase->id)
+                        ->whereHas('task.backlogItem', fn ($b) => $b->where('team_id', $team->id))
+                        ->whereHas('task', fn ($q) => $q->whereIn('status', [
+                            TaskStatus::TODO->value,
+                            TaskStatus::DOING->value,
+                        ]))
+                        ->pluck('task_id')
+                        ->unique()
+                        ->values();
 
+                    if ($incompleteTaskIds->isNotEmpty()) {
+                        Task::query()
+                            ->whereIn('id', $incompleteTaskIds)
+                            ->update(['status' => TaskStatus::TODO]);
+                    }
+
+                    if ($allTaskIds->isNotEmpty()) {
                         PhaseTask::query()
                             ->where('phase_id', $phase->id)
-                            ->whereIn('task_id', $taskIds)
+                            ->whereIn('task_id', $allTaskIds)
                             ->delete();
                     }
                 }

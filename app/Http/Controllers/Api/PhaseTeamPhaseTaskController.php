@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Enums\PhaseTeamSprintStatus;
+use App\Enums\TaskStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\PhaseTaskResource;
 use App\Models\Activity;
@@ -39,6 +40,13 @@ class PhaseTeamPhaseTaskController extends Controller
         }
         if ((int) $task->backlogItem->team_id !== (int) $team->id) {
             throw ValidationException::withMessages(['task_id' => ['La tarea no pertenece al backlog de este equipo.']]);
+        }
+
+        $taskStatus = $task->status instanceof TaskStatus ? $task->status : TaskStatus::tryFrom((int) $task->status) ?? TaskStatus::TODO;
+        if (in_array($taskStatus, [TaskStatus::DONE, TaskStatus::CANCELLED], true)) {
+            throw ValidationException::withMessages([
+                'task_id' => ['No se puede incluir en el sprint una tarea hecha o cancelada.'],
+            ]);
         }
 
         $phaseTask = PhaseTask::query()->firstOrCreate(

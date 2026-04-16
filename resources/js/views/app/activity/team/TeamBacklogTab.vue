@@ -1235,10 +1235,6 @@ async function submitTaskDialog() {
 }
 
 function confirmDeleteTask(task) {
-  if (taskStatusNum(task) === 2) {
-    toast.warning('Tarea', 'No se puede eliminar una tarea hecha.')
-    return
-  }
   const m = activeSprintTaskIdMap.value
   if (m[task.id] || m[Number(task.id)]) {
     toast.warning('Tarea', 'No se puede eliminar una tarea incluida en un sprint activo.')

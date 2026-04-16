@@ -41,6 +41,11 @@
         </p>
       </div>
       <div v-else class="space-y-4">
+        <p class="text-xs text-slate-600 leading-relaxed">
+          ¿Un sprint ya cerrado? En
+          <router-link :to="phasesLink" class="font-medium text-blue-700 hover:underline">Fases</router-link>
+          abrí esa fase: verás el tablero capturado (solo lectura), aunque otro sprint esté en curso.
+        </p>
         <div
           class="rounded-xl border border-sky-200/80 bg-sky-50/80 px-4 py-3 shadow-sm"
         >

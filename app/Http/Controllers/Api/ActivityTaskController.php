@@ -127,9 +127,6 @@ class ActivityTaskController extends Controller
             $this->assertStudentMayMutateTasksOnBacklogItem($request->user(), $activity, $backlogItem);
         }
 
-        if ($task->status === TaskStatus::DONE) {
-            abort(422, 'No se puede eliminar una tarea hecha.');
-        }
         if ($task->isLinkedToAnyActiveSprint()) {
             abort(422, 'No se puede eliminar una tarea incluida en un sprint activo.');
         }
