@@ -81,21 +81,43 @@
           </p>
 
           <template v-if="sprintStatusValue === 3">
-            <p class="text-xs text-slate-600">
-              En retrospectiva: rellena los tres campos; son obligatorios para finalizar el sprint.
+            <p class="text-xs text-slate-600 mb-3 leading-relaxed">
+              Marco <strong class="font-medium text-slate-700">Keep doing / Stop doing / Start doing</strong>.
+              Los tres bloques son obligatorios para finalizar el sprint.
             </p>
-            <div class="space-y-2">
+            <div class="space-y-4">
               <div>
-                <label class="text-xs font-medium text-slate-600 block mb-1">Qué fue bien</label>
-                <Textarea v-model="retroDraft.well" rows="2" class="w-full" auto-resize />
+                <label class="text-sm font-medium text-slate-800 block">
+                  Keep Doing
+                  <span class="text-slate-500 font-normal">(¿Qué ha funcionado?)</span>
+                </label>
+                <p class="text-xs text-slate-600 mt-1 mb-2 leading-relaxed">
+                  Acciones, dinámicas o hábitos de trabajo que el equipo considera positivos y que desea mantener en
+                  los siguientes sprints.
+                </p>
+                <Textarea v-model="retroDraft.well" rows="3" class="w-full" auto-resize />
               </div>
               <div>
-                <label class="text-xs font-medium text-slate-600 block mb-1">Qué mejorar</label>
-                <Textarea v-model="retroDraft.bad" rows="2" class="w-full" auto-resize />
+                <label class="text-sm font-medium text-slate-800 block">
+                  Stop Doing
+                  <span class="text-slate-500 font-normal">(¿Qué no ha funcionado?)</span>
+                </label>
+                <p class="text-xs text-slate-600 mt-1 mb-2 leading-relaxed">
+                  Problemas, dificultades o bloqueos que el equipo ha identificado durante el sprint y que deberían
+                  evitarse o corregirse.
+                </p>
+                <Textarea v-model="retroDraft.bad" rows="3" class="w-full" auto-resize />
               </div>
               <div>
-                <label class="text-xs font-medium text-slate-600 block mb-1">Acciones / mejoras</label>
-                <Textarea v-model="retroDraft.improve" rows="2" class="w-full" auto-resize />
+                <label class="text-sm font-medium text-slate-800 block">
+                  Start Doing
+                  <span class="text-slate-500 font-normal">(Mejora concreta)</span>
+                </label>
+                <p class="text-xs text-slate-600 mt-1 mb-2 leading-relaxed">
+                  Un único compromiso de mejora, realista y aplicable, que el equipo acuerda implementar en el
+                  siguiente sprint (o como aprendizaje transferible al contexto profesional).
+                </p>
+                <Textarea v-model="retroDraft.improve" rows="3" class="w-full" auto-resize />
               </div>
             </div>
             <Button
@@ -126,9 +148,8 @@
             </div>
           </template>
 
-          <div class="pt-1">
+          <div v-if="showSprintAdvanceButtonOnPhaseDetail" class="pt-1">
             <Button
-              v-if="canAdvanceSprintDetail"
               :label="sprintAdvanceButtonLabel(sprintStatusValue)"
               icon="pi pi-forward"
               size="small"
@@ -192,15 +213,21 @@
             >
               <h3 class="text-sm font-semibold text-slate-800">Retrospectiva</h3>
               <div v-if="pt.retro_well" class="rounded-lg border border-slate-200 p-3">
-                <p class="text-xs font-medium text-slate-500 mb-1">Qué fue bien</p>
+                <p class="text-xs font-medium text-slate-800 mb-1">
+                  Keep Doing <span class="text-slate-500 font-normal">(¿Qué ha funcionado?)</span>
+                </p>
                 <p class="text-slate-700 whitespace-pre-wrap">{{ pt.retro_well }}</p>
               </div>
               <div v-if="pt.retro_bad" class="rounded-lg border border-slate-200 p-3">
-                <p class="text-xs font-medium text-slate-500 mb-1">Qué mejorar</p>
+                <p class="text-xs font-medium text-slate-800 mb-1">
+                  Stop Doing <span class="text-slate-500 font-normal">(¿Qué no ha funcionado?)</span>
+                </p>
                 <p class="text-slate-700 whitespace-pre-wrap">{{ pt.retro_bad }}</p>
               </div>
               <div v-if="pt.retro_improvement" class="rounded-lg border border-slate-200 p-3">
-                <p class="text-xs font-medium text-slate-500 mb-1">Acciones</p>
+                <p class="text-xs font-medium text-slate-800 mb-1">
+                  Start Doing <span class="text-slate-500 font-normal">(Mejora concreta)</span>
+                </p>
                 <p class="text-slate-700 whitespace-pre-wrap">{{ pt.retro_improvement }}</p>
               </div>
             </div>
@@ -428,6 +455,11 @@ const canForceSprintStep = computed(() => can('phase-sprint-set') && sprintWorkf
 
 const canAdvanceSprintDetail = computed(
   () => sprintWorkflowVisible.value && (can('phase-view') || can('phase-edit'))
+)
+
+/** «Iniciar sprint» solo en Fases / Kanban; en el detalle de fase no (evita duplicar el disparador). */
+const showSprintAdvanceButtonOnPhaseDetail = computed(
+  () => canAdvanceSprintDetail.value && sprintStatusValue.value !== 4
 )
 
 const sprintSaving = ref(false)

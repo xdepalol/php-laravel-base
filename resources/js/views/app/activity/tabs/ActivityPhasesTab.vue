@@ -82,19 +82,9 @@
         >
           <template #body="{ data }">
             <template v-if="data.is_sprint">
-              <div class="flex flex-col gap-1">
-                <span class="text-xs text-slate-600">{{
-                  sprintTeamStatusDisplayLabel(teamPhaseTeamRow(data))
-                }}</span>
-                <Button
-                  v-if="showPerRowSprintAdvance(data)"
-                  size="small"
-                  :label="sprintAdvanceButtonLabel(sprintStatusValueForTeam(data))"
-                  :loading="sprintBusyId === data.id"
-                  :disabled="!canClickAdvanceSprint(data)"
-                  @click="onAdvanceTeamSprint(data)"
-                />
-              </div>
+              <span class="text-xs text-slate-600">{{
+                sprintTeamStatusDisplayLabel(teamPhaseTeamRow(data))
+              }}</span>
             </template>
             <span v-else class="text-slate-400">—</span>
           </template>
@@ -262,7 +252,6 @@ import { activityRoleAssignmentWarnings } from '@/utils/activityRoleWarnings'
 import {
   nextSprintStatusValue,
   retroCompleteForFinish,
-  sprintAdvanceButtonLabel,
   sprintNeverStartedForTeam,
   sprintStatusLabel,
   sprintTeamFinishedOnce,
@@ -367,21 +356,10 @@ const firstStartableSprintPhase = computed(() => {
 
 const showGlobalStartSprintButton = computed(() => firstStartableSprintPhase.value != null)
 
-/** «Iniciar sprint» solo arriba; el resto de pasos sigue en la fila. */
-function showPerRowSprintAdvance(phase) {
-  return sprintStatusValueForTeam(phase) !== 4
-}
-
+/** «Iniciar sprint» aquí; el resto de pasos del sprint se gestiona en la pestaña Sprint del equipo. */
 function onGlobalStartSprint() {
   const p = firstStartableSprintPhase.value
   if (p) onAdvanceTeamSprint(p)
-}
-
-function canClickAdvanceSprint(phase) {
-  const cur = sprintStatusValueForTeam(phase)
-  if (nextSprintStatusValue(cur) === null) return false
-  if (cur === 3 && !retroCompleteForFinish(teamPhaseTeamRow(phase) ?? {})) return false
-  return true
 }
 
 function api422FirstMessage(error, fallback) {
@@ -402,7 +380,7 @@ async function onAdvanceTeamSprint(phase) {
   if (cur === 3 && !retroCompleteForFinish(teamPhaseTeamRow(phase) ?? {})) {
     toast.error(
       'Retrospectiva',
-      'Completa qué fue bien, qué mejorar y acciones en el detalle de la fase antes de finalizar.'
+      'Completa Keep doing, Stop doing y Start doing en el detalle de la fase antes de finalizar.'
     )
     return
   }

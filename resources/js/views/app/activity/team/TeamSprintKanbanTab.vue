@@ -57,9 +57,18 @@
             <div class="flex flex-wrap items-center gap-2">
               <Tag :value="sprintStatusLabel(activeTeamPhaseTeam?.sprint_status?.value)" severity="info" />
               <Button
-                v-if="showSprintAdvanceButton"
+                v-if="showSprintAdvanceButton && sprintStatusCurrent === 3"
+                as="router-link"
+                :to="phaseDetailLink"
                 size="small"
                 :label="sprintAdvanceButtonLabel(sprintStatusCurrent)"
+                icon="pi pi-arrow-right"
+              />
+              <Button
+                v-else-if="showSprintAdvanceButton"
+                size="small"
+                :label="sprintAdvanceButtonLabel(sprintStatusCurrent)"
+                icon="pi pi-forward"
                 :loading="sprintBusy"
                 :disabled="!canAdvanceSprintStep || sprintBusy"
                 @click="onAdvanceActiveSprint"
@@ -305,7 +314,6 @@ const { can } = useAbility()
 const toast = useToast()
 const canList = computed(() => can('phase-list'))
 const showSprintAdvanceButton = computed(() => can('phase-edit') || can('phase-view'))
-const canKanbanDrag = computed(() => can('task-edit'))
 const canViewTaskDetail = computed(() => can('task-view') || can('task-edit'))
 const canEditTaskDesc = computed(() => can('task-edit'))
 const canEditAssignee = computed(() => can('phasetask-edit'))
@@ -490,6 +498,9 @@ const activeTeamPhaseTeam = computed(() =>
 
 const sprintStatusCurrent = computed(() => sprintStatusValue(activeTeamPhaseTeam.value))
 
+/** En retrospectiva (3) el tablero queda visible pero sin arrastre para priorizar la ceremonia. */
+const canKanbanDrag = computed(() => can('task-edit') && sprintStatusCurrent.value !== 3)
+
 const canAdvanceSprintStep = computed(() => canClickAdvanceSprintForPhase(activeSprintPhase.value))
 
 watch(
@@ -518,7 +529,7 @@ async function onAdvanceTeamSprint(phase) {
   if (cur === 3 && !retroCompleteForFinish(teamPhaseTeamRow(phase) ?? {})) {
     toast.error(
       'Retrospectiva',
-      'Completa qué fue bien, qué mejorar y acciones en el detalle de la fase antes de finalizar.'
+      'Completa Keep doing, Stop doing y Start doing en el detalle de la fase antes de finalizar.'
     )
     return
   }
@@ -542,7 +553,7 @@ async function confirmThenAdvanceTeamSprint(phase) {
   if (cur === 3 && !retroCompleteForFinish(teamPhaseTeamRow(phase) ?? {})) {
     toast.error(
       'Retrospectiva',
-      'Completa qué fue bien, qué mejorar y acciones en el detalle de la fase antes de finalizar.'
+      'Completa Keep doing, Stop doing y Start doing en el detalle de la fase antes de finalizar.'
     )
     return
   }

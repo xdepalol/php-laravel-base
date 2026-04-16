@@ -98,7 +98,7 @@ class PhaseTeamController extends Controller
                     $improve = $request->has('retro_improvement') ? (string) $request->retro_improvement : (string) ($phaseTeam->retro_improvement ?? '');
                     if (trim($well) === '' || trim($bad) === '' || trim($improve) === '') {
                         throw ValidationException::withMessages([
-                            'sprint_status' => ['Completa la retrospectiva (qué fue bien, qué mejorar y acciones) antes de finalizar el sprint.'],
+                            'sprint_status' => ['Completa la retrospectiva (Keep doing, Stop doing y Start doing) antes de finalizar el sprint.'],
                         ]);
                     }
                 }

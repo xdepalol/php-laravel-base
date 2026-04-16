@@ -50,6 +50,7 @@ export function sprintAdvanceButtonLabel(value) {
 
 /**
  * Comprueba si las tres cadenas de retrospectiva están rellenas (trim).
+ * Orden UI: Keep doing → `retro_well`, Stop doing → `retro_bad`, Start doing → `retro_improvement`.
  * @param {{ retro_well?: string | null, retro_bad?: string | null, retro_improvement?: string | null }} o
  */
 export function retroCompleteForFinish(o) {
