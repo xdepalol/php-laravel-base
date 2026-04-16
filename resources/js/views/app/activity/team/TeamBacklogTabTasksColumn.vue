@@ -36,6 +36,55 @@
             <p class="font-medium text-slate-800 break-words">{{ task.title }}</p>
             <Tag :value="taskStatusLabel(task)" severity="secondary" class="text-xs mt-1" />
           </div>
+          <div class="flex shrink-0 flex-col items-end gap-1">
+            <div v-if="canTaskEdit || canTaskDelete" class="flex shrink-0 gap-0.5">
+              <Button
+                v-if="canTaskEdit"
+                v-tooltip.top="'Editar'"
+                icon="pi pi-pencil"
+                text
+                rounded
+                severity="secondary"
+                size="small"
+                @click="$emit('edit-task', task)"
+              />
+              <Button
+                v-if="canTaskDelete"
+                v-tooltip.top="'Eliminar'"
+                icon="pi pi-trash"
+                text
+                rounded
+                severity="danger"
+                size="small"
+                @click="$emit('delete-task', task)"
+              />
+            </div>
+            <Button
+              v-if="showSprintToggle"
+              :label="inSprint(task) ? 'Quitar del sprint' : 'Incluir en sprint'"
+              :icon="inSprint(task) ? 'pi pi-times' : 'pi pi-plus'"
+              :severity="inSprint(task) ? 'danger' : 'secondary'"
+              :outlined="!inSprint(task)"
+              size="small"
+              class="text-xs whitespace-nowrap max-w-full"
+              :loading="!!sprintTaskLoading[task.id]"
+              @click="emitToggleSprint(task)"
+            />
+          </div>
+        </div>
+      </template>
+    </draggable>
+    <div v-else class="task-card-grid">
+      <div
+        v-for="task in tasks"
+        :key="task.id"
+        class="task-card rounded-md border border-white bg-white px-2 py-2 shadow-sm flex items-start justify-between gap-2 text-sm h-full min-w-0"
+      >
+        <div class="min-w-0">
+          <p class="font-medium text-slate-800 break-words">{{ task.title }}</p>
+          <Tag :value="taskStatusLabel(task)" severity="secondary" class="text-xs mt-1" />
+        </div>
+        <div class="flex shrink-0 flex-col items-end gap-1">
           <div v-if="canTaskEdit || canTaskDelete" class="flex shrink-0 gap-0.5">
             <Button
               v-if="canTaskEdit"
@@ -58,39 +107,16 @@
               @click="$emit('delete-task', task)"
             />
           </div>
-        </div>
-      </template>
-    </draggable>
-    <div v-else class="task-card-grid">
-      <div
-        v-for="task in tasks"
-        :key="task.id"
-        class="task-card rounded-md border border-white bg-white px-2 py-2 shadow-sm flex items-start justify-between gap-2 text-sm h-full min-w-0"
-      >
-        <div class="min-w-0">
-          <p class="font-medium text-slate-800 break-words">{{ task.title }}</p>
-          <Tag :value="taskStatusLabel(task)" severity="secondary" class="text-xs mt-1" />
-        </div>
-        <div v-if="canTaskEdit || canTaskDelete" class="flex shrink-0 gap-0.5">
           <Button
-            v-if="canTaskEdit"
-            v-tooltip.top="'Editar'"
-            icon="pi pi-pencil"
-            text
-            rounded
-            severity="secondary"
+            v-if="showSprintToggle"
+            :label="inSprint(task) ? 'Quitar del sprint' : 'Incluir en sprint'"
+            :icon="inSprint(task) ? 'pi pi-times' : 'pi pi-plus'"
+            :severity="inSprint(task) ? 'danger' : 'secondary'"
+            :outlined="!inSprint(task)"
             size="small"
-            @click="$emit('edit-task', task)"
-          />
-          <Button
-            v-if="canTaskDelete"
-            v-tooltip.top="'Eliminar'"
-            icon="pi pi-trash"
-            text
-            rounded
-            severity="danger"
-            size="small"
-            @click="$emit('delete-task', task)"
+            class="text-xs whitespace-nowrap max-w-full"
+            :loading="!!sprintTaskLoading[task.id]"
+            @click="emitToggleSprint(task)"
           />
         </div>
       </div>
@@ -101,6 +127,7 @@
 <script setup>
 import { computed } from 'vue'
 import draggable from 'vuedraggable'
+import { useAbility } from '@casl/vue'
 
 const props = defineProps({
   bi: { type: Object, required: true },
@@ -111,9 +138,36 @@ const props = defineProps({
   canTaskCreate: { type: Boolean, default: false },
   canTaskEdit: { type: Boolean, default: false },
   canTaskDelete: { type: Boolean, default: false },
+  sprintAssigningMode: { type: Boolean, default: false },
+  isTeamBacklog: { type: Boolean, default: false },
+  /** taskId -> phaseTaskId para tareas ya enlazadas al sprint actual */
+  sprintTaskBindings: { type: Object, default: () => ({}) },
+  sprintTaskLoading: { type: Object, default: () => ({}) },
 })
 
-defineEmits(['create-task', 'edit-task', 'delete-task', 'tasks-reordered'])
+const emit = defineEmits(['create-task', 'edit-task', 'delete-task', 'tasks-reordered', 'toggle-sprint-task'])
+
+const { can } = useAbility()
+
+const showSprintToggle = computed(
+  () =>
+    props.sprintAssigningMode &&
+    props.isTeamBacklog &&
+    (can('phase-edit') || can('phase-view'))
+)
+
+function phaseTaskIdFor(task) {
+  const m = props.sprintTaskBindings || {}
+  return m[task.id] ?? m[Number(task.id)]
+}
+
+function inSprint(task) {
+  return phaseTaskIdFor(task) != null
+}
+
+function emitToggleSprint(task) {
+  emit('toggle-sprint-task', { task, remove: inSprint(task) })
+}
 
 const TASK_STATUS_LABELS = {
   0: 'Por hacer',

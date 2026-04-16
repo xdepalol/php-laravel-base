@@ -21,7 +21,10 @@ class PhaseController extends Controller
     {
         $this->authorize('phase-list');
 
-        $query = $activity->phases()->with('phaseTasks');
+        $query = $activity->phases()->with([
+            'phaseTasks.task.backlogItem',
+            'phaseTasks.student.user',
+        ]);
         if ($this->shouldLimitPhaseStudentRolesForUser($request->user())) {
             $teamIds = $this->teamIdsForStudentInActivity($request->user(), $activity);
             $query->with([
@@ -82,14 +85,16 @@ class PhaseController extends Controller
             $teamIds = $this->teamIdsForStudentInActivity($request->user(), $activity);
             $phase->load([
                 'activity',
-                'phaseTasks',
+                'phaseTasks.task.backlogItem',
+                'phaseTasks.student.user',
                 'phaseStudentRoles' => fn ($q) => $q->whereIn('team_id', $teamIds)->with($this->phaseStudentRoleNestedRelations()),
                 'phaseTeams' => fn ($q) => $q->whereIn('team_id', $teamIds)->with('team'),
             ]);
         } else {
             $phase->load([
                 'activity',
-                'phaseTasks',
+                'phaseTasks.task.backlogItem',
+                'phaseTasks.student.user',
                 'phaseStudentRoles.student.user',
                 'phaseStudentRoles.activityRole',
                 'phaseStudentRoles.team',
@@ -115,7 +120,8 @@ class PhaseController extends Controller
         if ($phase->save()) {
             $phase->load([
                 'activity',
-                'phaseTasks',
+                'phaseTasks.task.backlogItem',
+                'phaseTasks.student.user',
                 'phaseStudentRoles.student.user',
                 'phaseStudentRoles.activityRole',
                 'phaseStudentRoles.team',
@@ -137,7 +143,8 @@ class PhaseController extends Controller
 
         $phase->load([
             'activity',
-            'phaseTasks',
+            'phaseTasks.task.backlogItem',
+            'phaseTasks.student.user',
             'phaseStudentRoles.student.user',
             'phaseStudentRoles.activityRole',
             'phaseStudentRoles.team',

@@ -400,6 +400,17 @@ export default [
                         },
                     },
                     {
+                        name: 'app.activity.team.sprint-kanban',
+                        path: 'sprint',
+                        component: () => import('../views/app/activity/team/TeamSprintKanbanTab.vue'),
+                        meta: {
+                            teamTab: 'sprint-kanban',
+                            requiresActivitySprints: true,
+                            breadCrumb: 'Sprint',
+                            pageTitle: 'Sprint',
+                        },
+                    },
+                    {
                         path: 'tareas',
                         redirect: (to) => ({
                             name: 'app.activity.team.backlog',

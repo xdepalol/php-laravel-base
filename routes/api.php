@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\GroupController;
 use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\PhaseController;
 use App\Http\Controllers\Api\PhaseTeamController;
+use App\Http\Controllers\Api\PhaseTeamPhaseTaskController;
 use App\Http\Controllers\Api\PhaseStudentMyRoleController;
 use App\Http\Controllers\Api\PhaseStudentRoleController;
 use App\Http\Controllers\Api\PhaseTaskController;
@@ -97,6 +98,8 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::patch('activities/{activity}/phases/{phase}/teams/{team}/me/phase-role', [PhaseStudentMyRoleController::class, 'update'])->scopeBindings();
     Route::get('activities/{activity}/phases/{phase}/teams/{team}/phase-team', [PhaseTeamController::class, 'show'])->scopeBindings();
     Route::patch('activities/{activity}/phases/{phase}/teams/{team}/phase-team', [PhaseTeamController::class, 'update'])->scopeBindings();
+    Route::post('activities/{activity}/phases/{phase}/teams/{team}/phase-tasks', [PhaseTeamPhaseTaskController::class, 'store'])->scopeBindings();
+    Route::delete('activities/{activity}/phases/{phase}/teams/{team}/phase-tasks/{phaseTask}', [PhaseTeamPhaseTaskController::class, 'destroy'])->scopeBindings();
     Route::apiResource('activities.deliverables', DeliverableController::class)->scoped();
     Route::patch('deliverables/{deliverable}/submissions/{submission}/grade', [SubmissionController::class, 'grade'])
         ->scopeBindings()

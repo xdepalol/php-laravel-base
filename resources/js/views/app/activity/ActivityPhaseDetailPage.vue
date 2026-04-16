@@ -341,7 +341,8 @@ const canManagePhaseStudentRoles = computed(
 
 const activityHasRoleTypes = computed(() => !!activityRef?.value?.activity_role_type_id)
 
-const { getPhase, deletePhase, patchPhaseTeam } = useActivityPhases()
+const teamActivityPhases = inject('teamActivityPhases', null)
+const { getPhase, deletePhase, patchPhaseTeam } = teamActivityPhases ?? useActivityPhases()
 const { getTeamStudentsList, getTeamMemberRoles } = useActivityTeams()
 const { saveTeacherPhaseStudentAssignment } = usePhaseStudentRoles()
 

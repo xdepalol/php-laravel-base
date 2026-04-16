@@ -78,7 +78,28 @@
           <Checkbox v-model="showTasks" input-id="show-tasks" binary />
           <label for="show-tasks" class="text-sm text-slate-700 cursor-pointer">Mostrar tareas</label>
         </div>
+        <div
+          v-if="isAssigningSprintTasks"
+          class="flex items-center gap-2 pb-0.5 w-full sm:w-auto sm:ml-auto"
+        >
+          <Checkbox
+            v-model="showSprintAssignedTasks"
+            input-id="show-sprint-assigned"
+            binary
+          />
+          <label for="show-sprint-assigned" class="text-sm text-slate-700 cursor-pointer">
+            Mostrar tareas ya en el sprint
+          </label>
+        </div>
       </div>
+
+      <p
+        v-if="isAssigningSprintTasks"
+        class="text-xs text-sky-900 bg-sky-50 border border-sky-200 rounded-md px-2 py-1.5 mb-3"
+      >
+        Modo asignación de sprint: podés incluir o quitar tareas del backlog del equipo en el sprint actual
+        (fase «{{ assigningSprintPhaseTitle }}»).
+      </p>
 
       <p
         v-if="backlogFiltersActive || taskFiltersActive"
@@ -120,9 +141,14 @@
                 :can-task-create="can('task-create')"
                 :can-task-edit="can('task-edit')"
                 :can-task-delete="can('task-delete')"
+                :sprint-assigning-mode="isAssigningSprintTasks"
+                :is-team-backlog="isTeamRow(bi)"
+                :sprint-task-bindings="sprintTaskPhaseTaskIdMap"
+                :sprint-task-loading="sprintTaskToggleLoading"
                 @create-task="openTaskDialog(bi, null)"
                 @edit-task="(t) => openTaskDialog(bi, t)"
                 @delete-task="confirmDeleteTask"
+                @toggle-sprint-task="onToggleSprintTask"
               />
             </div>
           </div>
@@ -152,10 +178,15 @@
                   :can-task-create="can('task-create')"
                   :can-task-edit="can('task-edit')"
                   :can-task-delete="can('task-delete')"
+                  :sprint-assigning-mode="isAssigningSprintTasks"
+                  :is-team-backlog="false"
+                  :sprint-task-bindings="sprintTaskPhaseTaskIdMap"
+                  :sprint-task-loading="sprintTaskToggleLoading"
                   @create-task="openTaskDialog(bi, null)"
                   @edit-task="(t) => openTaskDialog(bi, t)"
                   @delete-task="confirmDeleteTask"
                   @tasks-reordered="onTaskDragEnd(bi.id)"
+                  @toggle-sprint-task="onToggleSprintTask"
                 />
               </div>
             </div>
@@ -199,10 +230,15 @@
                     :can-task-create="can('task-create')"
                     :can-task-edit="can('task-edit')"
                     :can-task-delete="can('task-delete')"
+                    :sprint-assigning-mode="isAssigningSprintTasks"
+                    :is-team-backlog="true"
+                    :sprint-task-bindings="sprintTaskPhaseTaskIdMap"
+                    :sprint-task-loading="sprintTaskToggleLoading"
                     @create-task="openTaskDialog(bi, null)"
                     @edit-task="(t) => openTaskDialog(bi, t)"
                     @delete-task="confirmDeleteTask"
                     @tasks-reordered="onTaskDragEnd(bi.id)"
+                    @toggle-sprint-task="onToggleSprintTask"
                   />
                 </div>
               </template>
@@ -376,11 +412,13 @@ import { useAbility } from '@casl/vue'
 import { useToast } from '@/composables/useToast'
 import useAuth from '@/composables/auth'
 import useActivityBacklogItems from '@/composables/activityBacklogItems'
+import useActivityPhases from '@/composables/activityPhases'
 import useActivityTasks from '@/composables/activityTasks'
 import BacklogItemCard from './TeamBacklogTabBacklogCard.vue'
 import TasksColumn from './TeamBacklogTabTasksColumn.vue'
 
 const { can } = useAbility()
+const canPhaseList = computed(() => can('phase-list'))
 const { getAbilities } = useAuth()
 const activityId = inject('activityId')
 const teamId = inject('teamId')
@@ -411,6 +449,14 @@ const {
   reorderTasks,
 } = useActivityTasks()
 
+const teamActivityPhases = inject('teamActivityPhases', null)
+const {
+  phases,
+  refreshPhasesFromApi,
+  attachPhaseTeamPhaseTask,
+  detachPhaseTeamPhaseTask,
+} = teamActivityPhases ?? useActivityPhases()
+
 const canEditTeamBacklog = computed(() => !!teamId?.value && !!activityId?.value)
 
 const backlogNameQuery = ref('')
@@ -419,6 +465,9 @@ const backlogStatusFilter = ref(null)
 const taskNameQuery = ref('')
 const taskStatusFilter = ref(null)
 const showTasks = ref(true)
+/** Durante «Asignando tareas»: si es false, se ocultan en el backlog del equipo las tareas ya enlazadas al sprint. */
+const showSprintAssignedTasks = ref(true)
+const sprintTaskToggleLoading = reactive({})
 
 const taskStatusFilterOptions = [
   { value: null, label: 'Todos' },
@@ -577,7 +626,12 @@ function taskStatusNum(t) {
 
 function filteredTasksForBi(backlogItemId) {
   const list = taskLists[backlogItemId] || []
+  const hideSprintAssigned =
+    isAssigningSprintTasks.value &&
+    !showSprintAssignedTasks.value &&
+    isTeamBacklogItemId(backlogItemId)
   return list.filter((t) => {
+    if (hideSprintAssigned && sprintTaskIdToPhaseTaskId.value.has(t.id)) return false
     if (taskNameQuery.value.trim()) {
       const q = taskNameQuery.value.trim().toLowerCase()
       if (!(t.title || '').toLowerCase().includes(q)) return false
@@ -621,6 +675,91 @@ const teamItemsOnly = computed(() => {
   const tid = Number(teamId?.value)
   return (backlogItems.value || []).filter((b) => Number(b.team_id ?? b.team?.id) === tid)
 })
+
+function sprintStatusValue(row) {
+  const s = row?.sprint_status
+  if (s == null) return null
+  if (typeof s === 'object' && 'value' in s) return Number(s.value)
+  return Number(s)
+}
+
+const assigningSprintPhase = computed(() => {
+  const tid = Number(teamId?.value)
+  if (!tid) return null
+  const list = phases.value || []
+  for (const p of list) {
+    if (!p?.is_sprint) continue
+    const pt = (p.phase_teams || []).find((x) => Number(x.team_id) === tid)
+    if (pt && sprintStatusValue(pt) === 0) return p
+  }
+  return null
+})
+
+const isAssigningSprintTasks = computed(() => !!assigningSprintPhase.value)
+
+const assigningSprintPhaseTitle = computed(() => assigningSprintPhase.value?.title || 'Sprint')
+
+const sprintTaskIdToPhaseTaskId = computed(() => {
+  const map = new Map()
+  const phase = assigningSprintPhase.value
+  const tid = Number(teamId?.value)
+  if (!phase || !tid) return map
+  for (const pt of phase.phase_tasks || []) {
+    const task = pt.task
+    if (!task?.id) continue
+    const biTeam = task.backlog_item?.team_id ?? task.backlog_item?.team?.id
+    if (Number(biTeam) !== tid) continue
+    map.set(task.id, pt.id)
+  }
+  return map
+})
+
+const sprintTaskPhaseTaskIdMap = computed(() => {
+  const o = {}
+  sprintTaskIdToPhaseTaskId.value.forEach((phaseTaskId, taskId) => {
+    o[taskId] = phaseTaskId
+  })
+  return o
+})
+
+function isTeamBacklogItemId(backlogItemId) {
+  return teamItemsOrdered.value.some((b) => b.id === backlogItemId)
+}
+
+async function loadPhasesForSprintUi() {
+  const aid = activityId?.value
+  if (!aid || !canPhaseList.value) return
+  await refreshPhasesFromApi(aid)
+}
+
+async function onToggleSprintTask({ task, remove }) {
+  const phase = assigningSprintPhase.value
+  const aid = activityId?.value
+  const tid = teamId?.value
+  if (!phase?.id || !aid || !tid || !task?.id) return
+  const id = task.id
+  sprintTaskToggleLoading[id] = true
+  try {
+    if (remove) {
+      const phaseTaskId = sprintTaskIdToPhaseTaskId.value.get(id)
+      if (!phaseTaskId) return
+      await detachPhaseTeamPhaseTask(aid, phase.id, tid, phaseTaskId)
+    } else {
+      await attachPhaseTeamPhaseTask(aid, phase.id, tid, { task_id: id })
+    }
+    await loadPhasesForSprintUi()
+  } catch (e) {
+    const body = e?.response?.data
+    let msg = body?.message || 'No se pudo actualizar el sprint.'
+    if (body?.errors && typeof body.errors === 'object') {
+      const first = Object.values(body.errors).flat()[0]
+      if (first) msg = Array.isArray(first) ? first[0] : first
+    }
+    toast.error('Sprint', typeof msg === 'string' ? msg : 'Error')
+  } finally {
+    delete sprintTaskToggleLoading[id]
+  }
+}
 
 const csvFileInput = useTemplateRef('csvFileInput')
 
@@ -921,14 +1060,16 @@ function confirmDeleteTask(task) {
 }
 
 watch(
-  () => activityId?.value,
-  async (id) => {
+  () => [activityId?.value, teamId?.value, canPhaseList.value],
+  async () => {
+    const id = activityId?.value
     if (!id) return
     try {
       await getBacklogItems(id)
     } catch {
-      /* */
+      /* toast en composable */
     }
+    await loadPhasesForSprintUi()
   },
   { immediate: true }
 )

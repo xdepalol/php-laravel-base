@@ -9,6 +9,9 @@ const baseUrl = (activityId) => `/api/activities/${activityId}/phases`
 const phaseTeamUrl = (activityId, phaseId, teamId) =>
   `/api/activities/${activityId}/phases/${phaseId}/teams/${teamId}/phase-team`
 
+const phaseTeamPhaseTasksUrl = (activityId, phaseId, teamId) =>
+  `/api/activities/${activityId}/phases/${phaseId}/teams/${teamId}/phase-tasks`
+
 export default function useActivityPhases() {
   const phases = ref([])
   const isLoading = ref(false)
@@ -98,6 +101,21 @@ export default function useActivityPhases() {
     } catch (error) {
       toast.error('Error', 'No se pudieron cargar las fases')
       throw error
+    }
+  }
+
+  /**
+   * Actualiza `phases` sin candado `withLoading` (evita «Operación en curso» si ya hay un getPhases en curso
+   * en otra instancia del composable) y sin toast — útil en pestañas de equipo y tras hidratar CASL.
+   */
+  const refreshPhasesFromApi = async (activityId) => {
+    if (!activityId) return
+    try {
+      const response = await axios.get(baseUrl(activityId))
+      const data = unwrap(response)
+      phases.value = Array.isArray(data) ? data : []
+    } catch {
+      /* 403 lo gestiona el interceptor; aquí no duplicamos toast */
     }
   }
 
@@ -205,6 +223,22 @@ export default function useActivityPhases() {
     return unwrap(response)
   }
 
+  const attachPhaseTeamPhaseTask = async (activityId, phaseId, teamId, payload) => {
+    if (!activityId || !phaseId || !teamId) throw new Error('IDs requeridos')
+    const response = await axios.post(
+      phaseTeamPhaseTasksUrl(activityId, phaseId, teamId),
+      payload
+    )
+    return unwrap(response)
+  }
+
+  const detachPhaseTeamPhaseTask = async (activityId, phaseId, teamId, phaseTaskId) => {
+    if (!activityId || !phaseId || !teamId || !phaseTaskId) throw new Error('IDs requeridos')
+    await axios.delete(
+      `${phaseTeamPhaseTasksUrl(activityId, phaseId, teamId)}/${phaseTaskId}`
+    )
+  }
+
   return {
     phases,
     phase,
@@ -217,11 +251,14 @@ export default function useActivityPhases() {
     setPhase,
     upsertPhaseRecord,
     getPhases,
+    refreshPhasesFromApi,
     getPhase,
     createPhase,
     updatePhase,
     deletePhase,
     importPhasesCsv,
     patchPhaseTeam,
+    attachPhaseTeamPhaseTask,
+    detachPhaseTeamPhaseTask,
   }
 }

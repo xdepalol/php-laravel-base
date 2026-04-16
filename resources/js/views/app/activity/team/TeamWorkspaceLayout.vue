@@ -65,6 +65,7 @@
 import { computed, provide, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import useActivities from '@/composables/activities'
+import useActivityPhases from '@/composables/activityPhases'
 import useActivityTeams from '@/composables/activityTeams'
 
 const route = useRoute()
@@ -82,6 +83,16 @@ const tabQuery = computed(() => {
 const { activity, getActivity, isLoading: activityLoading } = useActivities()
 const { team, getTeam, isLoading: teamLoading } = useActivityTeams()
 
+/** Una sola instancia para Fases / Backlog / Sprint / detalle de fase en este equipo (evita estado vacío al cambiar de pestaña). */
+const teamActivityPhases = useActivityPhases()
+
+watch(
+  () => [routeActivityId.value, routeTeamId.value],
+  () => {
+    teamActivityPhases.phases.value = []
+  }
+)
+
 const loadError = ref(false)
 
 const isBootstrapping = computed(
@@ -98,6 +109,13 @@ const allTabs = [
     needsSprints: true,
   },
   { tabKey: 'backlog', name: 'app.activity.team.backlog', label: 'Backlog', icon: 'pi pi-table', needsBacklog: true },
+  {
+    tabKey: 'sprint-kanban',
+    name: 'app.activity.team.sprint-kanban',
+    label: 'Sprint',
+    icon: 'pi pi-th-large',
+    needsSprints: true,
+  },
   {
     tabKey: 'deliverables',
     name: 'app.activity.team.deliverables',
@@ -158,7 +176,9 @@ watch(
     if (
       activity.value?.id &&
       !activity.value?.has_sprints &&
-      (route.name === 'app.activity.team.phases' || route.name === 'app.activity.team.phase.show')
+      (route.name === 'app.activity.team.phases' ||
+        route.name === 'app.activity.team.phase.show' ||
+        route.name === 'app.activity.team.sprint-kanban')
     ) {
       router.replace({
         name: 'app.activity.team.overview',
@@ -193,6 +213,7 @@ provide(
   computed(() => routeTeamId.value)
 )
 provide('team', team)
+provide('teamActivityPhases', teamActivityPhases)
 
 async function bootstrap() {
   const aid = routeActivityId.value

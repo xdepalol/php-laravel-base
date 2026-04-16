@@ -84,7 +84,7 @@
             <template v-if="data.is_sprint">
               <div class="flex flex-col gap-1">
                 <span class="text-xs text-slate-600">{{
-                  sprintStatusLabel(sprintStatusValueForTeam(data))
+                  sprintTeamStatusDisplayLabel(teamPhaseTeamRow(data))
                 }}</span>
                 <Button
                   v-if="showPerRowSprintAdvance(data)"
@@ -266,6 +266,7 @@ import {
   sprintNeverStartedForTeam,
   sprintStatusLabel,
   sprintTeamFinishedOnce,
+  sprintTeamStatusDisplayLabel,
 } from '@/utils/phaseTeamSprint'
 
 const { can } = useAbility()
@@ -284,6 +285,7 @@ const toast = useToast()
 const swal = inject('$swal', null)
 const auth = authStore()
 
+const teamActivityPhases = inject('teamActivityPhases', null)
 const {
   phases,
   isLoading,
@@ -291,7 +293,7 @@ const {
   deletePhase,
   importPhasesCsv,
   patchPhaseTeam,
-} = useActivityPhases()
+} = teamActivityPhases ?? useActivityPhases()
 
 const { getTeamMemberRoles, patchMyPhaseStudentRole } = useActivityTeams()
 

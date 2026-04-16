@@ -22,6 +22,21 @@ export function sprintStatusLabel(value) {
   return SPRINT_STATUS_LABEL[v] ?? `Estado #${v}`
 }
 
+function sprintStatusValueFromPhaseTeam(pt) {
+  const v = pt?.sprint_status?.value
+  return v !== undefined && v !== null ? Number(v) : 4
+}
+
+/**
+ * Etiqueta para la columna «Sprint del equipo»: no confunde FINISHED sin snapshot con «terminado».
+ */
+export function sprintTeamStatusDisplayLabel(pt) {
+  if (sprintNeverStartedForTeam(pt)) {
+    return 'No iniciado'
+  }
+  return sprintStatusLabel(sprintStatusValueFromPhaseTeam(pt))
+}
+
 export function sprintAdvanceButtonLabel(value) {
   const v = Number(value)
   return SPRINT_ADVANCE_BUTTON_LABEL[v] ?? 'Siguiente'
@@ -43,11 +58,6 @@ export function nextSprintStatusValue(current) {
   const v = Number(current)
   const map = { 4: 0, 0: 1, 1: 2, 2: 3, 3: 4 }
   return map[v] ?? null
-}
-
-function sprintStatusValueFromPhaseTeam(pt) {
-  const v = pt?.sprint_status?.value
-  return v !== undefined && v !== null ? Number(v) : 4
 }
 
 /** Sprint cerrado al menos una vez (hay snapshot de cierre). */
