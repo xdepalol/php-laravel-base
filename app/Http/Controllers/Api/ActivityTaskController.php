@@ -52,7 +52,9 @@ class ActivityTaskController extends Controller
         $task->backlog_item_id = $request->backlog_item_id;
         $task->title = $request->title;
         $task->description = ContentSanitizer::sanitize($request->input('description'));
-        $task->status = $request->input('status') ?? TaskStatus::TODO;
+        $task->status = $this->actingAsStudentOnly($request->user())
+            ? TaskStatus::TODO
+            : TaskStatus::from((int) ($request->input('status') ?? TaskStatus::TODO->value));
         $task->position = $request->position ?? $this->nextTaskPosition($request->backlog_item_id);
         $task->card_hidden = $request->boolean('card_hidden');
         if ($task->save()) {
@@ -92,7 +94,11 @@ class ActivityTaskController extends Controller
         $task->title = $request->title;
         $task->description = ContentSanitizer::sanitize($request->input('description'));
         if ($request->exists('status')) {
-            $task->status = $request->input('status') ?? TaskStatus::TODO;
+            $newStatus = TaskStatus::from((int) $request->input('status'));
+            if ($this->actingAsStudentOnly($request->user())) {
+                $this->assertStudentMayChangeTaskStatusTo($task, $newStatus);
+            }
+            $task->status = $newStatus;
         }
         $task->position = $request->position ?? 0;
         if ($request->has('card_hidden')) {
@@ -209,6 +215,34 @@ class ActivityTaskController extends Controller
         }
 
         return $user->hasRole('student') && ! $user->hasRole('teacher');
+    }
+
+    /**
+     * Alumnado: el estado solo se ajusta en el tablero Kanban del sprint (tarea en sprint activo) o en el backlog
+     * para cancelar una tarea en cola o restaurar una cancelada.
+     */
+    private function assertStudentMayChangeTaskStatusTo(Task $task, TaskStatus $new): void
+    {
+        if ($task->status === $new) {
+            return;
+        }
+
+        if ($task->isLinkedToAnyActiveSprint()) {
+            if (in_array($new, [TaskStatus::TODO, TaskStatus::DOING, TaskStatus::DONE], true)) {
+                return;
+            }
+            abort(422, 'Estado no válido para una tarea en sprint activo.');
+        }
+
+        if ($task->status === TaskStatus::TODO && $new === TaskStatus::CANCELLED) {
+            return;
+        }
+
+        if ($task->status === TaskStatus::CANCELLED && $new === TaskStatus::TODO) {
+            return;
+        }
+
+        abort(422, 'Desde el backlog solo podés cancelar una tarea en cola o restaurar una cancelada. El resto del estado se cambia en el tablero del sprint.');
     }
 
     /**

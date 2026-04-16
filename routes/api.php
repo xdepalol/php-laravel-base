@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\ActivityController;
 use App\Http\Controllers\Api\ActivityPhaseCsvImportController;
 use App\Http\Controllers\Api\ActivityRoleController;
 use App\Http\Controllers\Api\ActivityRoleTypeController;
+use App\Http\Controllers\Api\ActivitySprintTaskSplitController;
 use App\Http\Controllers\Api\ActivitySubjectGroupController;
 use App\Http\Controllers\Api\ActivityTaskController;
 use App\Http\Controllers\Api\ActivityTeamMemberRolesController;
@@ -19,11 +20,11 @@ use App\Http\Controllers\Api\EnrollmentController;
 use App\Http\Controllers\Api\GroupController;
 use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\PhaseController;
-use App\Http\Controllers\Api\PhaseTeamController;
-use App\Http\Controllers\Api\PhaseTeamPhaseTaskController;
 use App\Http\Controllers\Api\PhaseStudentMyRoleController;
 use App\Http\Controllers\Api\PhaseStudentRoleController;
 use App\Http\Controllers\Api\PhaseTaskController;
+use App\Http\Controllers\Api\PhaseTeamController;
+use App\Http\Controllers\Api\PhaseTeamPhaseTaskController;
 use App\Http\Controllers\Api\PostController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\RoleController;
@@ -100,6 +101,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::patch('activities/{activity}/phases/{phase}/teams/{team}/phase-team', [PhaseTeamController::class, 'update'])->scopeBindings();
     Route::post('activities/{activity}/phases/{phase}/teams/{team}/phase-tasks', [PhaseTeamPhaseTaskController::class, 'store'])->scopeBindings();
     Route::delete('activities/{activity}/phases/{phase}/teams/{team}/phase-tasks/{phaseTask}', [PhaseTeamPhaseTaskController::class, 'destroy'])->scopeBindings();
+    Route::post('activities/{activity}/phases/{phase}/teams/{team}/sprint-tasks/{task}/split', [ActivitySprintTaskSplitController::class, 'store'])->scopeBindings();
     Route::apiResource('activities.deliverables', DeliverableController::class)->scoped();
     Route::patch('deliverables/{deliverable}/submissions/{submission}/grade', [SubmissionController::class, 'grade'])
         ->scopeBindings()

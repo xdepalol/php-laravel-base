@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Team extends Model
 {
@@ -30,6 +31,21 @@ class Team extends Model
     public function backlogItems(): HasMany
     {
         return $this->hasMany(BacklogItem::class);
+    }
+
+    /**
+     * Tareas de los ítems de backlog del equipo (p. ej. enlaces implícitos en rutas `.../teams/{team}/sprint-tasks/{task}`).
+     */
+    public function tasks(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            Task::class,
+            BacklogItem::class,
+            'team_id',
+            'backlog_item_id',
+            'id',
+            'id'
+        );
     }
 
     public function submissions(): HasMany

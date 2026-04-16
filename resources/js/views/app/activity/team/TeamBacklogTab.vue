@@ -410,7 +410,7 @@
             <label class="text-sm font-medium text-slate-700 block mb-1">Descripción</label>
             <Editor v-model="taskForm.description" editor-style="min-height: 220px" class="w-full" />
           </div>
-          <div class="w-52">
+          <div v-if="!isStudentOnlyView" class="w-52">
             <label class="text-sm font-medium text-slate-700 block mb-1">Estado</label>
             <Select
               v-model="taskForm.status"
@@ -420,6 +420,14 @@
               class="w-full"
             />
           </div>
+          <div v-else class="space-y-2">
+            <label class="text-sm font-medium text-slate-700 block mb-1">Estado</label>
+            <p class="text-sm font-medium text-slate-800">{{ studentBacklogTaskStatusLabel }}</p>
+            <p class="text-xs text-slate-500 leading-relaxed">
+              Para cambiar entre Por hacer, En progreso y Hecha usá el tablero del sprint (Kanban). Cancelar o
+              restaurar una tarea cancelada se hace con los botones de la barra inferior del diálogo.
+            </p>
+          </div>
           <div class="flex items-center gap-2">
             <Checkbox v-model="taskForm.card_hidden" input-id="task-card-hidden" binary />
             <label for="task-card-hidden" class="text-sm text-slate-700 cursor-pointer">
@@ -428,8 +436,33 @@
           </div>
         </div>
         <template #footer>
-          <Button label="Cancelar" severity="secondary" text @click="taskDialog.open = false" />
-          <Button label="Guardar" icon="pi pi-check" :loading="taskDialog.saving" @click="submitTaskDialog" />
+          <div class="flex w-full flex-wrap items-center gap-3 justify-between">
+            <div class="flex flex-1 flex-wrap gap-2 items-center justify-start min-w-0">
+              <template v-if="isStudentOnlyView && taskDialog.mode === 'edit'">
+                <Button
+                  v-if="canStudentCancelTaskInBacklog"
+                  label="Cancelar tarea"
+                  severity="danger"
+                  outlined
+                  size="small"
+                  :loading="taskDialog.saving"
+                  @click="studentApplyTaskStatus(3)"
+                />
+                <Button
+                  v-if="canStudentRestoreCancelledTask"
+                  label="Restaurar al backlog"
+                  size="small"
+                  outlined
+                  :loading="taskDialog.saving"
+                  @click="studentApplyTaskStatus(0)"
+                />
+              </template>
+            </div>
+            <div class="flex shrink-0 flex-wrap gap-2 items-center justify-end">
+              <Button label="Cancelar" severity="secondary" text :disabled="taskDialog.saving" @click="taskDialog.open = false" />
+              <Button label="Guardar" icon="pi pi-check" :loading="taskDialog.saving" :disabled="taskDialog.saving" @click="submitTaskDialog" />
+            </div>
+          </div>
         </template>
       </Dialog>
     </template>
@@ -438,10 +471,12 @@
 
 <script setup>
 import { computed, inject, onMounted, reactive, ref, useTemplateRef, watch } from 'vue'
+import axios from 'axios'
 import draggable from 'vuedraggable'
 import { useAbility } from '@casl/vue'
 import { useToast } from '@/composables/useToast'
 import useAuth from '@/composables/auth'
+import { useActivityViewerRole } from '@/composables/useActivityViewerRole'
 import useActivityBacklogItems from '@/composables/activityBacklogItems'
 import useActivityPhases from '@/composables/activityPhases'
 import useActivityTasks from '@/composables/activityTasks'
@@ -449,6 +484,7 @@ import BacklogItemCard from './TeamBacklogTabBacklogCard.vue'
 import TasksColumn from './TeamBacklogTabTasksColumn.vue'
 
 const { can } = useAbility()
+const { isStudentOnlyView } = useActivityViewerRole()
 const canPhaseList = computed(() => can('phase-list'))
 const { getAbilities } = useAuth()
 const activityId = inject('activityId')
@@ -806,6 +842,79 @@ const activeSprintTaskIdMap = computed(() => {
   }
   return map
 })
+
+const taskEditInActiveSprint = computed(() => {
+  const id = taskDialog.taskId
+  if (taskDialog.mode !== 'edit' || !id) return false
+  const m = activeSprintTaskIdMap.value
+  return !!(m[id] || m[Number(id)])
+})
+
+const studentBacklogTaskStatusLabel = computed(() => {
+  const v = Number(taskForm.value.status ?? 0)
+  if (v === 0) {
+    return taskEditInActiveSprint.value ? 'Por hacer (en sprint)' : 'Backlog'
+  }
+  const names = { 1: 'En progreso', 2: 'Hecha', 3: 'Cancelada' }
+  return names[v] ?? `Estado ${v}`
+})
+
+const canStudentCancelTaskInBacklog = computed(
+  () =>
+    isStudentOnlyView.value &&
+    taskDialog.mode === 'edit' &&
+    Number(taskForm.value.status ?? 0) === 0 &&
+    !taskEditInActiveSprint.value
+)
+
+const canStudentRestoreCancelledTask = computed(
+  () =>
+    isStudentOnlyView.value &&
+    taskDialog.mode === 'edit' &&
+    Number(taskForm.value.status ?? 0) === 3
+)
+
+function studentTaskStatusErrorMessage(error, fallback) {
+  const d = error?.response?.data
+  if (d?.errors && typeof d.errors === 'object') {
+    const first = Object.values(d.errors)[0]
+    if (Array.isArray(first) && first[0]) return String(first[0])
+  }
+  if (typeof d?.message === 'string') return d.message
+  return fallback
+}
+
+async function studentApplyTaskStatus(nextStatus) {
+  const aid = activityId?.value
+  const bi = taskDialog.backlogItem
+  if (!aid || !bi?.id || !taskDialog.taskId || !isStudentOnlyView.value) return
+  if (nextStatus === 3 && !canStudentCancelTaskInBacklog.value) return
+  if (nextStatus === 0 && !canStudentRestoreCancelledTask.value) return
+  taskDialog.saving = true
+  clearTaskErrors()
+  try {
+    const pos =
+      (taskLists[bi.id] || []).find((t) => t.id === taskDialog.taskId)?.position ?? 0
+    await axios.put(`/api/activities/${aid}/tasks/${taskDialog.taskId}`, {
+      backlog_item_id: bi.id,
+      title: taskForm.value.title.trim(),
+      description: taskForm.value.description || null,
+      status: nextStatus,
+      position: pos,
+      card_hidden: !!taskForm.value.card_hidden,
+    })
+    taskForm.value.status = nextStatus
+    await getBacklogItems(aid)
+    toast.success(
+      'Tarea',
+      nextStatus === 3 ? 'Tarea cancelada.' : 'Tarea restaurada al backlog.'
+    )
+  } catch (e) {
+    toast.error('Tarea', studentTaskStatusErrorMessage(e, 'No se pudo actualizar el estado.'))
+  } finally {
+    taskDialog.saving = false
+  }
+}
 
 function isTeamBacklogItemId(backlogItemId) {
   return teamItemsOrdered.value.some((b) => b.id === backlogItemId)

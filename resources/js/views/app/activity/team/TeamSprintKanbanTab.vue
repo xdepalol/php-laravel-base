@@ -171,7 +171,7 @@
     modal
     header="Tarea del sprint"
     class="w-full max-w-2xl"
-    :closable="!taskDialog.saving"
+    :closable="!taskDialog.saving && !taskDialog.splitting"
     @hide="closeTaskDialog"
   >
     <div v-if="taskDialog.row" class="flex flex-col gap-4 pt-1">
@@ -212,16 +212,71 @@
         />
         <p v-else class="text-sm text-slate-700">{{ assigneeDisplayLabel }}</p>
       </div>
+      <div v-if="canSplitSprintTask" class="border-t border-slate-200 pt-4 mt-2 space-y-3">
+        <p class="text-sm font-medium text-slate-800">Dividir en dos partes del sprint</p>
+        <p class="text-xs text-slate-600 leading-relaxed">
+          Se crea otra tarea en el mismo sprint y el mismo ítem de backlog, en estado «Por hacer» y
+          <strong>sin asignar</strong> para que el equipo redistribuya la parte nueva. Completá el título de la nueva
+          parte: el botón <strong>Dividir en dos tareas</strong> deja de verse como secundario (mismo estilo que una
+          acción principal). <strong>Guardar</strong> solo guarda título, descripción y asignación de <em>esta</em> tarea.
+          Las pendientes al cerrar el sprint vuelven al backlog como «Por hacer».
+        </p>
+        <div>
+          <label class="text-sm font-medium text-slate-700 block mb-1">Nueva tarea (segunda parte)</label>
+          <InputText
+            v-model="sprintSplitForm.titleB"
+            class="w-full"
+            maxlength="150"
+            placeholder="Título de la nueva tarea…"
+          />
+        </div>
+        <div>
+          <label class="text-sm font-medium text-slate-700 block mb-1">Renombrar esta tarea (opcional)</label>
+          <InputText
+            v-model="sprintSplitForm.titleA"
+            class="w-full"
+            maxlength="150"
+            placeholder="Vacío = no cambiar el título actual"
+          />
+        </div>
+      </div>
     </div>
     <template #footer>
-      <Button label="Cerrar" severity="secondary" text :disabled="taskDialog.saving" @click="taskDialog.open = false" />
-      <Button
-        v-if="canSaveTaskDialog"
-        label="Guardar"
-        icon="pi pi-check"
-        :loading="taskDialog.saving"
-        @click="saveTaskDialog"
-      />
+      <div class="flex w-full flex-wrap items-center gap-3 justify-between">
+        <div class="flex flex-1 flex-wrap gap-2 items-center justify-start min-w-0">
+          <Button
+            v-if="canSplitSprintTask"
+            type="button"
+            label="Dividir en dos tareas"
+            icon="pi pi-plus-circle"
+            :severity="splitDivideButtonSeverity"
+            :outlined="splitDivideButtonOutlined"
+            :size="splitDivideButtonSize"
+            :loading="taskDialog.splitting"
+            :disabled="taskDialog.saving || taskDialog.splitting || !String(sprintSplitForm.titleB || '').trim()"
+            @click.stop="splitSprintTask"
+          />
+        </div>
+        <div class="flex shrink-0 flex-wrap gap-2 items-center justify-end">
+          <Button
+            type="button"
+            label="Cerrar"
+            severity="secondary"
+            text
+            :disabled="taskDialog.saving || taskDialog.splitting"
+            @click="taskDialog.open = false"
+          />
+          <Button
+            v-if="canSaveTaskDialog"
+            type="button"
+            label="Guardar"
+            icon="pi pi-check"
+            :loading="taskDialog.saving"
+            :disabled="taskDialog.splitting"
+            @click.stop="saveTaskDialog"
+          />
+        </div>
+      </div>
     </template>
   </Dialog>
 </template>
@@ -307,6 +362,7 @@ const assigneeInitial = ref(null)
 const taskDialog = reactive({
   open: false,
   saving: false,
+  splitting: false,
   row: null,
 })
 
@@ -314,6 +370,11 @@ const taskForm = ref({
   title: '',
   description: '',
   assigneeUserId: null,
+})
+
+const sprintSplitForm = reactive({
+  titleA: '',
+  titleB: '',
 })
 
 const tabQuery = computed(() => {
@@ -715,6 +776,23 @@ const canSaveTaskDialog = computed(() => {
   return canEditTaskDesc.value || canEditAssignee.value
 })
 
+/** Misma base que el Kanban: `task-edit` basta; el alta de la segunda parte la autoriza el servidor. */
+const canSplitSprintTask = computed(
+  () =>
+    canKanbanDrag.value &&
+    !!activeSprintPhase.value?.id &&
+    !!taskDialog.row?.phase_task_id
+)
+
+/** Hay título para la segunda parte: quitar estilo secundario del botón Dividir. */
+const splitSecondTitleEntered = computed(
+  () => canSplitSprintTask.value && !!String(sprintSplitForm.titleB || '').trim()
+)
+
+const splitDivideButtonSeverity = computed(() => (splitSecondTitleEntered.value ? undefined : 'secondary'))
+const splitDivideButtonOutlined = computed(() => !splitSecondTitleEntered.value)
+const splitDivideButtonSize = computed(() => (splitSecondTitleEntered.value ? undefined : 'small'))
+
 async function ensureTeamMembers() {
   const aid = activityId?.value
   const tid = teamId?.value
@@ -734,6 +812,8 @@ async function openTaskDialog(row) {
     description: row.description ?? '',
     assigneeUserId: row.student?.user_id ?? null,
   }
+  sprintSplitForm.titleA = ''
+  sprintSplitForm.titleB = ''
   assigneeInitial.value = row.student?.user_id ?? null
   if (canEditAssignee.value) await ensureTeamMembers()
   taskDialog.open = true
@@ -741,7 +821,10 @@ async function openTaskDialog(row) {
 
 function closeTaskDialog() {
   taskDialog.saving = false
+  taskDialog.splitting = false
   taskDialog.row = null
+  sprintSplitForm.titleA = ''
+  sprintSplitForm.titleB = ''
 }
 
 async function saveTaskDialog() {
@@ -780,6 +863,35 @@ async function saveTaskDialog() {
     toast.error('Tarea', api422FirstMessage(e, 'No se pudo guardar.'))
   } finally {
     taskDialog.saving = false
+  }
+}
+
+async function splitSprintTask() {
+  const aid = activityId?.value
+  const tid = teamId?.value
+  const phase = activeSprintPhase.value
+  const row = taskDialog.row
+  const titleB = String(sprintSplitForm.titleB || '').trim()
+  const titleA = String(sprintSplitForm.titleA || '').trim()
+  if (!aid || !tid || !phase?.id || !row?.id || !titleB) return
+  taskDialog.splitting = true
+  try {
+    await axios.post(
+      `/api/activities/${aid}/phases/${phase.id}/teams/${tid}/sprint-tasks/${row.id}/split`,
+      {
+        title_part_a: titleA || null,
+        title_part_b: titleB,
+      }
+    )
+    sprintSplitForm.titleA = ''
+    sprintSplitForm.titleB = ''
+    toast.success('Tarea', 'Se dividió en dos tareas del sprint.')
+    await refreshPhasesFromApi(aid)
+    taskDialog.open = false
+  } catch (e) {
+    toast.error('Tarea', api422FirstMessage(e, 'No se pudo dividir la tarea.'))
+  } finally {
+    taskDialog.splitting = false
   }
 }
 
