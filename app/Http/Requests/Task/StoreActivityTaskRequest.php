@@ -31,6 +31,7 @@ class StoreActivityTaskRequest extends FormRequest
             'description' => ['nullable', 'string'],
             'status' => ['nullable', Rule::enum(TaskStatus::class)],
             'position' => ['nullable', 'integer', 'min:0'],
+            'card_hidden' => ['sometimes', 'boolean'],
         ];
     }
 }

@@ -78,6 +78,12 @@
           <Checkbox v-model="showTasks" input-id="show-tasks" binary />
           <label for="show-tasks" class="text-sm text-slate-700 cursor-pointer">Mostrar tareas</label>
         </div>
+        <div class="flex items-center gap-2 pb-0.5">
+          <Checkbox v-model="showHiddenInBacklog" input-id="show-hidden-backlog" binary />
+          <label for="show-hidden-backlog" class="text-sm text-slate-700 cursor-pointer">
+            Mostrar ítems y tareas ocultos
+          </label>
+        </div>
         <div
           v-if="isAssigningSprintTasks"
           class="flex items-center gap-2 pb-0.5 w-full sm:w-auto sm:ml-auto"
@@ -102,12 +108,22 @@
       </p>
 
       <p
-        v-if="backlogFiltersActive || taskFiltersActive"
+        v-if="backlogFiltersActive || taskFiltersActive || hiddenElementsSuppressed"
         class="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-md px-2 py-1.5 mb-3"
       >
         <template v-if="backlogFiltersActive">Filtros de backlog activos: el reordenado de ítems del equipo está desactivado.</template>
-        <template v-if="backlogFiltersActive && taskFiltersActive"> </template>
+        <template v-if="backlogFiltersActive && (taskFiltersActive || hiddenElementsSuppressed)"> </template>
         <template v-if="taskFiltersActive">Filtros de tarea activos: el reordenado de tareas está desactivado.</template>
+        <template v-if="(backlogFiltersActive || taskFiltersActive) && hiddenElementsSuppressed"> </template>
+        <template v-if="hiddenElementsSuppressed">
+          Hay tarjetas marcadas como ocultas que no se muestran; activá «Mostrar ítems y tareas ocultos» para verlas.
+        </template>
+        <span
+          v-if="backlogFiltersActive || taskFiltersActive || hiddenElementsSuppressed"
+          class="block mt-1.5 font-medium"
+        >
+          Mientras haya filtros u ocultos fuera de vista, el reordenado arrastrable está desactivado.
+        </span>
       </p>
 
       <div v-if="isLoading" class="flex justify-center py-12 text-slate-500">
@@ -145,6 +161,7 @@
                 :is-team-backlog="isTeamRow(bi)"
                 :sprint-task-bindings="sprintTaskPhaseTaskIdMap"
                 :sprint-task-loading="sprintTaskToggleLoading"
+                :active-sprint-task-map="activeSprintTaskIdMap"
                 @create-task="openTaskDialog(bi, null)"
                 @edit-task="(t) => openTaskDialog(bi, t)"
                 @delete-task="confirmDeleteTask"
@@ -173,7 +190,7 @@
                   v-if="showTasks"
                   :bi="bi"
                   :tasks="filteredTasksForBi(bi.id)"
-                  :show-drag="!taskFiltersActive && can('task-edit')"
+                  :show-drag="!listViewRestricted && can('task-edit')"
                   :task-lists="taskLists"
                   :can-task-create="can('task-create')"
                   :can-task-edit="can('task-edit')"
@@ -182,6 +199,7 @@
                   :is-team-backlog="false"
                   :sprint-task-bindings="sprintTaskPhaseTaskIdMap"
                   :sprint-task-loading="sprintTaskToggleLoading"
+                  :active-sprint-task-map="activeSprintTaskIdMap"
                   @create-task="openTaskDialog(bi, null)"
                   @edit-task="(t) => openTaskDialog(bi, t)"
                   @delete-task="confirmDeleteTask"
@@ -205,7 +223,7 @@
               handle=".bi-drag-handle"
               tag="div"
               class="space-y-6"
-              :disabled="!can('backlogitem-edit') || teamDraggableList.length === 0"
+              :disabled="!can('backlogitem-edit') || teamDraggableList.length === 0 || listViewRestricted"
               @end="onTeamBacklogDragEnd"
             >
               <template #item="{ element: bi }">
@@ -225,7 +243,7 @@
                     v-if="showTasks"
                     :bi="bi"
                     :tasks="filteredTasksForBi(bi.id)"
-                    :show-drag="!taskFiltersActive && can('task-edit')"
+                    :show-drag="!listViewRestricted && can('task-edit')"
                     :task-lists="taskLists"
                     :can-task-create="can('task-create')"
                     :can-task-edit="can('task-edit')"
@@ -234,6 +252,7 @@
                     :is-team-backlog="true"
                     :sprint-task-bindings="sprintTaskPhaseTaskIdMap"
                     :sprint-task-loading="sprintTaskToggleLoading"
+                    :active-sprint-task-map="activeSprintTaskIdMap"
                     @create-task="openTaskDialog(bi, null)"
                     @edit-task="(t) => openTaskDialog(bi, t)"
                     @delete-task="confirmDeleteTask"
@@ -357,6 +376,12 @@
               <InputNumber v-model="itemForm.position" class="w-full" :min="0" show-buttons />
             </div>
           </div>
+          <div class="flex items-center gap-2">
+            <Checkbox v-model="itemForm.card_hidden" input-id="item-card-hidden" binary />
+            <label for="item-card-hidden" class="text-sm text-slate-700 cursor-pointer">
+              Ocultar tarjeta del ítem en el backlog (equipo)
+            </label>
+          </div>
         </div>
         <template #footer>
           <Button label="Cancelar" severity="secondary" text @click="itemDialog.open = false" />
@@ -394,6 +419,12 @@
               option-value="value"
               class="w-full"
             />
+          </div>
+          <div class="flex items-center gap-2">
+            <Checkbox v-model="taskForm.card_hidden" input-id="task-card-hidden" binary />
+            <label for="task-card-hidden" class="text-sm text-slate-700 cursor-pointer">
+              Ocultar tarjeta de la tarea en el backlog
+            </label>
           </div>
         </div>
         <template #footer>
@@ -465,6 +496,8 @@ const backlogStatusFilter = ref(null)
 const taskNameQuery = ref('')
 const taskStatusFilter = ref(null)
 const showTasks = ref(true)
+/** Si es false, no se listan ítems/tareas con `card_hidden` (salvo filtros de nombre que los incluyan en la lista filtrada). */
+const showHiddenInBacklog = ref(false)
 /** Durante «Asignando tareas»: si es false, se ocultan en el backlog del equipo las tareas ya enlazadas al sprint. */
 const showSprintAssignedTasks = ref(true)
 const sprintTaskToggleLoading = reactive({})
@@ -534,6 +567,26 @@ const taskFiltersActive = computed(
   () => taskNameQuery.value.trim() !== '' || taskStatusFilter.value != null
 )
 
+const hasAnyHiddenMarked = computed(() => {
+  for (const b of filteredItems.value) {
+    if (b.card_hidden) return true
+    const raw = b.tasks
+    if (!Array.isArray(raw)) continue
+    for (const t of raw) {
+      if (t.card_hidden) return true
+    }
+  }
+  return false
+})
+
+const hiddenElementsSuppressed = computed(
+  () => !showHiddenInBacklog.value && hasAnyHiddenMarked.value
+)
+
+const listViewRestricted = computed(
+  () => backlogFiltersActive.value || taskFiltersActive.value || hiddenElementsSuppressed.value
+)
+
 const displayedBacklogRows = computed(() => {
   return sortedFilteredItems.value.filter((b) => {
     if (backlogNameQuery.value.trim()) {
@@ -546,19 +599,28 @@ const displayedBacklogRows = computed(() => {
     if (backlogStatusFilter.value != null) {
       if (Number(statusValue(b)) !== Number(backlogStatusFilter.value)) return false
     }
+    if (!showHiddenInBacklog.value && b.card_hidden) return false
     return true
   })
 })
 
 const sharedRows = computed(() =>
-  sortedFilteredItems.value.filter((b) => (b.team_id ?? b.team?.id) == null)
+  sortedFilteredItems.value.filter((b) => {
+    if ((b.team_id ?? b.team?.id) != null) return false
+    if (!showHiddenInBacklog.value && b.card_hidden) return false
+    return true
+  })
 )
 
 const teamDraggableList = ref([])
 
 const teamItemsOrdered = computed(() => {
   const tid = Number(teamId?.value)
-  return sortedFilteredItems.value.filter((b) => Number(b.team_id ?? b.team?.id) === tid)
+  return sortedFilteredItems.value.filter((b) => {
+    if (Number(b.team_id ?? b.team?.id) !== tid) return false
+    if (!showHiddenInBacklog.value && b.card_hidden) return false
+    return true
+  })
 })
 
 watch(
@@ -573,7 +635,7 @@ watch(
 async function onTeamBacklogDragEnd() {
   const aid = activityId?.value
   const tid = teamId?.value
-  if (!aid || !tid || !can('backlogitem-edit')) return
+  if (!aid || !tid || !can('backlogitem-edit') || listViewRestricted.value) return
   const ids = teamDraggableList.value.map((b) => b.id)
   try {
     await reorderBacklogItems(aid, { team_id: Number(tid), ids })
@@ -600,6 +662,7 @@ function normTask(t) {
     description: t.description ?? '',
     status: typeof t.status === 'object' && t.status ? t.status.value : Number(t.status ?? 0),
     position: Number(t.position) || 0,
+    card_hidden: !!t.card_hidden,
   }
 }
 
@@ -639,6 +702,7 @@ function filteredTasksForBi(backlogItemId) {
     if (taskStatusFilter.value != null) {
       if (Number(taskStatusNum(t)) !== Number(taskStatusFilter.value)) return false
     }
+    if (!showHiddenInBacklog.value && t.card_hidden) return false
     return true
   })
 }
@@ -646,7 +710,7 @@ function filteredTasksForBi(backlogItemId) {
 async function onTaskDragEnd(backlogItemId) {
   const aid = activityId?.value
   const tid = teamId?.value
-  if (!aid || !tid || taskFiltersActive.value) return
+  if (!aid || !tid || listViewRestricted.value) return
   const ids = (taskLists[backlogItemId] || []).map((t) => t.id)
   if (!ids.length) return
   try {
@@ -722,6 +786,27 @@ const sprintTaskPhaseTaskIdMap = computed(() => {
   return o
 })
 
+/** Tareas enlazadas a una fase sprint del equipo con sprint activo (estados 0–3). */
+const activeSprintTaskIdMap = computed(() => {
+  const tid = Number(teamId?.value)
+  const map = {}
+  if (!tid) return map
+  for (const p of phases.value || []) {
+    if (!p?.is_sprint) continue
+    const pt = (p.phase_teams || []).find((x) => Number(x.team_id) === tid)
+    const sv = sprintStatusValue(pt)
+    if (sv == null || sv < 0 || sv > 3) continue
+    for (const row of p.phase_tasks || []) {
+      const t = row.task
+      if (!t?.id) continue
+      const biTeam = t.backlog_item?.team_id ?? t.backlog_item?.team?.id
+      if (biTeam != null && Number(biTeam) !== tid) continue
+      map[t.id] = true
+    }
+  }
+  return map
+})
+
 function isTeamBacklogItemId(backlogItemId) {
   return teamItemsOrdered.value.some((b) => b.id === backlogItemId)
 }
@@ -795,6 +880,7 @@ const itemForm = ref({
   status: 0,
   points: null,
   position: 0,
+  card_hidden: false,
 })
 
 const taskDialog = reactive({
@@ -809,6 +895,7 @@ const taskForm = ref({
   title: '',
   description: '',
   status: 0,
+  card_hidden: false,
 })
 
 function openImportDialog() {
@@ -832,6 +919,7 @@ function openCreateDialog() {
     status: 0,
     points: null,
     position: nextSuggestedPosition(),
+    card_hidden: false,
   }
   itemDialog.open = true
 }
@@ -853,6 +941,7 @@ function openEditDialog(row) {
     status: statusValue(row) ?? 0,
     points: row.points ?? null,
     position: row.position ?? 0,
+    card_hidden: !!row.card_hidden,
   }
   itemDialog.open = true
 }
@@ -871,6 +960,7 @@ function buildApiPayload(form) {
     points: form.points ?? null,
     status: form.status,
     position: form.position ?? 0,
+    card_hidden: !!form.card_hidden,
   }
 }
 
@@ -975,6 +1065,7 @@ function openTaskDialog(bi, task) {
       title: task.title ?? '',
       description: task.description ?? '',
       status: taskStatusNum(task),
+      card_hidden: !!task.card_hidden,
     }
   } else {
     taskDialog.mode = 'create'
@@ -983,6 +1074,7 @@ function openTaskDialog(bi, task) {
       title: '',
       description: '',
       status: 0,
+      card_hidden: false,
     }
   }
   taskDialog.open = true
@@ -1011,6 +1103,7 @@ async function submitTaskDialog() {
         description: taskForm.value.description || null,
         status: taskForm.value.status ?? 0,
         position: nextPos,
+        card_hidden: !!taskForm.value.card_hidden,
       })
     } else if (taskDialog.taskId) {
       await updateTask(aid, taskDialog.taskId, {
@@ -1020,6 +1113,7 @@ async function submitTaskDialog() {
         status: taskForm.value.status ?? 0,
         position:
           (taskLists[bi.id] || []).find((t) => t.id === taskDialog.taskId)?.position ?? 0,
+        card_hidden: !!taskForm.value.card_hidden,
       })
     }
     await getBacklogItems(aid)
@@ -1032,6 +1126,15 @@ async function submitTaskDialog() {
 }
 
 function confirmDeleteTask(task) {
+  if (taskStatusNum(task) === 2) {
+    toast.warning('Tarea', 'No se puede eliminar una tarea hecha.')
+    return
+  }
+  const m = activeSprintTaskIdMap.value
+  if (m[task.id] || m[Number(task.id)]) {
+    toast.warning('Tarea', 'No se puede eliminar una tarea incluida en un sprint activo.')
+    return
+  }
   const run = async () => {
     const aid = activityId?.value
     if (!aid || !task?.id) return

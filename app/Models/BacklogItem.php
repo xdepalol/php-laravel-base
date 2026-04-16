@@ -19,6 +19,7 @@ class BacklogItem extends Model
         'points',
         'status',
         'position',
+        'card_hidden',
     ];
 
     protected $casts = [
@@ -26,6 +27,7 @@ class BacklogItem extends Model
         'status' => BacklogItemStatus::class,
         'points' => 'integer',
         'position' => 'integer',
+        'card_hidden' => 'boolean',
     ];
 
     public function activity(): BelongsTo

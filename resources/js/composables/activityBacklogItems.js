@@ -20,7 +20,8 @@ function normalizeBacklogItem(data) {
     priority: data.priority?.value ?? data.priority ?? 2,
     points: data.points ?? null,
     status: data.status?.value ?? data.status ?? 0,
-    position: data.position ?? 0
+    position: data.position ?? 0,
+    card_hidden: !!data.card_hidden,
   }
 }
 
@@ -37,7 +38,8 @@ export default function useActivityBacklogItems() {
     priority: 2,
     points: null,
     status: 0,
-    position: 0
+    position: 0,
+    card_hidden: false,
   }
 
   const backlogItem = ref({ ...initialBacklogItem })
@@ -51,7 +53,8 @@ export default function useActivityBacklogItems() {
     priority: yup.number().required().integer().oneOf(BACKLOG_PRIORITIES),
     points: yup.number().nullable().integer().min(0),
     status: yup.number().required().integer().oneOf(BACKLOG_STATUSES),
-    position: yup.number().nullable().integer().min(0)
+    position: yup.number().nullable().integer().min(0),
+    card_hidden: yup.boolean().optional(),
   })
 
   const withLoading = async (fn) => {
@@ -80,7 +83,8 @@ export default function useActivityBacklogItems() {
           priority: n.priority,
           points: n.points,
           status: n.status,
-          position: n.position
+          position: n.position,
+          card_hidden: !!n.card_hidden,
         }
       : { ...initialBacklogItem }
     clearErrors()
@@ -103,7 +107,8 @@ export default function useActivityBacklogItems() {
     priority: data.priority,
     points: data.points ?? null,
     status: data.status,
-    position: data.position ?? 0
+    position: data.position ?? 0,
+    card_hidden: !!data.card_hidden,
   })
 
   const getBacklogItems = async (activityId) => {

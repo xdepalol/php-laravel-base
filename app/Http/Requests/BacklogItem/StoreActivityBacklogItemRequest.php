@@ -34,6 +34,7 @@ class StoreActivityBacklogItemRequest extends FormRequest
             'points' => ['nullable', 'integer', 'min:0'],
             'status' => [Rule::enum(BacklogItemStatus::class)],
             'position' => ['nullable', 'integer', 'min:0'],
+            'card_hidden' => ['sometimes', 'boolean'],
         ];
     }
 }

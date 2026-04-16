@@ -17,7 +17,8 @@ function normalizeTask(data) {
     title: data.title ?? '',
     description: data.description ?? null,
     status: data.status?.value ?? data.status ?? 0,
-    position: data.position ?? 0
+    position: data.position ?? 0,
+    card_hidden: !!data.card_hidden,
   }
 }
 
@@ -32,7 +33,8 @@ export default function useActivityTasks() {
     title: '',
     description: null,
     status: 0,
-    position: 0
+    position: 0,
+    card_hidden: false,
   }
 
   const task = ref({ ...initialTask })
@@ -44,7 +46,8 @@ export default function useActivityTasks() {
     title: yup.string().trim().required('El título es obligatorio').max(150),
     description: yup.string().nullable(),
     status: yup.number().nullable().integer().oneOf(TASK_STATUSES),
-    position: yup.number().nullable().integer().min(0)
+    position: yup.number().nullable().integer().min(0),
+    card_hidden: yup.boolean().optional(),
   })
 
   const withLoading = async (fn) => {
@@ -71,7 +74,8 @@ export default function useActivityTasks() {
           title: n.title,
           description: n.description,
           status: n.status,
-          position: n.position
+          position: n.position,
+          card_hidden: !!n.card_hidden,
         }
       : { ...initialTask }
     clearErrors()
@@ -89,7 +93,8 @@ export default function useActivityTasks() {
     title: data.title,
     description: data.description || null,
     status: data.status ?? 0,
-    position: data.position ?? 0
+    position: data.position ?? 0,
+    card_hidden: !!data.card_hidden,
   })
 
   const getTasks = async (activityId) => {

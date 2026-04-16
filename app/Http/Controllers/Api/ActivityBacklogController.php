@@ -70,6 +70,7 @@ class ActivityBacklogController extends Controller
         $backlogItem->points = $request->points;
         $backlogItem->status = $request->status;
         $backlogItem->position = $request->position ?? 0;
+        $backlogItem->card_hidden = $request->boolean('card_hidden');
         if ($backlogItem->save()) {
             $backlogItem->load(['team', 'tasks']);
             $backlogItem->setRelation('activity', $activity);
@@ -100,6 +101,9 @@ class ActivityBacklogController extends Controller
         $backlogItem->points = $request->points;
         $backlogItem->status = $request->status;
         $backlogItem->position = $request->position ?? 0;
+        if ($request->has('card_hidden')) {
+            $backlogItem->card_hidden = $request->boolean('card_hidden');
+        }
         if ($backlogItem->save()) {
             $backlogItem->load(['team', 'tasks']);
             $backlogItem->setRelation('activity', $activity);

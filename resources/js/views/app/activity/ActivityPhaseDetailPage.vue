@@ -137,6 +137,37 @@
               @click="advanceSprintFromDetail"
             />
           </div>
+
+          <div
+            v-if="canForceSprintStep"
+            class="pt-3 mt-3 border-t border-indigo-200/70 space-y-2"
+          >
+            <p class="text-xs font-medium text-slate-800">Paso del sprint (profesorado)</p>
+            <p class="text-xs text-slate-600">
+              Podés fijar el sprint en un paso concreto (por ejemplo, retroceder si el equipo avanzó por error).
+            </p>
+            <div class="flex flex-wrap items-end gap-2">
+              <div class="w-full min-w-[12rem] sm:w-64">
+                <label class="text-xs text-slate-500 block mb-1">Estado</label>
+                <Select
+                  v-model="teacherSprintTarget"
+                  :options="SPRINT_STATUS_STEP_OPTIONS"
+                  option-label="label"
+                  option-value="value"
+                  class="w-full"
+                />
+              </div>
+              <Button
+                label="Establecer paso"
+                icon="pi pi-sliders-h"
+                size="small"
+                outlined
+                :loading="sprintSaving && sprintSaveMode === 'teacher-step'"
+                :disabled="sprintSaving"
+                @click="applyTeacherSprintStepFromDetail"
+              />
+            </div>
+          </div>
         </div>
 
         <template v-if="phaseTeamsForDisplay.length">
@@ -317,6 +348,7 @@ import { formatStudentDisplayName } from '@/utils/studentDisplayName'
 import {
   nextSprintStatusValue,
   retroCompleteForFinish,
+  SPRINT_STATUS_STEP_OPTIONS,
   sprintAdvanceButtonLabel,
   sprintStatusLabel,
 } from '@/utils/phaseTeamSprint'
@@ -325,6 +357,7 @@ const route = useRoute()
 const router = useRouter()
 const { can } = useAbility()
 const toast = useToast()
+const swal = inject('$swal', null)
 const activityRef = inject('activity')
 const activityId = inject('activityId')
 const teamRef = inject('team', null)
@@ -391,12 +424,15 @@ const sprintStatusValue = computed(() => {
   return v !== undefined && v !== null ? Number(v) : 4
 })
 
+const canForceSprintStep = computed(() => can('phase-sprint-set') && sprintWorkflowVisible.value)
+
 const canAdvanceSprintDetail = computed(
   () => sprintWorkflowVisible.value && (can('phase-view') || can('phase-edit'))
 )
 
 const sprintSaving = ref(false)
 const sprintSaveMode = ref('')
+const teacherSprintTarget = ref(0)
 const retroDraft = reactive({ well: '', bad: '', improve: '' })
 const feedbackDraft = ref('')
 
@@ -419,6 +455,14 @@ watch(
     phaseTeamSlice.value?.teacher_feedback,
   ],
   () => syncSprintDraftsFromRow(),
+  { immediate: true }
+)
+
+watch(
+  () => sprintStatusValue.value,
+  (v) => {
+    teacherSprintTarget.value = v
+  },
   { immediate: true }
 )
 
@@ -515,6 +559,47 @@ async function advanceSprintFromDetail() {
     sprintSaving.value = false
     sprintSaveMode.value = ''
   }
+}
+
+async function applyTeacherSprintStepFromDetail() {
+  const aidVal = aid.value
+  const tid = contextTeamId.value
+  const pid = phaseId.value
+  if (!aidVal || !tid || !pid || !canForceSprintStep.value) return
+  const cur = sprintStatusValue.value
+  const next = Number(teacherSprintTarget.value)
+  if (next === cur) {
+    toast.info('Sprint', 'El equipo ya está en ese paso.')
+    return
+  }
+  const label = sprintStatusLabel(next)
+  const run = async () => {
+    sprintSaveMode.value = 'teacher-step'
+    sprintSaving.value = true
+    try {
+      await patchPhaseTeam(aidVal, pid, tid, { sprint_status: next })
+      toast.success('Sprint', `Estado: ${label}`)
+      await load()
+    } catch (e) {
+      toast.error('Sprint', api422FirstMessage(e, 'No se pudo actualizar el paso del sprint.'))
+    } finally {
+      sprintSaving.value = false
+      sprintSaveMode.value = ''
+    }
+  }
+  if (!swal) {
+    if (typeof window !== 'undefined' && window.confirm(`¿Establecer el sprint en «${label}»?`)) await run()
+    return
+  }
+  const result = await swal({
+    icon: 'warning',
+    title: '¿Establecer paso del sprint?',
+    text: `El equipo pasará a «${label}». Usá esta acción solo cuando corresponda corregir el flujo.`,
+    showCancelButton: true,
+    confirmButtonText: 'Sí, establecer',
+    cancelButtonText: 'Cancelar',
+  })
+  if (result.isConfirmed) await run()
 }
 
 /** Filas `phase_teams` visibles: una sola si la ruta lleva `teamId`, todas si es vista global. */
@@ -661,8 +746,6 @@ function goEdit() {
     query: { ...tabQuery.value },
   })
 }
-
-const swal = inject('$swal', null)
 
 function confirmDelete() {
   const title = row.value.title || `Fase #${phaseId.value}`

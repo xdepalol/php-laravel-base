@@ -54,6 +54,7 @@ class ActivityTaskController extends Controller
         $task->description = ContentSanitizer::sanitize($request->input('description'));
         $task->status = $request->input('status') ?? TaskStatus::TODO;
         $task->position = $request->position ?? $this->nextTaskPosition($request->backlog_item_id);
+        $task->card_hidden = $request->boolean('card_hidden');
         if ($task->save()) {
             $task->load(['backlogItem', 'activity', 'phaseTasks.phase', 'phaseTasks.student.user']);
             $task->setRelation('activity', $activity);
@@ -94,6 +95,9 @@ class ActivityTaskController extends Controller
             $task->status = $request->input('status') ?? TaskStatus::TODO;
         }
         $task->position = $request->position ?? 0;
+        if ($request->has('card_hidden')) {
+            $task->card_hidden = $request->boolean('card_hidden');
+        }
         if ($task->save()) {
             $task->load(['backlogItem', 'activity', 'phaseTasks.phase', 'phaseTasks.student.user']);
             $task->setRelation('activity', $activity);
@@ -115,6 +119,13 @@ class ActivityTaskController extends Controller
                 abort(403);
             }
             $this->assertStudentMayMutateTasksOnBacklogItem($request->user(), $activity, $backlogItem);
+        }
+
+        if ($task->status === TaskStatus::DONE) {
+            abort(422, 'No se puede eliminar una tarea hecha.');
+        }
+        if ($task->isLinkedToAnyActiveSprint()) {
+            abort(422, 'No se puede eliminar una tarea incluida en un sprint activo.');
         }
 
         $task->load(['backlogItem', 'activity', 'phaseTasks.phase', 'phaseTasks.student.user']);

@@ -16,6 +16,7 @@
             <Tag v-if="showScopeTag" :value="scopeLabel" severity="secondary" class="text-xs" />
             <Tag :value="priorityTag" severity="info" class="text-xs" />
             <Tag :value="statusLabel" severity="secondary" class="text-xs" />
+            <Tag v-if="row.card_hidden" value="Oculto" severity="warn" class="text-xs" />
             <Tag v-if="row.points != null" :value="`${row.points} pt`" severity="secondary" class="text-xs" />
           </div>
         </div>

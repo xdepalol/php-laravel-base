@@ -25,6 +25,7 @@ class TaskResource extends JsonResource
                 'name' => $this->status->name,
             ],
             'position' => $this->position,
+            'card_hidden' => (bool) $this->card_hidden,
             'activity' => new ActivityResource($this->whenLoaded('activity')),
             'backlog_item' => new BacklogItemResource($this->whenLoaded('backlogItem')),
             'phase_tasks' => PhaseTaskResource::collection($this->whenLoaded('phaseTasks')),

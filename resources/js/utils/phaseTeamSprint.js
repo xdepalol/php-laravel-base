@@ -8,6 +8,12 @@ export const SPRINT_STATUS_LABEL = {
   4: 'Sprint terminado',
 }
 
+/** Opciones para un `Select` de paso del sprint (valor API = entero del enum). */
+export const SPRINT_STATUS_STEP_OPTIONS = [0, 1, 2, 3, 4].map((value) => ({
+  value,
+  label: SPRINT_STATUS_LABEL[value],
+}))
+
 /** Texto del botón para avanzar un paso (desde `value` actual). */
 export const SPRINT_ADVANCE_BUTTON_LABEL = {
   4: 'Iniciar sprint',

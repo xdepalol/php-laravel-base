@@ -30,6 +30,7 @@ class BacklogItemResource extends JsonResource
                 'name' => $this->status->name,
             ],
             'position' => $this->position,
+            'card_hidden' => (bool) $this->card_hidden,
             'activity' => new ActivityResource($this->whenLoaded('activity')),
             'team' => $this->when(
                 $this->relationLoaded('team') && $this->team,

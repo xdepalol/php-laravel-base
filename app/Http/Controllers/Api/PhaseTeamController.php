@@ -50,6 +50,7 @@ class PhaseTeamController extends Controller
 
         $user = $request->user();
         $isTeacher = $user->can('phase-edit');
+        $canSetSprintStepFreely = $user->can('phase-sprint-set');
 
         $phaseTeam = PhaseTeam::query()->firstOrCreate(
             [
@@ -82,21 +83,24 @@ class PhaseTeamController extends Controller
         }
 
         if ($request->has('sprint_status')) {
-            $new = PhaseTeamSprintStatus::from($request->input('sprint_status'));
-            if ($new !== $previousStatus->next()) {
-                throw ValidationException::withMessages([
-                    'sprint_status' => ['Transición de sprint no válida. Solo se permite avanzar un paso.'],
-                ]);
-            }
+            $new = PhaseTeamSprintStatus::from((int) $request->input('sprint_status'));
 
-            if ($new === PhaseTeamSprintStatus::FINISHED && $previousStatus === PhaseTeamSprintStatus::RETROSPECTIVE) {
-                $well = $request->has('retro_well') ? (string) $request->retro_well : (string) ($phaseTeam->retro_well ?? '');
-                $bad = $request->has('retro_bad') ? (string) $request->retro_bad : (string) ($phaseTeam->retro_bad ?? '');
-                $improve = $request->has('retro_improvement') ? (string) $request->retro_improvement : (string) ($phaseTeam->retro_improvement ?? '');
-                if (trim($well) === '' || trim($bad) === '' || trim($improve) === '') {
+            if (! $canSetSprintStepFreely) {
+                if ($new !== $previousStatus->next()) {
                     throw ValidationException::withMessages([
-                        'sprint_status' => ['Completa la retrospectiva (qué fue bien, qué mejorar y acciones) antes de finalizar el sprint.'],
+                        'sprint_status' => ['Transición de sprint no válida. Solo se permite avanzar un paso.'],
                     ]);
+                }
+
+                if ($new === PhaseTeamSprintStatus::FINISHED && $previousStatus === PhaseTeamSprintStatus::RETROSPECTIVE) {
+                    $well = $request->has('retro_well') ? (string) $request->retro_well : (string) ($phaseTeam->retro_well ?? '');
+                    $bad = $request->has('retro_bad') ? (string) $request->retro_bad : (string) ($phaseTeam->retro_bad ?? '');
+                    $improve = $request->has('retro_improvement') ? (string) $request->retro_improvement : (string) ($phaseTeam->retro_improvement ?? '');
+                    if (trim($well) === '' || trim($bad) === '' || trim($improve) === '') {
+                        throw ValidationException::withMessages([
+                            'sprint_status' => ['Completa la retrospectiva (qué fue bien, qué mejorar y acciones) antes de finalizar el sprint.'],
+                        ]);
+                    }
                 }
             }
         }

@@ -34,7 +34,21 @@
           </span>
           <div class="min-w-0 flex-1">
             <p class="font-medium text-slate-800 break-words">{{ task.title }}</p>
-            <Tag :value="taskStatusLabel(task)" severity="secondary" class="text-xs mt-1" />
+            <div class="flex flex-wrap gap-1 mt-1">
+              <Tag
+                v-if="taskStatusTagText(task)"
+                :value="taskStatusTagText(task)"
+                severity="secondary"
+                class="text-xs"
+              />
+              <Tag
+                v-if="taskInActiveSprint(task)"
+                value="Sprint"
+                severity="info"
+                class="text-xs"
+              />
+              <Tag v-if="task.card_hidden" value="Oculto" severity="warn" class="text-xs" />
+            </div>
           </div>
           <div class="flex shrink-0 flex-col items-end gap-1">
             <div v-if="canTaskEdit || canTaskDelete" class="flex shrink-0 gap-0.5">
@@ -50,12 +64,13 @@
               />
               <Button
                 v-if="canTaskDelete"
-                v-tooltip.top="'Eliminar'"
+                v-tooltip.top="taskDeleteBlockReason(task) || 'Eliminar'"
                 icon="pi pi-trash"
                 text
                 rounded
                 severity="danger"
                 size="small"
+                :disabled="!taskDeleteAllowed(task)"
                 @click="$emit('delete-task', task)"
               />
             </div>
@@ -82,7 +97,16 @@
       >
         <div class="min-w-0">
           <p class="font-medium text-slate-800 break-words">{{ task.title }}</p>
-          <Tag :value="taskStatusLabel(task)" severity="secondary" class="text-xs mt-1" />
+          <div class="flex flex-wrap gap-1 mt-1">
+            <Tag
+              v-if="taskStatusTagText(task)"
+              :value="taskStatusTagText(task)"
+              severity="secondary"
+              class="text-xs"
+            />
+            <Tag v-if="taskInActiveSprint(task)" value="Sprint" severity="info" class="text-xs" />
+            <Tag v-if="task.card_hidden" value="Oculto" severity="warn" class="text-xs" />
+          </div>
         </div>
         <div class="flex shrink-0 flex-col items-end gap-1">
           <div v-if="canTaskEdit || canTaskDelete" class="flex shrink-0 gap-0.5">
@@ -98,12 +122,13 @@
             />
             <Button
               v-if="canTaskDelete"
-              v-tooltip.top="'Eliminar'"
+              v-tooltip.top="taskDeleteBlockReason(task) || 'Eliminar'"
               icon="pi pi-trash"
               text
               rounded
               severity="danger"
               size="small"
+              :disabled="!taskDeleteAllowed(task)"
               @click="$emit('delete-task', task)"
             />
           </div>
@@ -143,6 +168,8 @@ const props = defineProps({
   /** taskId -> phaseTaskId para tareas ya enlazadas al sprint actual */
   sprintTaskBindings: { type: Object, default: () => ({}) },
   sprintTaskLoading: { type: Object, default: () => ({}) },
+  /** taskId -> true si la tarea está en un sprint activo del equipo (fases 0–3) */
+  activeSprintTaskMap: { type: Object, default: () => ({}) },
 })
 
 const emit = defineEmits(['create-task', 'edit-task', 'delete-task', 'tasks-reordered', 'toggle-sprint-task'])
@@ -163,6 +190,15 @@ function phaseTaskIdFor(task) {
 
 function inSprint(task) {
   return phaseTaskIdFor(task) != null
+}
+
+function taskInActiveSprint(task) {
+  const m = props.activeSprintTaskMap || {}
+  return !!(m[task.id] || m[Number(task.id)])
+}
+
+function taskStatusValue(task) {
+  return typeof task.status === 'object' && task.status ? task.status.value : Number(task.status ?? 0)
 }
 
 function emitToggleSprint(task) {
@@ -191,9 +227,26 @@ const draggableList = computed({
   },
 })
 
-function taskStatusLabel(task) {
-  const v = typeof task.status === 'object' && task.status ? task.status.value : Number(task.status ?? 0)
+/** Texto del tag de estado: en backlog (TODO fuera de sprint) mostramos «Backlog», no «Por hacer». */
+function taskStatusTagText(task) {
+  const v = taskStatusValue(task)
+  if (v === 0 && !taskInActiveSprint(task)) {
+    return 'Backlog'
+  }
   return TASK_STATUS_LABELS[v] ?? String(v)
+}
+
+function taskDeleteAllowed(task) {
+  if (!props.canTaskDelete) return false
+  if (taskStatusValue(task) === 2) return false
+  if (taskInActiveSprint(task)) return false
+  return true
+}
+
+function taskDeleteBlockReason(task) {
+  if (taskStatusValue(task) === 2) return 'No se puede eliminar una tarea hecha'
+  if (taskInActiveSprint(task)) return 'No se puede eliminar una tarea en sprint activo'
+  return ''
 }
 </script>
 
